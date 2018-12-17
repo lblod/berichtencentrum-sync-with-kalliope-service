@@ -1,1 +1,0 @@
- docker run -v $PWD:/app -e MODE='development' -e APP_ENTRYPOINT='test' -e MU_APPLICATION_GRAPH='http://mu.semte.ch/graphs/public' -e MU_SPARQL_ENDPOINT='http://virtuoso:8890/sparql' -e MU_SPARQL_UPDATEPOINT='http://virtuoso:8890/sparql' -p 80:80 python3-template
