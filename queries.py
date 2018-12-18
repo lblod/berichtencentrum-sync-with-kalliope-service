@@ -34,23 +34,26 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
         PREFIX schema: <http://schema.org/>
 
         INSERT DATA {{
-          GRAPH <{0}> {{
-            <http://data.lblod.info/id/conversaties/{1[uuid]}> a schema:Conversation;
-               <http://mu.semte.ch/vocabularies/core/uuid> "{1[uuid]}";
-               schema:identifier "{1[dossiernummer]}";
-               schema:about "{1[betreft]}";
-               <http://purl.org/dc/terms/type> "{1[type_communicatie]}";
-               schema:processingTime "{1[reactietermijn]}";
-               schema:hasPart <http://data.lblod.info/id/berichten/{2[uuid]}>.
+            GRAPH <{0}> {{
+                ?conversatie a schema:Conversation;
+                    <http://mu.semte.ch/vocabularies/core/uuid> "{1[uuid]}";
+                    schema:identifier "{1[dossiernummer]}";
+                    schema:about "{1[betreft]}";
+                    <http://purl.org/dc/terms/type> "{1[type_communicatie]}";
+                    schema:processingTime "{1[reactietermijn]}";
+                    schema:hasPart ?bericht.
 
-           <http://data.lblod.info/id/berichten/{2[uuid]}> a schema:Message;
-              <http://mu.semte.ch/vocabularies/core/uuid> "{2[uuid]}";
-              schema:dateSent "{2[verzonden]}"^^xsd:dateTime;
-              schema:dateReceived "{2[ontvangen]}"^^xsd:dateTime;
-              schema:text \"\"\"{2[inhoud]}\"\"\";
-              schema:sender <{2[van]}>;
-              schema:recipient <{2[naar]}>.
-          }}
+                ?bericht a schema:Message;
+                    <http://mu.semte.ch/vocabularies/core/uuid> "{2[uuid]}";
+                    schema:dateSent "{2[verzonden]}"^^xsd:dateTime;
+                    schema:dateReceived "{2[ontvangen]}"^^xsd:dateTime;
+                    schema:text \"\"\"{2[inhoud]}\"\"\";
+                    schema:sender <{2[van]}>;
+                    schema:recipient <{2[naar]}>.
+
+                BIND(IRI(CONCAT("http://data.lblod.info/id/conversaties/", "{1[uuid]}")) AS ?conversatie)
+                BIND(IRI(CONCAT("http://data.lblod.info/id/berichten/", "{2[uuid]}")) AS ?bericht)
+            }}
         }}
         """.format(graph_uri, conversatie, bericht)
     return q
@@ -70,14 +73,16 @@ def construct_insert_bericht_query(graph_uri, bericht, conversatie_uri):
         INSERT DATA {{
             GRAPH <{0}> {{
                 <{2}> a schema:Conversation;
-                    schema:hasPart <http://data.lblod.info/id/berichten/{1[uuid]}>.
-                <http://data.lblod.info/id/berichten/{1[uuid]}> a schema:Message;
-                    http://mu.semte.ch/vocabularies/core/uuid> "{1[uuid]}";
+                    schema:hasPart ?bericht.
+                ?bericht a schema:Message;
+                    <http://mu.semte.ch/vocabularies/core/uuid> "{1[uuid]}";
                     schema:dateSent "{1[verzonden]}"^^xsd:dateTime;
                     schema:dateReceived "{1[ontvangen]}"^^xsd::dateTime;
                     schema:text \"\"\"{1[inhoud]}\"\"\";
                     schema:sender <{1[van]}>;
                     schema:recipient <{1[naar]}>.
+
+                BIND(IRI(CONCAT("http://data.lblod.info/id/berichten/", "{1[uuid]}")) AS ?bericht)
             }}
         }}
         """.format(graph_uri, bericht, conversatie_uri)
