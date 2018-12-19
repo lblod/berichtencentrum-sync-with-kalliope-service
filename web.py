@@ -1,15 +1,17 @@
 import os
-import schedule
+from apscheduler.schedulers.background import BackgroundScheduler
 from helpers import log
 from .tasks import process_berichten_in
 from .tasks import process_berichten_out
 
 INTERVAL = 5 if os.environ.get('RUN_INTERVAL') is None else os.environ.get('RUN_INTERVAL')
 
-# schedule.every(INTERVAL).minutes.do(process_berichten_in)
+scheduler = BackgroundScheduler()
+# scheduler.add_job(func=process_berichten_in, trigger="interval", minutes=INTERVAL)
 log("Registered a task for fetching and processing messages from Kalliope every {} minutes".format(INTERVAL))
-# schedule.every(INTERVAL).minutes.do(process_berichten_out)
+# scheduler.add_job(func=process_berichten_out, trigger="interval", minutes=INTERVAL)
 log("Registered a task for fetching and processing messages to Kalliope every {} minutes".format(INTERVAL))
+scheduler.start()
 
 
 ################# TEMP: test routes ############################################
