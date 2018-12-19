@@ -33,7 +33,7 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
     q = """
         PREFIX schema: <http://schema.org/>
 
-        INSERT DATA {{
+        INSERT {{
             GRAPH <{0}> {{
                 ?conversatie a schema:Conversation;
                     <http://mu.semte.ch/vocabularies/core/uuid> "{1[uuid]}";
@@ -50,7 +50,10 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
                     schema:text \"\"\"{2[inhoud]}\"\"\";
                     schema:sender <{2[van]}>;
                     schema:recipient <{2[naar]}>.
-
+            }}
+        }}
+        WHERE {{
+            GRAPH <{0}> {{
                 BIND(IRI(CONCAT("http://data.lblod.info/id/conversaties/", "{1[uuid]}")) AS ?conversatie)
                 BIND(IRI(CONCAT("http://data.lblod.info/id/berichten/", "{2[uuid]}")) AS ?bericht)
             }}
@@ -81,7 +84,10 @@ def construct_insert_bericht_query(graph_uri, bericht, conversatie_uri):
                     schema:text \"\"\"{1[inhoud]}\"\"\";
                     schema:sender <{1[van]}>;
                     schema:recipient <{1[naar]}>.
-
+            }}
+        }}
+        WHERE {{
+            GRAPH <{0}> {{
                 BIND(IRI(CONCAT("http://data.lblod.info/id/berichten/", "{1[uuid]}")) AS ?bericht)
             }}
         }}
