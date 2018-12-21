@@ -35,9 +35,9 @@ def exists(dossiernummer):
     q = construct_conversatie_exists_query(PUBLIC_GRAPH, dossiernummer)
     return flask.jsonify(helpers.query(q))
 
-@app.route("/mock_insert")
-def mock():
+@app.route("/mock_insert/<dossiernummer>")
+def mock(dossiernummer):
     b = mock_bericht()
-    c = mock_conversatie()
+    c = mock_conversatie(dossiernummer)
     q = construct_insert_conversatie_query(PUBLIC_GRAPH, c, b)
     return flask.jsonify(helpers.update(q))

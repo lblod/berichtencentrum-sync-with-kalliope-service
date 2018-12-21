@@ -13,8 +13,8 @@ def mock_bericht():
                        "http://data.lblod.info/id/bestuurseenheden/003e84121111866af60611a59e13d4c478718f60472655936edec1e352a34c5f",
                        "Hello,\n\nThis is a test message from ABB @{}.".format(datetime.now().isoformat()))
 
-def mock_conversatie():
-    return new_conversatie("2018.00301",
-                           "Meerjarenplanwijziging 2014-2018",
+def mock_conversatie(dossiernummer):
+    return new_conversatie(dossiernummer,
+                           "Meerjarenplanwijziging {}".format(dossiernummer),
                            "Opvraging in kader van een toezichtsdossier",
                            "P30D")
