@@ -43,11 +43,11 @@ def process_berichten_out(arg):
     q = construct_unsent_berichten_query(PUBLIC_GRAPH, ABB_URI)
     berichten = helpers.query(q)['results']['bindings']
     for bericht in berichten:
-        bericht_uri = bericht['bericht']
-        dossiernummer = bericht['dossiernummer']
-        van = bericht['van']
-        verzonden = bericht['verzonden']
-        inhoud = bericht['inhoud']
+        bericht_uri = bericht['bericht']['value']
+        dossiernummer = bericht['dossiernummer']['value']
+        van = bericht['van']['value']
+        verzonden = bericht['verzonden']['value']
+        inhoud = bericht['inhoud']['value']
         poststuk = construct_kalliope_poststuk_in(arg)
         post_result = post_kalliope_poststuk_in(poststuk)
         if post_result:
