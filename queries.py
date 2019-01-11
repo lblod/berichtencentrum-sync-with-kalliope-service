@@ -21,6 +21,30 @@ def construct_conversatie_exists_query(graph_uri, dossiernummer):
         """.format(graph_uri, dossiernummer)
     return q
 
+def construct_bericht_exists_query(graph_uri, bericht_uri):
+    """
+    Construct a query for selecting a bericht based on its URI, retrieving the conversatie & dossiernummer at the same time.
+
+    :param graph_uri: string
+    :param bericht_uri: string
+    :returns: string containing SPARQL query
+    """
+    q = """
+        PREFIX schema: <http://schema.org/>
+
+        SELECT DISTINCT ?bericht ?conversatie ?dossiernummer
+        WHERE {{
+            GRAPH <{}> {{
+                ?bericht a schema:Message.
+                ?conversatie a schema:Conversation;
+                    schema:hasPart ?bericht;
+                    schema:identifier ?dossiernummer.
+                BIND(IRI("{}") AS ?bericht)
+            }}
+        }}
+        """.format(graph_uri, bericht_uri)
+    return q
+
 def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
     """
     Construct a SPARQL query for inserting a new conversatie with a first bericht attached.
@@ -55,7 +79,7 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
         WHERE {{
             GRAPH <{0}> {{
                 BIND(IRI(CONCAT("http://data.lblod.info/id/conversaties/", "{1[uuid]}")) AS ?conversatie)
-                BIND(IRI(CONCAT("http://data.lblod.info/id/berichten/", "{2[uuid]}")) AS ?bericht)
+                BIND(IRI("{2[uri]}") AS ?bericht)
             }}
         }}
         """.format(graph_uri, conversatie, bericht)
@@ -88,10 +112,85 @@ def construct_insert_bericht_query(graph_uri, bericht, conversatie_uri):
         }}
         WHERE {{
             GRAPH <{0}> {{
-                BIND(IRI(CONCAT("http://data.lblod.info/id/berichten/", "{1[uuid]}")) AS ?bericht)
+                BIND(IRI("{1[uri]}") AS ?bericht)
             }}
         }}
         """.format(graph_uri, bericht, conversatie_uri)
+    return q
+
+def construct_update_last_bericht_query_part1():
+    """
+    Construct a SPARQL query for keeping the ext:lastMessage of each conversation up to date.
+
+    :returns: string containing SPARQL query
+    """
+    q = """
+        PREFIX schema: <http://schema.org/>
+        PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+
+        DELETE {
+            GRAPH ?g {
+                ?conversation ext:lastMessage ?message.
+            }
+        }
+        WHERE {
+            GRAPH ?g {
+                ?conversation a schema:Conversation;
+                    schema:hasPart ?newMessage;
+                    ext:lastMessage ?message. 
+            }
+            {
+                SELECT (?message AS ?newMessage) WHERE {
+                    GRAPH ?g {
+                        ?conversation a schema:Conversation;
+                            schema:hasPart ?message.
+                        ?message schema:dateSent ?dateSent.
+                        FILTER NOT EXISTS {
+                            ?conversation schema:hasPart/schema:dateSent ?otherDateSent.
+                            FILTER( ?dateSent < ?otherDateSent  )
+                        }
+                    }
+                }
+            }
+        }
+        """
+    return q
+
+def construct_update_last_bericht_query_part2():
+    """
+    Construct a SPARQL query for keeping the ext:lastMessage of each conversation up to date.
+
+    :returns: string containing SPARQL query
+    """
+    q = """
+        PREFIX schema: <http://schema.org/>
+        PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+
+        INSERT {
+            GRAPH ?g {
+                ?conversation ext:lastMessage ?newMessage.
+            }
+        }
+        WHERE {
+            GRAPH ?g {
+                ?conversation a schema:Conversation;
+                    schema:hasPart ?newMessage.
+            }
+            {
+                SELECT (?message AS ?newMessage) WHERE {
+                    GRAPH ?g {
+                        ?conversation a schema:Conversation;
+                            schema:hasPart ?message.
+                        ?message schema:dateSent ?dateSent.
+                        FILTER NOT EXISTS {
+                            ?conversation schema:hasPart/schema:dateSent ?otherDateSent.
+                            FILTER( ?dateSent < ?otherDateSent  )
+                        }
+                    }
+                }
+            }
+        }
+        """
     return q
 
 def construct_unsent_berichten_query(graph_uri, naar_uri):
