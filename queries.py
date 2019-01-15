@@ -103,12 +103,50 @@ def construct_insert_bericht_query(graph_uri, bericht, conversatie_uri):
                     schema:recipient <{1[naar]}>.
             }}
         }}
-        WHERE {{
+        """.format(graph_uri, bericht, conversatie_uri)
+    return q
+
+def construct_insert_bijlage_query(bericht_graph_uri, bijlage_graph_uri, bericht_uri, bijlage, file):
+    """
+    Construct a SPARQL query for inserting a bijlage and attaching it to an existing bericht.
+
+    :param graph_uri: string
+    :param bericht: dict containing escaped properties for bericht
+    :param conversatie_uri: string containing the uri of the conversatie that the bericht has to get attached to
+    :returns: string containing SPARQL query
+    """
+    q = """
+        PREFIX schema: <http://schema.org/>
+        PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
+        PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
+        PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
+        PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+        PREFIX dct: <http://purl.org/dc/terms/>
+        PREFIX dbpedia: <http://dbpedia.org/ontology/>
+
+        INSERT DATA {{
             GRAPH <{0}> {{
-                BIND(IRI("{1[uri]}") AS ?bericht)
+                <{2}> nie:hasPart <{3[uri]}>.     
+            }}
+            GRAPH <{1}> {{
+                <{3[uri]}> a nfo:FileDataObject;
+                    <http://mu.semte.ch/vocabularies/core/uuid> "{3[uuid]}";
+                    nfo:fileName \"\"\"{3[name]}\"\"\";
+                    dct:format "{3[mimetype]}";
+                    dct:created "3[created]";
+                    nfo:fileSize "{3[size]}";
+                    dbpedia:fileExtension "{3[extension]}".
+                <{4[uri]}> a nfo:FileDataObject;
+                    <http://mu.semte.ch/vocabularies/core/uuid> "{4[uuid]}";
+                    nfo:fileName "{4[name]}";
+                    dct:format "{3[mimetype]}";
+                    dct:created "3[created]";
+                    nfo:fileSize "{3[size]}";
+                    dbpedia:fileExtension "{3[extension]}";
+                    nie:dataSource <{3[uri]}>.
             }}
         }}
-        """.format(graph_uri, bericht, conversatie_uri)
+        """.format(bericht_graph_uri, bijlage_graph_uri, bericht_uri, bijlage, file)
     return q
 
 def construct_update_last_bericht_query_part1():
