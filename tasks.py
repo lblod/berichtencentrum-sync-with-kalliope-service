@@ -63,6 +63,7 @@ def process_berichten_in():
                 result = update(q_bericht)
             else: #conversatie to which the bericht is linked does not exist yet.
                 log("Non-existing conversation '{}' inserting new conversation + message sent @ {}".format(conversatie['betreft'], bericht['verzonden']))
+                conversatie['uri'] = "http://data.lblod.info/id/conversaties/{}".format(conversatie['uuid'])
                 q_conversatie = construct_insert_conversatie_query(graph, conversatie, bericht)
                 result = update(q_conversatie)
             # Updating ext:lastMessage link for each conversation (in 2 parts because Virtuoso)

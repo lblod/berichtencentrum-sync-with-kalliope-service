@@ -32,14 +32,13 @@ def construct_bericht_exists_query(graph_uri, bericht_uri):
     q = """
         PREFIX schema: <http://schema.org/>
 
-        SELECT DISTINCT ?bericht ?conversatie ?dossiernummer
+        SELECT DISTINCT ?conversatie ?dossiernummer
         WHERE {{
-            GRAPH <{}> {{
-                ?bericht a schema:Message.
+            GRAPH <{0}> {{
+                <{1}> a schema:Message.
                 ?conversatie a schema:Conversation;
-                    schema:hasPart ?bericht;
+                    schema:hasPart <{1}>;
                     schema:identifier ?dossiernummer.
-                BIND(IRI("{}") AS ?bericht)
             }}
         }}
         """.format(graph_uri, bericht_uri)
@@ -57,29 +56,23 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
     q = """
         PREFIX schema: <http://schema.org/>
 
-        INSERT {{
+        INSERT DATA {{
             GRAPH <{0}> {{
-                ?conversatie a schema:Conversation;
+                <{1[uri]}> a schema:Conversation;
                     <http://mu.semte.ch/vocabularies/core/uuid> "{1[uuid]}";
                     schema:identifier "{1[dossiernummer]}";
                     schema:about "{1[betreft]}";
                     <http://purl.org/dc/terms/type> "{1[type_communicatie]}";
                     schema:processingTime "{1[reactietermijn]}";
-                    schema:hasPart ?bericht.
+                    schema:hasPart <{2[uri]}>.
 
-                ?bericht a schema:Message;
+                <{2[uri]}> a schema:Message;
                     <http://mu.semte.ch/vocabularies/core/uuid> "{2[uuid]}";
                     schema:dateSent "{2[verzonden]}"^^xsd:dateTime;
                     schema:dateReceived "{2[ontvangen]}"^^xsd:dateTime;
                     schema:text \"\"\"{2[inhoud]}\"\"\";
                     schema:sender <{2[van]}>;
                     schema:recipient <{2[naar]}>.
-            }}
-        }}
-        WHERE {{
-            GRAPH <{0}> {{
-                BIND(IRI(CONCAT("http://data.lblod.info/id/conversaties/", "{1[uuid]}")) AS ?conversatie)
-                BIND(IRI("{2[uri]}") AS ?bericht)
             }}
         }}
         """.format(graph_uri, conversatie, bericht)
@@ -100,8 +93,8 @@ def construct_insert_bericht_query(graph_uri, bericht, conversatie_uri):
         INSERT DATA {{
             GRAPH <{0}> {{
                 <{2}> a schema:Conversation;
-                    schema:hasPart ?bericht.
-                ?bericht a schema:Message;
+                    schema:hasPart <{1[uri]}>.
+                <{1[uri]}> a schema:Message;
                     <http://mu.semte.ch/vocabularies/core/uuid> "{1[uuid]}";
                     schema:dateSent "{1[verzonden]}"^^xsd:dateTime;
                     schema:dateReceived "{1[ontvangen]}"^^xsd::dateTime;
@@ -215,8 +208,7 @@ def construct_unsent_berichten_query(graph_uri, naar_uri):
                     schema:dateSent ?verzonden;
                     schema:text ?inhoud;
                     schema:sender ?van;
-                    schema:recipient ?naar.
-                BIND(IRI("{1}") AS ?naar)
+                    schema:recipient <{1}>.
                 FILTER NOT EXISTS {{?bericht schema:dateReceived ?ontvangen.}} #Bericht hasn't been received yet, this means we have yet to send it to the other party
             }}
         }}
@@ -237,13 +229,12 @@ def construct_bericht_sent_query(graph_uri, bericht_uri, verzonden):
 
         INSERT {{
             GRAPH <{0}> {{
-                ?bericht schema:dateReceived "{2}"^^xsd:dateTime.
+                <{1}> schema:dateReceived "{2}"^^xsd:dateTime.
             }}
         }}
         WHERE {{
             GRAPH <{0}> {{
-                ?bericht a schema:Message;
-                BIND(IRI("{1}") AS ?bericht)
+                <{1}> a schema:Message;
             }}
         }}
         """.format(graph_uri, bericht_uri, verzonden)
