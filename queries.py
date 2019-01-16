@@ -150,15 +150,15 @@ def construct_insert_bijlage_query(bericht_graph_uri, bijlage_graph_uri, bericht
                     <http://mu.semte.ch/vocabularies/core/uuid> "{3[uuid]}";
                     nfo:fileName \"\"\"{3[name]}\"\"\";
                     dct:format "{3[mimetype]}";
-                    dct:created "3[created]";
-                    nfo:fileSize "{3[size]}";
+                    dct:created "3[created]"^^xsd::dateTime;
+                    nfo:fileSize "{3[size]}"^^xsd:integer;
                     dbpedia:fileExtension "{3[extension]}".
                 <{4[uri]}> a nfo:FileDataObject;
                     <http://mu.semte.ch/vocabularies/core/uuid> "{4[uuid]}";
                     nfo:fileName "{4[name]}";
                     dct:format "{3[mimetype]}";
-                    dct:created "3[created]";
-                    nfo:fileSize "{3[size]}";
+                    dct:created "3[created]"^^xsd::dateTime;
+                    nfo:fileSize "{3[size]}"^^xsd:integer;
                     dbpedia:fileExtension "{3[extension]}";
                     nie:dataSource <{3[uri]}>.
             }}
