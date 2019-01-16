@@ -114,7 +114,7 @@ def parse_kalliope_poststuk_uit(ps_uit):
     verzonden = re.sub(r'\+(\d{4})', isotz_repl, ps_uit['creatieDatum']) 
     ontvangen = datetime.utcnow().isoformat()+'Z'
     inhoud = ps_uit['inhoud']
-    dossiernummer = ps_uit['dossier']['naam'] # NOTE: Will become "dossierNummer" in future API versiom 
+    dossiernummer = ps_uit['dossier']['naam'] # NOTE: Will become ps_uit['dossierNummer'] in future API version
     betreft = ps_uit['betreft']
     type_communicatie = ps_uit['typeCommunicatie']
     reactietermijn = "P30D"
@@ -125,6 +125,7 @@ def parse_kalliope_poststuk_uit(ps_uit):
                         betreft,
                         type_communicatie,
                         reactietermijn)
+    conversatie['dossierUri'] =  ps_uit['dossier']['uri'] # TEMP: As kalliope identifier for Dossier while dossiernummer doesn't exist
 
     bericht['bijlagen'] = []
     for ps_bijlage in ps_uit['bijlages']:

@@ -64,12 +64,14 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
     bericht['inhoud'] = escape_helpers.sparql_escape_string(bericht['inhoud'])
     q = """
         PREFIX schema: <http://schema.org/>
+        PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 
         INSERT DATA {{
             GRAPH <{0}> {{
                 <{1[uri]}> a schema:Conversation;
                     <http://mu.semte.ch/vocabularies/core/uuid> "{1[uuid]}";
                     schema:identifier "{1[dossiernummer]}";
+                    ext:dossierUri "{1[dossierUri]}"; # TEMP: As kalliope identifier for Dossier while dossiernummer doesn't exist
                     schema:about "{1[betreft]}";
                     <http://purl.org/dc/terms/type> "{1[type_communicatie]}";
                     schema:processingTime "{1[reactietermijn]}";
@@ -251,11 +253,13 @@ def construct_unsent_berichten_query(graph_uri, naar_uri):
     """
     q = """
         PREFIX schema: <http://schema.org/>
+        PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 
-        SELECT DISTINCT ?dossiernummer ?bericht ?uuid ?van ?verzonden ?inhoud
+        SELECT DISTINCT ?dossiernummer ?dossieruri ?bericht ?uuid ?van ?verzonden ?inhoud
         WHERE {{
             GRAPH <{0}> {{
                 ?conversatie a schema:Conversation;
+                    ext:dossierUri ?dossieruri; # TEMP: As kalliope identifier for Dossier while dossiernummer doesn't exist
                     schema:identifier ?dossiernummer;
                     schema:hasPart ?bericht.
                 ?bericht a schema:Message;
