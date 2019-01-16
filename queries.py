@@ -1,4 +1,6 @@
 #!/usr/bin/python3
+import copy
+import escape_helpers
 
 def construct_conversatie_exists_query(graph_uri, dossiernummer):
     """
@@ -8,6 +10,7 @@ def construct_conversatie_exists_query(graph_uri, dossiernummer):
     :param dossiernummer: string
     :returns: string containing SPARQL query
     """
+    dossiernummer = escape_helpers.sparql_escape_string(dossiernummer)
     q = """
         PREFIX schema: <http://schema.org/>
 
@@ -53,6 +56,12 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
     :param bericht: dict containing escaped properties for bericht
     :returns: string containing SPARQL query
     """
+    conversatie = copy.deepcopy(conversatie) # For not modifying the pass-by-name original
+    conversatie['dossiernummer'] = escape_helpers.sparql_escape_string(conversatie['dossiernummer'])
+    conversatie['betreft'] = escape_helpers.sparql_escape_string(conversatie['betreft'])
+    conversatie['type_communicatie'] = escape_helpers.sparql_escape_string(conversatie['type_communicatie'])
+    bericht = copy.deepcopy(bericht) # For not modifying the pass-by-name original
+    bericht['inhoud'] = escape_helpers.sparql_escape_string(bericht['inhoud'])
     q = """
         PREFIX schema: <http://schema.org/>
 
@@ -87,6 +96,8 @@ def construct_insert_bericht_query(graph_uri, bericht, conversatie_uri):
     :param conversatie_uri: string containing the uri of the conversatie that the bericht has to get attached to
     :returns: string containing SPARQL query
     """
+    bericht = copy.deepcopy(bericht) # For not modifying the pass-by-name original
+    bericht['inhoud'] = escape_helpers.sparql_escape_string(bericht['inhoud'])
     q = """
         PREFIX schema: <http://schema.org/>
 
@@ -115,6 +126,12 @@ def construct_insert_bijlage_query(bericht_graph_uri, bijlage_graph_uri, bericht
     :param conversatie_uri: string containing the uri of the conversatie that the bericht has to get attached to
     :returns: string containing SPARQL query
     """
+    bijlage = copy.deepcopy(bijlage) # For not modifying the pass-by-name original
+    bijlage['name'] = escape_helpers.sparql_escape_string(bijlage['name'])
+    bijlage['mimetype'] = escape_helpers.sparql_escape_string(bijlage['mimetype'])
+    file = copy.deepcopy(file) # For not modifying the pass-by-name original
+    file['name'] = escape_helpers.sparql_escape_string(file['name'])
+    file['mimetype'] = escape_helpers.sparql_escape_string(file['mimetype'])
     q = """
         PREFIX schema: <http://schema.org/>
         PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
