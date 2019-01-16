@@ -5,6 +5,7 @@ from helpers import log
 sparqlQuery = SPARQLWrapper(os.environ.get('MU_SPARQL_ENDPOINT'), returnFormat=JSON)
 sparqlQuery.addCustomHttpHeader('mu-auth-sudo', 'true')
 sparqlUpdate = SPARQLWrapper(os.environ.get('MU_SPARQL_UPDATEPOINT'), returnFormat=JSON)
+sparqlUpdate.method = 'POST'
 sparqlUpdate.addCustomHttpHeader('mu-auth-sudo', 'true')
 
 def query(the_query):
