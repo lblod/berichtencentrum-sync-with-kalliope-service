@@ -18,7 +18,7 @@ def construct_conversatie_exists_query(graph_uri, dossiernummer):
         WHERE {{
             GRAPH <{}> {{
                 ?conversatie a schema:Conversation;
-                    schema:identifier "{}".
+                    schema:identifier {}.
             }}
         }}
         """.format(graph_uri, dossiernummer)
@@ -70,10 +70,10 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
             GRAPH <{0}> {{
                 <{1[uri]}> a schema:Conversation;
                     <http://mu.semte.ch/vocabularies/core/uuid> "{1[uuid]}";
-                    schema:identifier "{1[dossiernummer]}";
-                    ext:dossierUri "{1[dossierUri]}"; # TEMP: As kalliope identifier for Dossier while dossiernummer doesn't exist
-                    schema:about "{1[betreft]}";
-                    <http://purl.org/dc/terms/type> "{1[type_communicatie]}";
+                    schema:identifier {1[dossiernummer]};
+                    ext:dossierUri "{1[dossierUri]}";
+                    schema:about {1[betreft]};
+                    <http://purl.org/dc/terms/type> {1[type_communicatie]};
                     schema:processingTime "{1[reactietermijn]}";
                     schema:hasPart <{2[uri]}>.
 
@@ -81,7 +81,7 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
                     <http://mu.semte.ch/vocabularies/core/uuid> "{2[uuid]}";
                     schema:dateSent "{2[verzonden]}"^^xsd:dateTime;
                     schema:dateReceived "{2[ontvangen]}"^^xsd:dateTime;
-                    schema:text \"\"\"{2[inhoud]}\"\"\";
+                    schema:text {2[inhoud]};
                     schema:sender <{2[van]}>;
                     schema:recipient <{2[naar]}>.
             }}
@@ -111,7 +111,7 @@ def construct_insert_bericht_query(graph_uri, bericht, conversatie_uri):
                     <http://mu.semte.ch/vocabularies/core/uuid> "{1[uuid]}";
                     schema:dateSent "{1[verzonden]}"^^xsd:dateTime;
                     schema:dateReceived "{1[ontvangen]}"^^xsd::dateTime;
-                    schema:text \"\"\"{1[inhoud]}\"\"\";
+                    schema:text {1[inhoud]};
                     schema:sender <{1[van]}>;
                     schema:recipient <{1[naar]}>.
             }}
@@ -133,7 +133,6 @@ def construct_insert_bijlage_query(bericht_graph_uri, bijlage_graph_uri, bericht
     bijlage['mimetype'] = escape_helpers.sparql_escape_string(bijlage['mimetype'])
     file = copy.deepcopy(file) # For not modifying the pass-by-name original
     file['name'] = escape_helpers.sparql_escape_string(file['name'])
-    file['mimetype'] = escape_helpers.sparql_escape_string(file['mimetype'])
     q = """
         PREFIX schema: <http://schema.org/>
         PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
@@ -150,16 +149,16 @@ def construct_insert_bijlage_query(bericht_graph_uri, bijlage_graph_uri, bericht
             GRAPH <{1}> {{
                 <{3[uri]}> a nfo:FileDataObject;
                     <http://mu.semte.ch/vocabularies/core/uuid> "{3[uuid]}";
-                    nfo:fileName \"\"\"{3[name]}\"\"\";
-                    dct:format "{3[mimetype]}";
-                    dct:created "3[created]"^^xsd::dateTime;
+                    nfo:fileName {3[name]};
+                    dct:format {3[mimetype]};
+                    dct:created "{3[created]}"^^xsd::dateTime;
                     nfo:fileSize "{3[size]}"^^xsd:integer;
                     dbpedia:fileExtension "{3[extension]}".
                 <{4[uri]}> a nfo:FileDataObject;
                     <http://mu.semte.ch/vocabularies/core/uuid> "{4[uuid]}";
-                    nfo:fileName "{4[name]}";
-                    dct:format "{3[mimetype]}";
-                    dct:created "3[created]"^^xsd::dateTime;
+                    nfo:fileName {4[name]};
+                    dct:format {3[mimetype]};
+                    dct:created "{3[created]}"^^xsd::dateTime;
                     nfo:fileSize "{3[size]}"^^xsd:integer;
                     dbpedia:fileExtension "{3[extension]}";
                     nie:dataSource <{3[uri]}>.
