@@ -18,7 +18,7 @@ def construct_conversatie_exists_query(graph_uri, dossiernummer):
         WHERE {{
             GRAPH <{}> {{
                 ?conversatie a schema:Conversation;
-                    schema:identifier "{}".
+                    schema:identifier {}.
             }}
         }}
         """.format(graph_uri, dossiernummer)
@@ -64,14 +64,16 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
     bericht['inhoud'] = escape_helpers.sparql_escape_string(bericht['inhoud'])
     q = """
         PREFIX schema: <http://schema.org/>
+        PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 
         INSERT DATA {{
             GRAPH <{0}> {{
                 <{1[uri]}> a schema:Conversation;
                     <http://mu.semte.ch/vocabularies/core/uuid> "{1[uuid]}";
-                    schema:identifier "{1[dossiernummer]}";
-                    schema:about "{1[betreft]}";
-                    <http://purl.org/dc/terms/type> "{1[type_communicatie]}";
+                    schema:identifier {1[dossiernummer]};
+                    ext:dossierUri "{1[dossierUri]}";
+                    schema:about {1[betreft]};
+                    <http://purl.org/dc/terms/type> {1[type_communicatie]};
                     schema:processingTime "{1[reactietermijn]}";
                     schema:hasPart <{2[uri]}>.
 
@@ -79,7 +81,7 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
                     <http://mu.semte.ch/vocabularies/core/uuid> "{2[uuid]}";
                     schema:dateSent "{2[verzonden]}"^^xsd:dateTime;
                     schema:dateReceived "{2[ontvangen]}"^^xsd:dateTime;
-                    schema:text \"\"\"{2[inhoud]}\"\"\";
+                    schema:text {2[inhoud]};
                     schema:sender <{2[van]}>;
                     schema:recipient <{2[naar]}>.
             }}
@@ -109,7 +111,7 @@ def construct_insert_bericht_query(graph_uri, bericht, conversatie_uri):
                     <http://mu.semte.ch/vocabularies/core/uuid> "{1[uuid]}";
                     schema:dateSent "{1[verzonden]}"^^xsd:dateTime;
                     schema:dateReceived "{1[ontvangen]}"^^xsd::dateTime;
-                    schema:text \"\"\"{1[inhoud]}\"\"\";
+                    schema:text {1[inhoud]};
                     schema:sender <{1[van]}>;
                     schema:recipient <{1[naar]}>.
             }}
@@ -131,7 +133,6 @@ def construct_insert_bijlage_query(bericht_graph_uri, bijlage_graph_uri, bericht
     bijlage['mimetype'] = escape_helpers.sparql_escape_string(bijlage['mimetype'])
     file = copy.deepcopy(file) # For not modifying the pass-by-name original
     file['name'] = escape_helpers.sparql_escape_string(file['name'])
-    file['mimetype'] = escape_helpers.sparql_escape_string(file['mimetype'])
     q = """
         PREFIX schema: <http://schema.org/>
         PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
@@ -148,16 +149,16 @@ def construct_insert_bijlage_query(bericht_graph_uri, bijlage_graph_uri, bericht
             GRAPH <{1}> {{
                 <{3[uri]}> a nfo:FileDataObject;
                     <http://mu.semte.ch/vocabularies/core/uuid> "{3[uuid]}";
-                    nfo:fileName \"\"\"{3[name]}\"\"\";
-                    dct:format "{3[mimetype]}";
-                    dct:created "3[created]"^^xsd::dateTime;
+                    nfo:fileName {3[name]};
+                    dct:format {3[mimetype]};
+                    dct:created "{3[created]}"^^xsd::dateTime;
                     nfo:fileSize "{3[size]}"^^xsd:integer;
                     dbpedia:fileExtension "{3[extension]}".
                 <{4[uri]}> a nfo:FileDataObject;
                     <http://mu.semte.ch/vocabularies/core/uuid> "{4[uuid]}";
-                    nfo:fileName "{4[name]}";
-                    dct:format "{3[mimetype]}";
-                    dct:created "3[created]"^^xsd::dateTime;
+                    nfo:fileName {4[name]};
+                    dct:format {3[mimetype]};
+                    dct:created "{3[created]}"^^xsd::dateTime;
                     nfo:fileSize "{3[size]}"^^xsd:integer;
                     dbpedia:fileExtension "{3[extension]}";
                     nie:dataSource <{3[uri]}>.
@@ -241,7 +242,7 @@ def construct_update_last_bericht_query_part2():
         """
     return q
 
-def construct_unsent_berichten_query(graph_uri, naar_uri):
+def construct_unsent_berichten_query(naar_uri):
     """
     Construct a SPARQL query for retrieving all messages for a given recipient that haven't been received yet by the other party.
 
@@ -251,26 +252,56 @@ def construct_unsent_berichten_query(graph_uri, naar_uri):
     """
     q = """
         PREFIX schema: <http://schema.org/>
+        PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 
-        SELECT DISTINCT ?dossiernummer ?bericht ?uuid ?van ?verzonden ?inhoud
+        SELECT DISTINCT ?dossiernummer ?dossieruri ?bericht ?betreft ?uuid ?van ?verzonden ?inhoud
         WHERE {{
-            GRAPH <{0}> {{
+            GRAPH ?g {{
                 ?conversatie a schema:Conversation;
+                    ext:dossierUri ?dossieruri;
                     schema:identifier ?dossiernummer;
+                    schema:about ?betreft;
                     schema:hasPart ?bericht.
                 ?bericht a schema:Message;
                     <http://mu.semte.ch/vocabularies/core/uuid> ?uuid;
                     schema:dateSent ?verzonden;
                     schema:text ?inhoud;
                     schema:sender ?van;
-                    schema:recipient <{1}>.
-                FILTER NOT EXISTS {{?bericht schema:dateReceived ?ontvangen.}} #Bericht hasn't been received yet, this means we have yet to send it to the other party
+                    schema:recipient <{0}>.
+                FILTER NOT EXISTS {{ ?bericht schema:dateReceived ?ontvangen. }}
             }}
         }}
-        """.format(graph_uri, naar_uri)
+        """.format(naar_uri)
     return q
 
-def construct_bericht_sent_query(graph_uri, bericht_uri, verzonden):
+def construct_select_bijlagen_query(bijlagen_graph_uri, bericht_uri):
+    """
+    Construct a SPARQL query for retrieving all bijlages for a given bericht.
+
+    :param bijlagen_graph_uri: string, graph where file information is stored
+    :param bericht_uri: URI of the bericht for which we want to retrieve bijlagen.
+    :returns: string containing SPARQL query
+    """
+    q = """
+        PREFIX schema: <http://schema.org/>
+        PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
+        PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
+
+        SELECT ?bijlagenaam ?file WHERE {{
+            GRAPH ?g {{
+                <{1}> a schema:Message;
+                    nie:hasPart ?bijlage.
+            }}
+            GRAPH <{0}> {{
+                ?bijlage a nfo:FileDataObject;
+                    nfo:fileName ?bijlagenaam.
+                ?file nie:dataSource ?bijlage.
+            }}
+        }}
+        """.format(bijlagen_graph_uri, bericht_uri)
+    return q
+
+def construct_bericht_sent_query(bericht_uri, verzonden):
     """
     Construct a SPARQL query for marking a bericht as received by the other party.
 
@@ -283,14 +314,14 @@ def construct_bericht_sent_query(graph_uri, bericht_uri, verzonden):
         PREFIX schema: <http://schema.org/>
 
         INSERT {{
-            GRAPH <{0}> {{
-                <{1}> schema:dateReceived "{2}"^^xsd:dateTime.
+            GRAPH ?g {{
+                <{0}> schema:dateReceived "{1}"^^xsd:dateTime.
             }}
         }}
         WHERE {{
-            GRAPH <{0}> {{
-                <{1}> a schema:Message;
+            GRAPH ?g {{
+                <{0}> a schema:Message.
             }}
         }}
-        """.format(graph_uri, bericht_uri, verzonden)
+        """.format(bericht_uri, verzonden)
     return q

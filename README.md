@@ -3,6 +3,8 @@ required environment variables:
 
 * `KALLIOPE_API_USERNAME`  
 * `KALLIOPE_API_PASSWORD`
+* `KALLIOPE_PS_UIT_ENDPOINT`
+* `KALLIOPE_PS_IN_ENDPOINT``
 
 
 Optional environment variables:
