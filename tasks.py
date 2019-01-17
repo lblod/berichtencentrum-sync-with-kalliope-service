@@ -13,17 +13,20 @@ from .queries import construct_insert_bijlage_query
 from .queries import construct_insert_conversatie_query
 from .queries import construct_insert_bericht_query
 from .queries import construct_unsent_berichten_query
+from .queries import construct_select_bijlagen_query
 from .queries import construct_bericht_sent_query
 from .queries import construct_update_last_bericht_query_part1
 from .queries import construct_update_last_bericht_query_part2
+from .kalliope_adapter import BIJLAGEN_FOLDER_PATH
 
 ABB_URI = "http://data.lblod.info/id/bestuurseenheden/141d9d6b-54af-4d17-b313-8d1c30bc3f5b"
 PUBLIC_GRAPH = "http://mu.semte.ch/graphs/public"
 PS_UIT_PATH = os.environ.get('KALLIOPE_PS_UIT_ENDPOINT')
-BIJLAGEN_FOLDER_PATH = "/data/files"
+PS_IN_PATH = os.environ.get('KALLIOPE_PS_IN_ENDPOINT')
 MAX_MESSAGE_AGE = int(os.environ.get('MAX_MESSAGE_AGE')) #in days
 KALLIOPE_API_USERNAME = os.environ.get('KALLIOPE_API_USERNAME')
 KALLIOPE_API_PASSWORD = os.environ.get('KALLIOPE_API_PASSWORD')
+API_AUTH = (KALLIOPE_API_USERNAME, KALLIOPE_API_PASSWORD)
 
 def process_berichten_in():
     """
@@ -40,9 +43,8 @@ def process_berichten_in():
         'dossierTypes': "https://kalliope.abb.vlaanderen.be/ld/algemeen/dossierType/klacht",
         'aantal': str(1000)
     }
-    api_auth = (KALLIOPE_API_USERNAME, KALLIOPE_API_PASSWORD)
     try:
-        poststukken = get_kalliope_poststukken_uit(PS_UIT_PATH, api_auth, api_query_params)
+        poststukken = get_kalliope_poststukken_uit(PS_UIT_PATH, API_AUTH, api_query_params)
         log('Retrieved {} poststukken uit from Kalliope'.format(len(poststukken)))
     except Exception as e:
         log("Something went wrong while accessing the Kalliope API. Aborting: {}".format(e))
@@ -95,24 +97,44 @@ def process_berichten_in():
             log("Bericht '{}' - {} already exists in our DB, skipping ...".format(conversatie['betreft'], bericht['verzonden']))
             pass
     
-def process_berichten_out(arg):
+def process_berichten_out():
     """
     Fetch Berichten that have to be sent from the triple store, convert them to the correct format for the Kalliope API, post them and finally mark them as sent.
 
     :param ?:
     :returns:
     """
-    q = construct_unsent_berichten_query(PUBLIC_GRAPH, ABB_URI)
+    q = construct_unsent_berichten_query(ABB_URI)
     berichten = query(q)['results']['bindings']
-    for bericht in berichten:
-        bericht_uri = bericht['bericht']['value']
-        dossiernummer = bericht['dossiernummer']['value']
-        van = bericht['van']['value']
-        verzonden = bericht['verzonden']['value']
-        inhoud = bericht['inhoud']['value']
-        poststuk = construct_kalliope_poststuk_in(arg)
-        post_result = post_kalliope_poststuk_in(poststuk)
+    log("Found {} berichten that need to be sent to the Kalliope API".format(len(berichten)))
+    for bericht_res in berichten:
+        bericht = {
+            'uri': bericht_res['bericht']['value'],
+            'van': bericht_res['van']['value'],
+            'verzonden': bericht_res['verzonden']['value'],
+            'inhoud': bericht_res['inhoud']['value'],
+        }
+        conversatie = {
+            'dossiernummer': bericht_res['dossiernummer']['value'],
+            'dossierUri': bericht_res['dossieruri']['value'], # TEMP: As kalliope identifier for Dossier while dossiernummer doesn't exist
+            'betreft': bericht_res['betreft']['value']
+        }
+        q_bijlagen = construct_select_bijlagen_query(PUBLIC_GRAPH, bericht['uri']) # TEMP: bijlage in public graph
+        bijlagen = query(q_bijlagen)['results']['bindings']
+        bericht['bijlagen'] = []
+        for bijlage_res in bijlagen:
+            bijlage = {
+                'name': bijlage_res['bijlagenaam']['value'],
+                'filepath': bijlage_res['file']['value'].strip("share://")
+            }
+            bericht['bijlagen'].append(bijlage)
+        
+        poststuk_in = construct_kalliope_poststuk_in(conversatie, bericht)
+        log("Posting bericht <{}>. Payload: {}".format(bericht['uri'], poststuk_in))
+        post_result = post_kalliope_poststuk_in(PS_IN_PATH, API_AUTH, poststuk_in)
         if post_result:
-            ontvangen = datetime.utcnow().isoformat()+'Z' #We consider the moment when the api-call succeeded the 'ontvangen'-time
-            construct_bericht_sent_query(PUBLIC_GRAPH, bericht_uri, ontvangen)
+            ontvangen = datetime.utcnow().isoformat()+'Z' # We consider the moment when the api-call succeeded the 'ontvangen'-time
+            q_sent = construct_bericht_sent_query(bericht['uri'], ontvangen)
+            update(q_sent)
+            log("successfully sent bericht {} with {} bijlagen to Kalliope".format(bericht['uri'], len(bijlagen)))
     pass

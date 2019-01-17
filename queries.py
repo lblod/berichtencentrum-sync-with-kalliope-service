@@ -242,7 +242,7 @@ def construct_update_last_bericht_query_part2():
         """
     return q
 
-def construct_unsent_berichten_query(graph_uri, naar_uri):
+def construct_unsent_berichten_query(naar_uri):
     """
     Construct a SPARQL query for retrieving all messages for a given recipient that haven't been received yet by the other party.
 
@@ -254,26 +254,54 @@ def construct_unsent_berichten_query(graph_uri, naar_uri):
         PREFIX schema: <http://schema.org/>
         PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 
-        SELECT DISTINCT ?dossiernummer ?dossieruri ?bericht ?uuid ?van ?verzonden ?inhoud
+        SELECT DISTINCT ?dossiernummer ?dossieruri ?bericht ?betreft ?uuid ?van ?verzonden ?inhoud
         WHERE {{
-            GRAPH <{0}> {{
+            GRAPH ?g {{
                 ?conversatie a schema:Conversation;
-                    ext:dossierUri ?dossieruri; # TEMP: As kalliope identifier for Dossier while dossiernummer doesn't exist
+                    ext:dossierUri ?dossieruri;
                     schema:identifier ?dossiernummer;
+                    schema:about ?betreft;
                     schema:hasPart ?bericht.
                 ?bericht a schema:Message;
                     <http://mu.semte.ch/vocabularies/core/uuid> ?uuid;
                     schema:dateSent ?verzonden;
                     schema:text ?inhoud;
                     schema:sender ?van;
-                    schema:recipient <{1}>.
-                FILTER NOT EXISTS {{?bericht schema:dateReceived ?ontvangen.}} #Bericht hasn't been received yet, this means we have yet to send it to the other party
+                    schema:recipient <{0}>.
+                FILTER NOT EXISTS {{ ?bericht schema:dateReceived ?ontvangen. }}
             }}
         }}
-        """.format(graph_uri, naar_uri)
+        """.format(naar_uri)
     return q
 
-def construct_bericht_sent_query(graph_uri, bericht_uri, verzonden):
+def construct_select_bijlagen_query(bijlagen_graph_uri, bericht_uri):
+    """
+    Construct a SPARQL query for retrieving all bijlages for a given bericht.
+
+    :param bijlagen_graph_uri: string, graph where file information is stored
+    :param bericht_uri: URI of the bericht for which we want to retrieve bijlagen.
+    :returns: string containing SPARQL query
+    """
+    q = """
+        PREFIX schema: <http://schema.org/>
+        PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
+        PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
+
+        SELECT ?bijlagenaam ?file WHERE {{
+            GRAPH ?g {{
+                <{1}> a schema:Message;
+                    nie:hasPart ?bijlage.
+            }}
+            GRAPH <{0}> {{
+                ?bijlage a nfo:FileDataObject;
+                    nfo:fileName ?bijlagenaam.
+                ?file nie:dataSource ?bijlage.
+            }}
+        }}
+        """.format(bijlagen_graph_uri, bericht_uri)
+    return q
+
+def construct_bericht_sent_query(bericht_uri, verzonden):
     """
     Construct a SPARQL query for marking a bericht as received by the other party.
 
@@ -286,14 +314,14 @@ def construct_bericht_sent_query(graph_uri, bericht_uri, verzonden):
         PREFIX schema: <http://schema.org/>
 
         INSERT {{
-            GRAPH <{0}> {{
-                <{1}> schema:dateReceived "{2}"^^xsd:dateTime.
+            GRAPH ?g {{
+                <{0}> schema:dateReceived "{1}"^^xsd:dateTime.
             }}
         }}
         WHERE {{
-            GRAPH <{0}> {{
-                <{1}> a schema:Message;
+            GRAPH ?g {{
+                <{0}> a schema:Message.
             }}
         }}
-        """.format(graph_uri, bericht_uri, verzonden)
+        """.format(bericht_uri, verzonden)
     return q

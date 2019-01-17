@@ -7,6 +7,7 @@ import magic
 import helpers, escape_helpers
 
 ABB_URI = "http://data.lblod.info/id/bestuurseenheden/141d9d6b-54af-4d17-b313-8d1c30bc3f5b"
+BIJLAGEN_FOLDER_PATH = "/data/files"
 
 def new_conversatie(dossiernummer,
                     betreft,
@@ -137,20 +138,46 @@ def parse_kalliope_poststuk_uit(ps_uit):
 
     return (conversatie, bericht)
 
-def construct_kalliope_poststuk_in(arg):
+def construct_kalliope_poststuk_in(conversatie, bericht):
     """
     Prepare the payload for sending messages to the Kalliope API.
 
     :param ?:
     :returns:
     """
-    pass
+    files = []
+    for bijlage in bericht['bijlagen']:
+        name = bijlage['name']
+        filepath = os.path.join(BIJLAGEN_FOLDER_PATH, bijlage['filepath'])
+        buffer = open(filepath, 'rb')
+        files.append(('files', (name, buffer))) # http://docs.python-requests.org/en/master/user/advanced/#post-multiple-multipart-encoded-files
 
-def post_kalliope_poststuk_in(arg):
+    poststuk_in = {
+          'poststukInUri': bericht['uri'],
+          'afzenderUri': bericht['van'],
+          'dossierUri': conversatie['dossierUri'], # NOTE: optional # TEMP: As kalliope identifier for Dossier while dossiernummer doesn't exist
+          'betreft': conversatie['betreft'], # NOTE: Is always the same across the whole conversation for what we are concerned 
+          # 'origineelBerichtUri': conversatie['berichten'][0]['uri'], # NOTE: optional
+          'inhoud': bericht['inhoud'],
+          'files': files,
+    }
+    return poststuk_in
+
+def post_kalliope_poststuk_in(path, auth, params):
     """
     Perform the API-call to a new poststuk to Kalliope.
 
     :param ?:
     :returns:
     """
-    pass
+    if params['files']:
+        files = params.pop('files')
+        r = requests.post(path, files=files, data=params, auth=auth, verify=False) # WARNING: Certificate validity isn't verified atm
+        r.connection.close()
+    else:
+        r = requests.post(path, data=params, auth=auth, verify=False) # WARNING: Certificate validity isn't verified atm
+        r.connection.close()
+    if r.status_code == requests.codes.ok:
+        return r.json()
+    else:
+        raise requests.exceptions.HTTPError('Failed to post Kalliope poststuk-in (statuscode {})'.format(r.status_code))
