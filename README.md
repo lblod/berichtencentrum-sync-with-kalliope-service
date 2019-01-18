@@ -1,13 +1,14 @@
 
-required environment variables:
+Required environment variables:
 
 * `KALLIOPE_API_USERNAME`  
 * `KALLIOPE_API_PASSWORD`
 * `KALLIOPE_PS_UIT_ENDPOINT`
-* `KALLIOPE_PS_IN_ENDPOINT``
+* `KALLIOPE_PS_IN_ENDPOINT`
 
 
 Optional environment variables:
+
 * `MU_APPLICATION_GRAPH`
 * `MU_SPARQL_ENDPOINT`
 * `MU_SPARQL_UPDATEPOINT`

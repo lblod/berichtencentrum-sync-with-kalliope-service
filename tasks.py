@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, timedelta
+from pytz import timezone
 import helpers
 from helpers import log
 from .sudo_query_helpers import query, update
@@ -17,8 +18,10 @@ from .queries import construct_select_bijlagen_query
 from .queries import construct_bericht_sent_query
 from .queries import construct_update_last_bericht_query_part1
 from .queries import construct_update_last_bericht_query_part2
+from .queries import construct_select_original_bericht_query
 from .kalliope_adapter import BIJLAGEN_FOLDER_PATH
 
+TIMEZONE = timezone('Europe/Brussels')
 ABB_URI = "http://data.lblod.info/id/bestuurseenheden/141d9d6b-54af-4d17-b313-8d1c30bc3f5b"
 PUBLIC_GRAPH = "http://mu.semte.ch/graphs/public"
 PS_UIT_PATH = os.environ.get('KALLIOPE_PS_UIT_ENDPOINT')
@@ -34,12 +37,12 @@ def process_berichten_in():
 
     :returns:
     """
-    vanaf = datetime.utcnow() - timedelta(days=MAX_MESSAGE_AGE)
-    tot = datetime.utcnow()
-    log("Pulling poststukken from kalliope API for period {} - {}".format(vanaf.isoformat()+'Z', tot.isoformat()+'Z'))
+    vanaf = datetime.now(tz=TIMEZONE) - timedelta(days=MAX_MESSAGE_AGE)
+    tot = datetime.now(tz=TIMEZONE)
+    log("Pulling poststukken from kalliope API for period {} - {}".format(vanaf.isoformat(), tot.isoformat()))
     api_query_params = {
-        'vanaf': vanaf.isoformat()+'Z',
-        'tot': tot.isoformat()+'Z',
+        'vanaf': vanaf.isoformat(),
+        'tot': tot.isoformat(),
         'dossierTypes': "https://kalliope.abb.vlaanderen.be/ld/algemeen/dossierType/klacht",
         'aantal': str(1000)
     }
@@ -114,10 +117,13 @@ def process_berichten_out():
             'verzonden': bericht_res['verzonden']['value'],
             'inhoud': bericht_res['inhoud']['value'],
         }
+        q_origineel = construct_select_original_bericht_query(bericht['uri'])
+        origineel_bericht_uri = query(q_origineel)['results']['bindings'][0]['origineelbericht']['value']
         conversatie = {
             'dossiernummer': bericht_res['dossiernummer']['value'],
             'dossierUri': bericht_res['dossieruri']['value'], # TEMP: As kalliope identifier for Dossier while dossiernummer doesn't exist
-            'betreft': bericht_res['betreft']['value']
+            'betreft': bericht_res['betreft']['value'],
+            'origineelBerichtUri': origineel_bericht_uri
         }
         q_bijlagen = construct_select_bijlagen_query(PUBLIC_GRAPH, bericht['uri']) # TEMP: bijlage in public graph
         bijlagen = query(q_bijlagen)['results']['bindings']
@@ -133,7 +139,7 @@ def process_berichten_out():
         log("Posting bericht <{}>. Payload: {}".format(bericht['uri'], poststuk_in))
         post_result = post_kalliope_poststuk_in(PS_IN_PATH, API_AUTH, poststuk_in)
         if post_result:
-            ontvangen = datetime.utcnow().isoformat()+'Z' # We consider the moment when the api-call succeeded the 'ontvangen'-time
+            ontvangen = datetime.now(tz=TIMEZONE).isoformat() # We consider the moment when the api-call succeeded the 'ontvangen'-time
             q_sent = construct_bericht_sent_query(bericht['uri'], ontvangen)
             update(q_sent)
             log("successfully sent bericht {} with {} bijlagen to Kalliope".format(bericht['uri'], len(bijlagen)))
