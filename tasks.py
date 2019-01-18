@@ -18,6 +18,7 @@ from .queries import construct_select_bijlagen_query
 from .queries import construct_bericht_sent_query
 from .queries import construct_update_last_bericht_query_part1
 from .queries import construct_update_last_bericht_query_part2
+from .queries import construct_select_original_bericht_query
 from .kalliope_adapter import BIJLAGEN_FOLDER_PATH
 
 TIMEZONE = timezone('Europe/Brussels')
@@ -116,10 +117,13 @@ def process_berichten_out():
             'verzonden': bericht_res['verzonden']['value'],
             'inhoud': bericht_res['inhoud']['value'],
         }
+        q_origineel = construct_select_original_bericht_query(bericht['uri'])
+        origineel_bericht_uri = query(q_origineel)['results']['bindings'][0]['origineelbericht']['value']
         conversatie = {
             'dossiernummer': bericht_res['dossiernummer']['value'],
             'dossierUri': bericht_res['dossieruri']['value'], # TEMP: As kalliope identifier for Dossier while dossiernummer doesn't exist
-            'betreft': bericht_res['betreft']['value']
+            'betreft': bericht_res['betreft']['value'],
+            'origineelBerichtUri': origineel_bericht_uri
         }
         q_bijlagen = construct_select_bijlagen_query(PUBLIC_GRAPH, bericht['uri']) # TEMP: bijlage in public graph
         bijlagen = query(q_bijlagen)['results']['bindings']

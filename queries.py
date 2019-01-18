@@ -325,3 +325,36 @@ def construct_bericht_sent_query(bericht_uri, verzonden):
         }}
         """.format(bericht_uri, verzonden)
     return q
+
+def construct_select_original_bericht_query(bericht_uri):
+    """
+    Construct a SPARQL query for selecting the first message in a conversation
+
+    :returns: string containing SPARQL query
+    """
+    q = """
+        PREFIX schema: <http://schema.org/>
+        PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+
+        SELECT ?origineelbericht WHERE {{
+            GRAPH ?g {{
+                ?conversation a schema:Conversation;
+                    schema:hasPart ?origineelbericht;
+                    schema:hasPart <{0}>.
+            }}
+            {{
+                SELECT (?message AS ?origineelbericht) WHERE {{
+                    GRAPH ?g {{
+                        ?conversation a schema:Conversation;
+                            schema:hasPart ?message.
+                        ?message schema:dateSent ?dateSent.
+                        FILTER NOT EXISTS {{
+                            ?conversation schema:hasPart/schema:dateSent ?otherDateSent.
+                            FILTER( ?dateSent > ?otherDateSent )
+                        }}
+                    }}
+                }}
+            }}
+        }}
+        """.format(bericht_uri)
+    return q

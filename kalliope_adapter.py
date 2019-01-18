@@ -160,6 +160,7 @@ def construct_kalliope_poststuk_in(conversatie, bericht):
           'poststukInUri': bericht['uri'],
           'afzenderUri': bericht['van'],
           'dossierUri': conversatie['dossierUri'], # NOTE: optional # TEMP: As kalliope identifier for Dossier while dossiernummer doesn't exist
+          'origineelBerichtUri': conversatie['origineelBerichtUri'], # NOTE: optional # TEMP: As kalliope identifier for Dossier while dossiernummer doesn't exist
           'betreft': conversatie['betreft'], # NOTE: Is always the same across the whole conversation for what we are concerned 
           # 'origineelBerichtUri': conversatie['berichten'][0]['uri'], # NOTE: optional
           'inhoud': bericht['inhoud'],
