@@ -1,11 +1,13 @@
 #!/usr/bin/python3
 from datetime import datetime
+from pytz import timezone
 import re
 import os
 import requests
 import magic
 import helpers, escape_helpers
 
+TIMEZONE = timezone('Europe/Brussels')
 ABB_URI = "http://data.lblod.info/id/bestuurseenheden/141d9d6b-54af-4d17-b313-8d1c30bc3f5b"
 BIJLAGEN_FOLDER_PATH = "/data/files"
 
@@ -74,7 +76,7 @@ def parse_kalliope_bijlage(ps_bijlage):
         'extension': os.path.splitext(ps_bijlage['naam'])[1].strip("."),
         'mimetype': m_type.from_buffer(buffer) + "; charset=" + m_encoding.from_buffer(buffer),
         'size': filesize,
-        'created': datetime.utcnow().isoformat()+'Z',
+        'created': datetime.now().isoformat(),
     }
     return bijlage
 
@@ -108,12 +110,14 @@ def parse_kalliope_poststuk_uit(ps_uit):
         naar = ps_uit['bestemmeling']['uri']
     else:
         raise ValueError("The bestemmeling has no URI. Probably this message isn't intended for Loket")
-    def isotz_repl(matchobj): # HACK: making ISO 8601 timezone offset xsd-compliant (including colon)
-        hh = matchobj.group(1)[0:2]
-        mm = matchobj.group(1)[2:4]
-        return "+{}:{}".format(hh, mm)
-    verzonden = re.sub(r'\+(\d{4})', isotz_repl, ps_uit['creatieDatum']) 
-    ontvangen = datetime.utcnow().isoformat()+'Z'
+    def pythonize_iso_timestamp(timestamp):
+        """ Convert ISO 8601 timestamp to python .fromisoformat()-compliant format """
+        def repl(matchobj):
+            hh, mm = matchobj.group(1)[0:2], matchobj.group(1)[2:4]
+            return "+{}:{}".format(hh, mm)
+        return re.sub(r'\+(\d{4})', repl, timestamp)
+    verzonden =  datetime.fromisoformat(pythonize_iso_timestamp(ps_uit['creatieDatum'])).astimezone(TIMEZONE).isoformat()
+    ontvangen = datetime.now(tz=TIMEZONE).isoformat()
     inhoud = ps_uit['inhoud']
     dossiernummer = ps_uit['dossier']['naam'] # NOTE: Will become ps_uit['dossierNummer'] in future API version
     betreft = ps_uit['betreft']
