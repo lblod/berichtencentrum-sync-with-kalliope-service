@@ -151,21 +151,22 @@ def construct_kalliope_poststuk_in(conversatie, bericht):
     """
     files = []
     for bijlage in bericht['bijlagen']:
-        name = bijlage['name']
         filepath = os.path.join(BIJLAGEN_FOLDER_PATH, bijlage['filepath'])
         buffer = open(filepath, 'rb')
-        files.append(('files', (name, buffer))) # http://docs.python-requests.org/en/master/user/advanced/#post-multiple-multipart-encoded-files
+        files.append(('files', (bijlage['name'], buffer, bijlage['type']))) # http://docs.python-requests.org/en/master/user/advanced/#post-multiple-multipart-encoded-files
 
-    poststuk_in = {
-          'poststukInUri': bericht['uri'],
-          'afzenderUri': bericht['van'],
-          'dossierUri': conversatie['dossierUri'], # NOTE: optional # TEMP: As kalliope identifier for Dossier while dossiernummer doesn't exist
-          'origineelBerichtUri': conversatie['origineelBerichtUri'], # NOTE: optional # TEMP: As kalliope identifier for Dossier while dossiernummer doesn't exist
-          'betreft': conversatie['betreft'], # NOTE: Is always the same across the whole conversation for what we are concerned 
-          # 'origineelBerichtUri': conversatie['berichten'][0]['uri'], # NOTE: optional
-          'inhoud': bericht['inhoud'],
-          'files': files,
-    }
+    inhoud = bericht['inhoud'] if bericht['inhoud'] else 'leeg' # NOTE: API doesn't accept bericht with empty inhoud
+    # NOTE: All parameters are sent as file-like objects because the API expects a 'Content-Type'-header for each parameter
+    poststuk_in = [
+        ('uri', (None, bericht['uri'], 'text/plain')),
+        ('afzender_uri', (None, bericht['van'], 'text/plain')),
+        ('dossier_uri', (None, conversatie['dossierUri'], 'text/plain')), # NOTE: optional # TEMP: As kalliope identifier for Dossier while dossiernummer doesn't exist
+        ('origineel_bericht_uri', (None, conversatie['origineelBerichtUri'], 'text/plain')), # NOTE: optional # TEMP: As kalliope identifier for Dossier while dossiernummer doesn't exist
+        ('betreft', (None, conversatie['betreft'], 'text/plain')), # NOTE: Is always the same across the whole conversation for what we are concerned 
+        # 'origineelBerichtUri': conversatie['berichten'][0]['uri'], # NOTE: optional
+        ('inhoud', (None, inhoud, 'text/plain')),
+    ]
+    poststuk_in.extend(files)
     return poststuk_in
 
 def post_kalliope_poststuk_in(path, auth, params):
@@ -175,14 +176,9 @@ def post_kalliope_poststuk_in(path, auth, params):
     :param ?:
     :returns:
     """
-    if params['files']:
-        files = params.pop('files')
-        r = requests.post(path, files=files, data=params, auth=auth, verify=False) # WARNING: Certificate validity isn't verified atm
-        r.connection.close()
-    else:
-        r = requests.post(path, data=params, auth=auth, verify=False) # WARNING: Certificate validity isn't verified atm
-        r.connection.close()
+    r = requests.post(path, files=params, auth=auth, verify=False) # WARNING: Certificate validity isn't verified atm
+    r.connection.close()
     if r.status_code == requests.codes.ok:
         return r.json()
     else:
-        raise requests.exceptions.HTTPError('Failed to post Kalliope poststuk-in (statuscode {})'.format(r.status_code))
+        raise requests.exceptions.HTTPError('Failed to post Kalliope poststuk-in (statuscode {}): {}'.format(r.status_code, r.json()))

@@ -286,15 +286,17 @@ def construct_select_bijlagen_query(bijlagen_graph_uri, bericht_uri):
         PREFIX schema: <http://schema.org/>
         PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
         PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
+        PREFIX dct: <http://purl.org/dc/terms/>
 
-        SELECT ?bijlagenaam ?file WHERE {{
+        SELECT ?bijlagenaam ?file ?type WHERE {{
             GRAPH ?g {{
                 <{1}> a schema:Message;
                     nie:hasPart ?bijlage.
             }}
             GRAPH <{0}> {{
                 ?bijlage a nfo:FileDataObject;
-                    nfo:fileName ?bijlagenaam.
+                    nfo:fileName ?bijlagenaam;
+                    dct:format ?type.
                 ?file nie:dataSource ?bijlage.
             }}
         }}
