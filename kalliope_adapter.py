@@ -118,7 +118,7 @@ def parse_kalliope_poststuk_uit(ps_uit):
         return re.sub(r'\+(\d{4})', repl, timestamp)
     verzonden =  datetime.fromisoformat(pythonize_iso_timestamp(ps_uit['creatieDatum'])).astimezone(TIMEZONE).isoformat()
     ontvangen = datetime.now(tz=TIMEZONE).isoformat()
-    inhoud = ps_uit['inhoud']
+    inhoud = ps_uit['inhoud'] if ps_uit['inhoud'] else ""
     dossiernummer = ps_uit['dossier']['naam'] # NOTE: Will become ps_uit['dossierNummer'] in future API version
     betreft = ps_uit['betreft']
     type_communicatie = ps_uit['typeCommunicatie']
@@ -155,7 +155,6 @@ def construct_kalliope_poststuk_in(conversatie, bericht):
         buffer = open(filepath, 'rb')
         files.append(('files', (bijlage['name'], buffer, bijlage['type']))) # http://docs.python-requests.org/en/master/user/advanced/#post-multiple-multipart-encoded-files
 
-    inhoud = bericht['inhoud'] if bericht['inhoud'] else 'leeg' # NOTE: API doesn't accept bericht with empty inhoud
     # NOTE: All parameters are sent as file-like objects because the API expects a 'Content-Type'-header for each parameter
     poststuk_in = [
         ('uri', (None, bericht['uri'], 'text/plain')),
@@ -164,7 +163,7 @@ def construct_kalliope_poststuk_in(conversatie, bericht):
         ('origineel_bericht_uri', (None, conversatie['origineelBerichtUri'], 'text/plain')), # NOTE: optional # TEMP: As kalliope identifier for Dossier while dossiernummer doesn't exist
         ('betreft', (None, conversatie['betreft'], 'text/plain')), # NOTE: Is always the same across the whole conversation for what we are concerned 
         # 'origineelBerichtUri': conversatie['berichten'][0]['uri'], # NOTE: optional
-        ('inhoud', (None, inhoud, 'text/plain')),
+        ('inhoud', (None, bericht['inhoud'], 'text/plain')), # NOTE: optional
     ]
     poststuk_in.extend(files)
     return poststuk_in
