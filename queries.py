@@ -303,7 +303,7 @@ def construct_select_bijlagen_query(bijlagen_graph_uri, bericht_uri):
         """.format(bijlagen_graph_uri, bericht_uri)
     return q
 
-def construct_bericht_sent_query(bericht_uri, verzonden):
+def construct_bericht_sent_query(graph_uri, bericht_uri, verzonden):
     """
     Construct a SPARQL query for marking a bericht as received by the other party.
 
@@ -316,16 +316,16 @@ def construct_bericht_sent_query(bericht_uri, verzonden):
         PREFIX schema: <http://schema.org/>
 
         INSERT {{
-            GRAPH ?g {{
-                <{0}> schema:dateReceived "{1}"^^xsd:dateTime.
+            GRAPH <{0}> {{
+                <{1}> schema:dateReceived "{2}"^^xsd:dateTime.
             }}
         }}
         WHERE {{
-            GRAPH ?g {{
-                <{0}> a schema:Message.
+            GRAPH <{0}> {{
+                <{1}> a schema:Message.
             }}
         }}
-        """.format(bericht_uri, verzonden)
+        """.format(graph_uri, bericht_uri, verzonden)
     return q
 
 def construct_select_original_bericht_query(bericht_uri):

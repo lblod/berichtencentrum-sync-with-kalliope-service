@@ -140,8 +140,10 @@ def process_berichten_out():
         log("Posting bericht <{}>. Payload: {}".format(bericht['uri'], poststuk_in))
         post_result = post_kalliope_poststuk_in(PS_IN_PATH, API_AUTH, poststuk_in)
         if post_result:
-            ontvangen = datetime.now(tz=TIMEZONE).isoformat() # We consider the moment when the api-call succeeded the 'ontvangen'-time
-            q_sent = construct_bericht_sent_query(bericht['uri'], ontvangen)
+            ontvangen = datetime.now(tz=TIMEZONE).replace(microsecond=0).isoformat() # We consider the moment when the api-call succeeded the 'ontvangen'-time
+            bestuurseenheid_uuid = bericht['van'].split('/')[-1] # NOTE: Add graph as argument to query because Virtuoso
+            graph = "http://mu.semte.ch/graphs/organizations/{}/LoketLB-berichtenGebruiker".format(bestuurseenheid_uuid)
+            q_sent = construct_bericht_sent_query(graph, bericht['uri'], ontvangen)
             update(q_sent)
             log("successfully sent bericht {} with {} bijlagen to Kalliope".format(bericht['uri'], len(bijlagen)))
     pass
