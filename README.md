@@ -1,3 +1,22 @@
+# berichtencentrum-sync-with-kalliope-service
+
+## Installation
+To add the service to your stack, add the following snippet to `docker-compose.yml`:
+```
+    image: lblod/berichtencentrum-sync-with-kalliope-service:latest
+    environment:
+      KALLIOPE_API_USERNAME: "***"
+      KALLIOPE_API_PASSWORD: "***"
+      KALLIOPE_PS_UIT_ENDPOINT: "https://kalliope-svc-test.abb.vlaanderen.be/glapi/poststuk-uit"
+      KALLIOPE_PS_IN_ENDPOINT: "https://kalliope-svc-test.abb.vlaanderen.be/glapi/poststuk-in"
+      RUN_INTERVAL: 5
+    volumes:
+      - ./data/files:/data/files
+```
+
+## Configuration
+
+### Environment variables
 
 Required environment variables:
 

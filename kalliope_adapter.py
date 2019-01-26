@@ -39,7 +39,13 @@ def new_bericht(verzonden,
     bericht['inhoud'] = inhoud
     return bericht
 
-def get_kalliope_bijlage(path, auth):
+def open_kalliope_api_session(verify=False): # WARNING: Certificate validity isn't verified atm
+    s = requests.Session()
+    s.auth = (os.environ.get('KALLIOPE_API_USERNAME'), os.environ.get('KALLIOPE_API_PASSWORD'))
+    s.verify = verify
+    return s
+
+def get_kalliope_bijlage(path, session):
     """
     Perform the API-call to get a poststuk-uit bijlage.
 
@@ -48,22 +54,20 @@ def get_kalliope_bijlage(path, auth):
     :param url_params: dict of url parameters for the api call
     :returns: buffer with bijlage
     """
-    r = requests.get(path, auth=auth, verify=False) # WARNING: Certificate validity isn't verified atm
-    r.connection.close()
+    r = session.get(path)
     if r.status_code == requests.codes.ok:
         return r.content
     else:
         raise requests.exceptions.HTTPError('Failed to get Kalliope poststuk bijlage (statuscode {})'.format(r.status_code))
     
-def parse_kalliope_bijlage(ps_bijlage):
+def parse_kalliope_bijlage(ps_bijlage, session):
     """
     Parse the mijlage response from the Kalliope API into our bijlage format
 
     :param bijlage: The bijlage deserialized JSON
     :returns: a dict of bijlage properties including the binary buffer
     """
-    api_auth = (os.environ.get('KALLIOPE_API_USERNAME'), os.environ.get('KALLIOPE_API_PASSWORD'))
-    buffer = get_kalliope_bijlage(ps_bijlage['url'], api_auth)
+    buffer = get_kalliope_bijlage(ps_bijlage['url'], session)
     m_type = magic.Magic(mime=True)
     m_encoding = magic.Magic(mime_encoding=True) #mimeype and encoding seperate because of library quirk
     filesize = len(buffer)
@@ -80,7 +84,7 @@ def parse_kalliope_bijlage(ps_bijlage):
     }
     return bijlage
 
-def get_kalliope_poststukken_uit(path, auth, url_params):
+def get_kalliope_poststukken_uit(path, session, url_params):
     """
     Perform the API-call to get all poststukken-uit that are ready to be processed.
 
@@ -89,8 +93,7 @@ def get_kalliope_poststukken_uit(path, auth, url_params):
     :param url_params: dict of url parameters for the api call
     :returns: tuple of poststukken
     """
-    r = requests.get(path, auth=auth, params=url_params, verify=False) # WARNING: Certificate validity isn't verified atm
-    r.connection.close()
+    r = session.get(path, params=url_params)
     if r.status_code == requests.codes.ok:
         poststukken = r.json()['poststukken']
         # TODO: paged response 
@@ -98,7 +101,7 @@ def get_kalliope_poststukken_uit(path, auth, url_params):
     else:
         raise requests.exceptions.HTTPError('Failed to get Kalliope poststuk uit (statuscode {})'.format(r.status_code))
     
-def parse_kalliope_poststuk_uit(ps_uit):
+def parse_kalliope_poststuk_uit(ps_uit, session):
     """
     Parse the response from the Kalliope API into our bericht format
 
@@ -118,7 +121,7 @@ def parse_kalliope_poststuk_uit(ps_uit):
         return re.sub(r'\+(\d{4})', repl, timestamp)
     verzonden =  datetime.fromisoformat(pythonize_iso_timestamp(ps_uit['creatieDatum'])).astimezone(TIMEZONE).isoformat()
     ontvangen = datetime.now(tz=TIMEZONE).isoformat()
-    inhoud = ps_uit['inhoud']
+    inhoud = ps_uit['inhoud'] if ps_uit['inhoud'] else ""
     dossiernummer = ps_uit['dossier']['naam'] # NOTE: Will become ps_uit['dossierNummer'] in future API version
     betreft = ps_uit['betreft']
     type_communicatie = ps_uit['typeCommunicatie']
@@ -135,7 +138,7 @@ def parse_kalliope_poststuk_uit(ps_uit):
     bericht['bijlagen'] = []
     for ps_bijlage in ps_uit['bijlages']:
         try:
-            bijlage = parse_kalliope_bijlage(ps_bijlage)
+            bijlage = parse_kalliope_bijlage(ps_bijlage, session)
             bericht['bijlagen'].append(bijlage)
         except Exception as e:
             helpers.log("Something went wrong while parsing a bijlage for bericht {} sent @ {}".format(conversatie['betreft'], bericht['verzonden'])) 
@@ -155,7 +158,6 @@ def construct_kalliope_poststuk_in(conversatie, bericht):
         buffer = open(filepath, 'rb')
         files.append(('files', (bijlage['name'], buffer, bijlage['type']))) # http://docs.python-requests.org/en/master/user/advanced/#post-multiple-multipart-encoded-files
 
-    inhoud = bericht['inhoud'] if bericht['inhoud'] else 'leeg' # NOTE: API doesn't accept bericht with empty inhoud
     # NOTE: All parameters are sent as file-like objects because the API expects a 'Content-Type'-header for each parameter
     poststuk_in = [
         ('uri', (None, bericht['uri'], 'text/plain')),
@@ -164,20 +166,19 @@ def construct_kalliope_poststuk_in(conversatie, bericht):
         ('origineel_bericht_uri', (None, conversatie['origineelBerichtUri'], 'text/plain')), # NOTE: optional # TEMP: As kalliope identifier for Dossier while dossiernummer doesn't exist
         ('betreft', (None, conversatie['betreft'], 'text/plain')), # NOTE: Is always the same across the whole conversation for what we are concerned 
         # 'origineelBerichtUri': conversatie['berichten'][0]['uri'], # NOTE: optional
-        ('inhoud', (None, inhoud, 'text/plain')),
+        ('inhoud', (None, bericht['inhoud'], 'text/plain')), # NOTE: optional
     ]
     poststuk_in.extend(files)
     return poststuk_in
 
-def post_kalliope_poststuk_in(path, auth, params):
+def post_kalliope_poststuk_in(path, session, params):
     """
     Perform the API-call to a new poststuk to Kalliope.
 
     :param ?:
     :returns:
     """
-    r = requests.post(path, files=params, auth=auth, verify=False) # WARNING: Certificate validity isn't verified atm
-    r.connection.close()
+    r = session.post(path, files=params)
     if r.status_code == requests.codes.ok:
         return r.json()
     else:
