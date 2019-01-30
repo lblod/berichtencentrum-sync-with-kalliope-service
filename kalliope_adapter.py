@@ -80,7 +80,7 @@ def parse_kalliope_bijlage(ps_bijlage, session):
         'extension': os.path.splitext(ps_bijlage['naam'])[1].strip("."),
         'mimetype': m_type.from_buffer(buffer) + "; charset=" + m_encoding.from_buffer(buffer),
         'size': filesize,
-        'created': datetime.now().isoformat(),
+        'created': datetime.now().replace(microsecond=0).isoformat(),
     }
     return bijlage
 
@@ -120,7 +120,7 @@ def parse_kalliope_poststuk_uit(ps_uit, session):
             return "+{}:{}".format(hh, mm)
         return re.sub(r'\+(\d{4})', repl, timestamp)
     verzonden =  datetime.fromisoformat(pythonize_iso_timestamp(ps_uit['creatieDatum'])).astimezone(TIMEZONE).isoformat()
-    ontvangen = datetime.now(tz=TIMEZONE).isoformat()
+    ontvangen = datetime.now(tz=TIMEZONE).replace(microsecond=0).isoformat()
     inhoud = ps_uit['inhoud'] if ps_uit['inhoud'] else ""
     dossiernummer = ps_uit['dossier']['naam'] # NOTE: Will become ps_uit['dossierNummer'] in future API version
     betreft = ps_uit['betreft']
