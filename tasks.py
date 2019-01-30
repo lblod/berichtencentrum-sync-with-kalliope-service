@@ -41,7 +41,7 @@ def process_berichten_in():
     api_query_params = {
         'vanaf': vanaf.isoformat(),
         'tot': tot.isoformat(),
-        'dossierTypes': "https://kalliope.abb.vlaanderen.be/ld/algemeen/dossierType/klacht",
+        # 'dossierTypes': "https://kalliope.abb.vlaanderen.be/ld/algemeen/dossierType/klacht",
         'aantal': str(1000)
     }
     with open_kalliope_api_session(verify=False) as session: # WARNING: Certificate validity isn't verified atm
