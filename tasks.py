@@ -78,16 +78,23 @@ def process_berichten_in():
                         f.write(bijlage['buffer'])
                         q_bijlage = construct_insert_bijlage_query(graph, PUBLIC_GRAPH, bericht['uri'], bijlage, file) # TEMP: bijlage in public graph
                         result = update(q_bijlage)
-                q2 = construct_conversatie_exists_query(graph, conversatie['dossiernummer'])
-                query_result2 = query(q2)['results']['bindings']
-                if query_result2: #conversatie to which the bericht is linked, exists.
-                    conversatie_uri = query_result2[0]['conversatie']['value']
-                    log("Existing conversation '{}' inserting new message sent @ {}".format(conversatie['betreft'], bericht['verzonden']))
-                    q_bericht = construct_insert_bericht_query(graph, bericht, conversatie_uri)
-                    result = update(q_bericht)
-                    save_bijlagen(bericht['bijlagen'])
-                else: #conversatie to which the bericht is linked does not exist yet.
-                    log("Non-existing conversation '{}' inserting new conversation + message sent @ {}".format(conversatie['betreft'], bericht['verzonden']))
+                if conversatie['dossiernummer']:
+                    q2 = construct_conversatie_exists_query(graph, conversatie['dossiernummer'])
+                    query_result2 = query(q2)['results']['bindings']
+                    if query_result2: #conversatie to which the bericht is linked, exists.
+                        conversatie_uri = query_result2[0]['conversatie']['value']
+                        log("Existing conversation '{}' inserting new message sent @ {}".format(conversatie['betreft'], bericht['verzonden']))
+                        q_bericht = construct_insert_bericht_query(graph, bericht, conversatie_uri)
+                        result = update(q_bericht)
+                        save_bijlagen(bericht['bijlagen'])
+                    else: #conversatie to which the bericht is linked does not exist yet.
+                        log("Non-existing conversation '{}' inserting new conversation + message sent @ {}".format(conversatie['betreft'], bericht['verzonden']))
+                        conversatie['uri'] = "http://data.lblod.info/id/conversaties/{}".format(conversatie['uuid'])
+                        q_conversatie = construct_insert_conversatie_query(graph, conversatie, bericht)
+                        result = update(q_conversatie)
+                        save_bijlagen(bericht['bijlagen'])
+                else: # TEMP: Message without linked dossier
+                    log("Non-existing conversation '{}' inserting new conversation + message sent @ {} (No dossier linked to message!)".format(conversatie['betreft'], bericht['verzonden']))
                     conversatie['uri'] = "http://data.lblod.info/id/conversaties/{}".format(conversatie['uuid'])
                     q_conversatie = construct_insert_conversatie_query(graph, conversatie, bericht)
                     result = update(q_conversatie)
@@ -122,11 +129,13 @@ def process_berichten_out():
             q_origineel = construct_select_original_bericht_query(bericht['uri'])
             origineel_bericht_uri = query(q_origineel)['results']['bindings'][0]['origineelbericht']['value']
             conversatie = {
-                'dossiernummer': bericht_res['dossiernummer']['value'],
-                'dossierUri': bericht_res['dossieruri']['value'], # TEMP: As kalliope identifier for Dossier while dossiernummer doesn't exist
                 'betreft': bericht_res['betreft']['value'],
                 'origineelBerichtUri': origineel_bericht_uri
             }
+            if 'dossiernummer' in bericht_res:
+                conversatie['dossiernummer'] = bericht_res['dossiernummer']['value']
+            if 'dossieruri' in bericht_res:
+                conversatie['dossierUri'] = bericht_res['dossieruri']['value'] # TEMP: As kalliope identifier for Dossier while dossiernummer doesn't exist
             q_bijlagen = construct_select_bijlagen_query(PUBLIC_GRAPH, bericht['uri']) # TEMP: bijlage in public graph
             bijlagen = query(q_bijlagen)['results']['bindings']
             bericht['bijlagen'] = []
