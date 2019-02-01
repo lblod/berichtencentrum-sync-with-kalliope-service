@@ -40,8 +40,10 @@ def construct_bericht_exists_query(graph_uri, bericht_uri):
             GRAPH <{0}> {{
                 <{1}> a schema:Message.
                 ?conversatie a schema:Conversation;
-                    schema:hasPart <{1}>;
-                    schema:identifier ?dossiernummer.
+                    schema:hasPart <{1}>.
+                OPTIONAL {{
+                    ?conversatie schema:identifier ?dossiernummer.
+                }}
             }}
         }}
         """.format(graph_uri, bericht_uri)
@@ -57,7 +59,8 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
     :returns: string containing SPARQL query
     """
     conversatie = copy.deepcopy(conversatie) # For not modifying the pass-by-name original
-    conversatie['dossiernummer'] = escape_helpers.sparql_escape_string(conversatie['dossiernummer'])
+    if conversatie["dossiernummer"]:
+        conversatie['dossiernummer'] = escape_helpers.sparql_escape_string(conversatie['dossiernummer'])
     conversatie['betreft'] = escape_helpers.sparql_escape_string(conversatie['betreft'])
     conversatie['type_communicatie'] = escape_helpers.sparql_escape_string(conversatie['type_communicatie'])
     bericht = copy.deepcopy(bericht) # For not modifying the pass-by-name original
@@ -70,8 +73,16 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
             GRAPH <{0}> {{
                 <{1[uri]}> a schema:Conversation;
                     <http://mu.semte.ch/vocabularies/core/uuid> "{1[uuid]}";
-                    schema:identifier {1[dossiernummer]};
-                    ext:dossierUri "{1[dossierUri]}";
+        """
+    if conversatie["dossiernummer"]:
+        q += """
+                        schema:identifier {1[dossiernummer]};
+             """
+    if conversatie["dossierUri"]:
+        q += """    
+                        ext:dossierUri "{1[dossierUri]}";
+             """
+    q += """
                     schema:about {1[betreft]};
                     <http://purl.org/dc/terms/type> {1[type_communicatie]};
                     schema:processingTime "{1[reactietermijn]}";
@@ -86,7 +97,8 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
                     schema:recipient <{2[naar]}>.
             }}
         }}
-        """.format(graph_uri, conversatie, bericht)
+        """
+    q = q.format(graph_uri, conversatie, bericht)
     return q
 
 def construct_insert_bericht_query(graph_uri, bericht, conversatie_uri):
@@ -258,8 +270,6 @@ def construct_unsent_berichten_query(naar_uri):
         WHERE {{
             GRAPH ?g {{
                 ?conversatie a schema:Conversation;
-                    ext:dossierUri ?dossieruri;
-                    schema:identifier ?dossiernummer;
                     schema:about ?betreft;
                     schema:hasPart ?bericht.
                 ?bericht a schema:Message;
@@ -269,6 +279,10 @@ def construct_unsent_berichten_query(naar_uri):
                     schema:sender ?van;
                     schema:recipient <{0}>.
                 FILTER NOT EXISTS {{ ?bericht schema:dateReceived ?ontvangen. }}
+                OPTIONAL {{
+                    ?conversatie ext:dossierUri ?dossieruri;
+                        schema:identifier ?dossiernummer.
+                }}
             }}
         }}
         """.format(naar_uri)
