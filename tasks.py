@@ -33,7 +33,7 @@ def process_berichten_in():
     """
     Fetch Berichten from the Kalliope-api, parse them, and if needed, import them into the triple store.
 
-    :returns:
+    :returns: None
     """
     vanaf = datetime.now(tz=TIMEZONE) - timedelta(days=MAX_MESSAGE_AGE)
     tot = datetime.now(tz=TIMEZONE)
@@ -101,10 +101,9 @@ def process_berichten_in():
     
 def process_berichten_out():
     """
-    Fetch Berichten that have to be sent from the triple store, convert them to the correct format for the Kalliope API, post them and finally mark them as sent.
+    Fetch Berichten that have to be sent to Kalliope from the triple store, convert them to the correct format for the Kalliope API, post them and finally mark them as sent.
 
-    :param ?:
-    :returns:
+    :returns: None
     """
     q = construct_unsent_berichten_query(ABB_URI)
     berichten = query(q)['results']['bindings']

@@ -5,7 +5,7 @@ import re
 import os
 import requests
 import magic
-import helpers, escape_helpers
+import helpers
 
 TIMEZONE = timezone('Europe/Brussels')
 ABB_URI = "http://data.lblod.info/id/bestuurseenheden/141d9d6b-54af-4d17-b313-8d1c30bc3f5b"
@@ -49,9 +49,8 @@ def get_kalliope_bijlage(path, session):
     """
     Perform the API-call to get a poststuk-uit bijlage.
 
-    :param path: url of the api endpoint
-    :param auth: tuple of the form ('user', 'pass')
-    :param url_params: dict of url parameters for the api call
+    :param path: url of the api endpoint that we want to fetch
+    :param session: a Kalliope session, as returned by open_kalliope_api_session()
     :returns: buffer with bijlage
     """
     r = session.get(path)
@@ -62,9 +61,10 @@ def get_kalliope_bijlage(path, session):
     
 def parse_kalliope_bijlage(ps_bijlage, session):
     """
-    Parse the mijlage response from the Kalliope API into our bijlage format
+    Parse the bijlage response from the Kalliope API into our bijlage format
 
     :param bijlage: The bijlage deserialized JSON
+    :param session: a Kalliope session, as returned by open_kalliope_api_session()
     :returns: a dict of bijlage properties including the binary buffer
     """
     buffer = get_kalliope_bijlage(ps_bijlage['url'], session)
@@ -84,16 +84,16 @@ def parse_kalliope_bijlage(ps_bijlage, session):
     }
     return bijlage
 
-def get_kalliope_poststukken_uit(path, session, url_params):
+def get_kalliope_poststukken_uit(path, session, params):
     """
     Perform the API-call to get all poststukken-uit that are ready to be processed.
 
-    :param path: url of the api endpoint
-    :param auth: tuple of the form ('user', 'pass')
+    :param path: url of the api endpoint that we want to fetch
+    :param session: a Kalliope session, as returned by open_kalliope_api_session()
     :param url_params: dict of url parameters for the api call
     :returns: tuple of poststukken
     """
-    r = session.get(path, params=url_params)
+    r = session.get(path, params=params)
     if r.status_code == requests.codes.ok:
         poststukken = r.json()['poststukken']
         # TODO: paged response 
@@ -106,6 +106,7 @@ def parse_kalliope_poststuk_uit(ps_uit, session):
     Parse the response from the Kalliope API into our bericht format
 
     :param ps_uit: The poststuk uit deserialized JSON
+    :param session: a Kalliope session, as returned by open_kalliope_api_session(), needed for fetching bijlages
     :returns: a tuple of the form (conversatie, bericht)
     """
     van = ABB_URI
@@ -149,8 +150,9 @@ def construct_kalliope_poststuk_in(conversatie, bericht):
     """
     Prepare the payload for sending messages to the Kalliope API.
 
-    :param ?:
-    :returns:
+    :param conversatie: conversatie object of the poststuk_in we want to send
+    :param bericht: bericht object of the poststuk_in we want to send
+    :returns: poststuk_in parameters object as consumed by requests
     """
     files = []
     for bijlage in bericht['bijlagen']:
@@ -173,10 +175,12 @@ def construct_kalliope_poststuk_in(conversatie, bericht):
 
 def post_kalliope_poststuk_in(path, session, params):
     """
-    Perform the API-call to a new poststuk to Kalliope.
+    Perform the API-call to send a new poststuk to Kalliope.
 
-    :param ?:
-    :returns:
+    :param path: url of the api endpoint that we want to send to
+    :param session: a Kalliope session, as returned by open_kalliope_api_session()
+    :param url_params: dict of url parameters for the api call
+    :returns: response dict
     """
     r = session.post(path, files=params)
     if r.status_code == requests.codes.ok:

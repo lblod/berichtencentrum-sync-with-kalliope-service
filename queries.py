@@ -94,7 +94,7 @@ def construct_insert_bericht_query(graph_uri, bericht, conversatie_uri):
     Construct a SPARQL query for inserting a bericht and attaching it to an existing conversatie.
 
     :param graph_uri: string
-    :param bericht: dict containing escaped properties for bericht
+    :param bericht: dict containing properties for bericht
     :param conversatie_uri: string containing the uri of the conversatie that the bericht has to get attached to
     :returns: string containing SPARQL query
     """
@@ -123,9 +123,11 @@ def construct_insert_bijlage_query(bericht_graph_uri, bijlage_graph_uri, bericht
     """
     Construct a SPARQL query for inserting a bijlage and attaching it to an existing bericht.
 
-    :param graph_uri: string
-    :param bericht: dict containing escaped properties for bericht
-    :param conversatie_uri: string containing the uri of the conversatie that the bericht has to get attached to
+    :param bericht_graph_uri: string
+    :param bijlage_graph_uri: string
+    :param bericht_uri: string
+    :param bijlage: dict containing escaped properties for bijlage
+    :param file: dict containing escaped properties for file (similar to bijlage, see mu-file-service)
     :returns: string containing SPARQL query
     """
     bijlage = copy.deepcopy(bijlage) # For not modifying the pass-by-name original
@@ -170,6 +172,7 @@ def construct_insert_bijlage_query(bericht_graph_uri, bijlage_graph_uri, bericht
 def construct_update_last_bericht_query_part1():
     """
     Construct a SPARQL query for keeping the ext:lastMessage of each conversation up to date.
+    Part 1/2 (query constructed in 2 parts because Virtuoso)
 
     :returns: string containing SPARQL query
     """
@@ -208,6 +211,7 @@ def construct_update_last_bericht_query_part1():
 def construct_update_last_bericht_query_part2():
     """
     Construct a SPARQL query for keeping the ext:lastMessage of each conversation up to date.
+    Part 2/2 (query constructed in 2 parts because Virtuoso)
 
     :returns: string containing SPARQL query
     """
@@ -246,8 +250,7 @@ def construct_unsent_berichten_query(naar_uri):
     """
     Construct a SPARQL query for retrieving all messages for a given recipient that haven't been received yet by the other party.
 
-    :param graph_uri: string
-    :param naar_uri: URI of the recpient for which we want to retrieve messages that have yet to be sent.
+    :param naar_uri: URI of the recipient for which we want to retrieve messages that have yet to be sent.
     :returns: string containing SPARQL query
     """
     q = """
@@ -305,7 +308,7 @@ def construct_select_bijlagen_query(bijlagen_graph_uri, bericht_uri):
 
 def construct_bericht_sent_query(graph_uri, bericht_uri, verzonden):
     """
-    Construct a SPARQL query for marking a bericht as received by the other party.
+    Construct a SPARQL query for marking a bericht as received by the other party (and thus 'sent' by us)
 
     :param graph_uri: string
     :param bericht_uri: URI of the bericht we would like to mark as sent.
@@ -332,6 +335,7 @@ def construct_select_original_bericht_query(bericht_uri):
     """
     Construct a SPARQL query for selecting the first message in a conversation
 
+    :param bericht_uri: URI of a bericht in a conversation
     :returns: string containing SPARQL query
     """
     q = """
