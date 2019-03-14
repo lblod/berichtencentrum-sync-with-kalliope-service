@@ -132,9 +132,11 @@ def process_berichten_out():
             }
             q_origineel = construct_select_original_bericht_query(bericht['uri'])
             origineel_bericht_uri = query(q_origineel)['results']['bindings'][0]['origineelbericht']['value']
+            REPLY_SUBJECT_PREFIX = "Reactie op "
+            betreft = REPLY_SUBJECT_PREFIX + bericht_res['betreft']['value']
             conversatie = {
                 'dossiernummer': bericht_res['dossiernummer']['value'],
-                'betreft': bericht_res['betreft']['value'],
+                'betreft': betreft,
                 'origineelBerichtUri': origineel_bericht_uri
             }
             if 'dossieruri' in bericht_res:
