@@ -10,6 +10,7 @@ import helpers
 TIMEZONE = timezone('Europe/Brussels')
 ABB_URI = "http://data.lblod.info/id/bestuurseenheden/141d9d6b-54af-4d17-b313-8d1c30bc3f5b"
 BIJLAGEN_FOLDER_PATH = "/data/files"
+CERT_BUNDLE_PATH = "/etc/ssl/certs/ca-certificates.crt"
 
 def new_conversatie(dossiernummer,
                     betreft,
@@ -39,7 +40,7 @@ def new_bericht(verzonden,
     bericht['inhoud'] = inhoud
     return bericht
 
-def open_kalliope_api_session(verify=False): # WARNING: Certificate validity isn't verified atm
+def open_kalliope_api_session(verify=CERT_BUNDLE_PATH):
     s = requests.Session()
     s.auth = (os.environ.get('KALLIOPE_API_USERNAME'), os.environ.get('KALLIOPE_API_PASSWORD'))
     s.verify = verify

@@ -45,7 +45,7 @@ def process_berichten_in():
         # 'dossierTypes': "https://kalliope.abb.vlaanderen.be/ld/algemeen/dossierType/klacht",
         'aantal': str(1000)
     }
-    with open_kalliope_api_session(verify=False) as session: # WARNING: Certificate validity isn't verified atm
+    with open_kalliope_api_session() as session:
         try:
             poststukken = get_kalliope_poststukken_uit(PS_UIT_PATH, session, api_query_params)
             log('Retrieved {} poststukken uit from Kalliope'.format(len(poststukken)))
@@ -111,7 +111,7 @@ def process_berichten_out():
     log("Found {} berichten that need to be sent to the Kalliope API".format(len(berichten)))
     if len(berichten) == 0:
         return
-    with open_kalliope_api_session(verify=False) as session: # WARNING: Certificate validity isn't verified atm
+    with open_kalliope_api_session() as session:
         for bericht_res in berichten:
             bericht = {
                 'uri': bericht_res['bericht']['value'],
