@@ -59,7 +59,7 @@ def get_kalliope_bijlage(path, session):
         return r.content
     else:
         raise requests.exceptions.HTTPError('Failed to get Kalliope poststuk bijlage (statuscode {})'.format(r.status_code))
-    
+
 def parse_kalliope_bijlage(ps_bijlage, session):
     """
     Parse the bijlage response from the Kalliope API into our bijlage format
@@ -99,7 +99,8 @@ def get_kalliope_poststukken_uit(path, session, params):
         # TODO: paged response 
         return tuple(poststukken)
     else:
-        raise requests.exceptions.HTTPError('Failed to get Kalliope poststuk uit (statuscode {}): {}'.format(r.status_code, r.json()))
+        raise requests.exceptions.HTTPError('Failed to get Kalliope poststuk uit (statuscode {}): {}'.format(r.status_code,
+                                                                                                             r.json()))
     
 def parse_kalliope_poststuk_uit(ps_uit, session):
     """
@@ -121,7 +122,9 @@ def parse_kalliope_poststuk_uit(ps_uit, session):
             hh, mm = matchobj.group(1)[0:2], matchobj.group(1)[2:4]
             return "+{}:{}".format(hh, mm)
         return re.sub(r'\+(\d{4})', repl, timestamp)
-    verzonden =  datetime.fromisoformat(pythonize_iso_timestamp(ps_uit['creatieDatum'])).astimezone(TIMEZONE).replace(microsecond=0).isoformat()
+    verzonden = datetime.fromisoformat(pythonize_iso_timestamp(ps_uit['creatieDatum'])) \
+                        .astimezone(TIMEZONE).replace(microsecond=0)                    \
+                        .isoformat()
     ontvangen = datetime.now(tz=TIMEZONE).replace(microsecond=0).isoformat()
     inhoud = ps_uit['inhoud'] if ps_uit['inhoud'] else ""
     dossiernummer = ps_uit['dossierNummer']
@@ -132,18 +135,19 @@ def parse_kalliope_poststuk_uit(ps_uit, session):
     bericht = new_bericht(verzonden, ontvangen, van, naar, inhoud)
     bericht['uri'] = ps_uit['uri']
     conversatie = new_conversatie(dossiernummer,
-                        betreft,
-                        type_communicatie,
-                        reactietermijn)
-    conversatie['dossierUri'] =  ps_uit['dossier']['uri'] if ps_uit['dossier'] else None
-    
+                                  betreft,
+                                  type_communicatie,
+                                  reactietermijn)
+    conversatie['dossierUri'] = ps_uit['dossier']['uri'] if ps_uit['dossier'] else None
+
     bericht['bijlagen'] = []
     for ps_bijlage in ps_uit['bijlages']:
         try:
             bijlage = parse_kalliope_bijlage(ps_bijlage, session)
             bericht['bijlagen'].append(bijlage)
         except Exception as e:
-            helpers.log("Something went wrong while parsing a bijlage for bericht {} sent @ {}".format(conversatie['betreft'], bericht['verzonden'])) 
+            helpers.log("Something went wrong while parsing a bijlage for bericht {} sent @ {}".format(conversatie['betreft'],
+                                                                                                       bericht['verzonden'])) 
 
     return (conversatie, bericht)
 
@@ -187,4 +191,5 @@ def post_kalliope_poststuk_in(path, session, params):
     if r.status_code == requests.codes.ok:
         return r.json()
     else:
-        raise requests.exceptions.HTTPError('Failed to post Kalliope poststuk-in (statuscode {}): {}'.format(r.status_code, r.json()))
+        raise requests.exceptions.HTTPError('Failed to post Kalliope poststuk-in (statuscode {}): {}'.format(r.status_code,
+                                                                                                             r.json()))

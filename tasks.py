@@ -38,7 +38,8 @@ def process_berichten_in():
     """
     vanaf = datetime.now(tz=TIMEZONE).replace(microsecond=0) - timedelta(days=MAX_MESSAGE_AGE)
     tot = datetime.now(tz=TIMEZONE).replace(microsecond=0)
-    log("Pulling poststukken from kalliope API for period {} - {}".format(vanaf.isoformat(), tot.isoformat()))
+    log("Pulling poststukken from kalliope API for period {} - {}".format(vanaf.isoformat(),
+                                                                          tot.isoformat()))
     api_query_params = {
         'vanaf': vanaf.astimezone(tz=pytz.utc).isoformat().replace('+00:00', 'Z'), # API only supports Z-style timezone info
         'tot': tot.astimezone(tz=pytz.utc).isoformat().replace('+00:00', 'Z'),
@@ -52,19 +53,21 @@ def process_berichten_in():
         except Exception as e:
             log("Something went wrong while accessing the Kalliope API. Aborting: {}".format(e))
             return
-        
+
         for poststuk in poststukken:
             try:
                 (conversatie, bericht) = parse_kalliope_poststuk_uit(poststuk, session)
             except Exception as e:
-                log("Something went wrong parsing following poststuk uit, skipping: {}\n{}".format(poststuk, e))
+                log("Something went wrong parsing following poststuk uit, skipping: {}\n{}".format(poststuk,
+                                                                                                   e))
                 continue
             bestuurseenheid_uuid = bericht['naar'].split('/')[-1]
             graph = "http://mu.semte.ch/graphs/organizations/{}/LoketLB-berichtenGebruiker".format(bestuurseenheid_uuid)
             q = construct_bericht_exists_query(graph, bericht['uri'])
             query_result = query(q)['results']['bindings']
             if not query_result: #Bericht is not in our DB yet. We should insert it.
-                log("Bericht '{}' - {} is not in DB yet.".format(conversatie['betreft'], bericht['verzonden']))
+                log("Bericht '{}' - {} is not in DB yet.".format(conversatie['betreft'],
+                                                                 bericht['verzonden']))
                 def save_bijlagen(bijlagen):
                     for bijlage in bijlagen:
                         bijlage['uri'] = "http://mu.semte.ch/services/file-service/files/{}".format(bijlage['id'])
@@ -77,18 +80,24 @@ def process_berichten_in():
                         filepath = os.path.join(BIJLAGEN_FOLDER_PATH, file['name'])
                         f = open(filepath, 'wb')
                         f.write(bijlage['buffer'])
-                        q_bijlage = construct_insert_bijlage_query(graph, PUBLIC_GRAPH, bericht['uri'], bijlage, file) # TEMP: bijlage in public graph
+                        q_bijlage = construct_insert_bijlage_query(graph,
+                                                                   PUBLIC_GRAPH,
+                                                                   bericht['uri'],
+                                                                   bijlage,
+                                                                   file) # TEMP: bijlage in public graph
                         result = update(q_bijlage)
                 q2 = construct_conversatie_exists_query(graph, conversatie['dossiernummer'])
                 query_result2 = query(q2)['results']['bindings']
                 if query_result2: #conversatie to which the bericht is linked, exists.
                     conversatie_uri = query_result2[0]['conversatie']['value']
-                    log("Existing conversation '{}' inserting new message sent @ {}".format(conversatie['betreft'], bericht['verzonden']))
+                    log("Existing conversation '{}' inserting new message sent @ {}".format(conversatie['betreft'],
+                                                                                            bericht['verzonden']))
                     q_bericht = construct_insert_bericht_query(graph, bericht, conversatie_uri)
                     result = update(q_bericht)
                     save_bijlagen(bericht['bijlagen'])
                 else: #conversatie to which the bericht is linked does not exist yet.
-                    log("Non-existing conversation '{}' inserting new conversation + message sent @ {}".format(conversatie['betreft'], bericht['verzonden']))
+                    log("Non-existing conversation '{}' inserting new conversation + message sent @ {}".format(conversatie['betreft'],
+                                                                                                               bericht['verzonden']))
                     conversatie['uri'] = "http://data.lblod.info/id/conversaties/{}".format(conversatie['uuid'])
                     q_conversatie = construct_insert_conversatie_query(graph, conversatie, bericht)
                     result = update(q_conversatie)
@@ -97,12 +106,14 @@ def process_berichten_in():
                 update(construct_update_last_bericht_query_part1())
                 update(construct_update_last_bericht_query_part2())
             else: #bericht already exists in our DB
-                log("Bericht '{}' - {} already exists in our DB, skipping ...".format(conversatie['betreft'], bericht['verzonden']))
+                log("Bericht '{}' - {} already exists in our DB, skipping ...".format(conversatie['betreft'],
+                                                                                      bericht['verzonden']))
                 pass
-    
+
 def process_berichten_out():
     """
-    Fetch Berichten that have to be sent to Kalliope from the triple store, convert them to the correct format for the Kalliope API, post them and finally mark them as sent.
+    Fetch Berichten that have to be sent to Kalliope from the triple store,
+    convert them to the correct format for the Kalliope API, post them and finally mark them as sent.
 
     :returns: None
     """
@@ -138,7 +149,7 @@ def process_berichten_out():
                     'type': bijlage_res['type']['value'],
                 }
                 bericht['bijlagen'].append(bijlage)
-            
+
             poststuk_in = construct_kalliope_poststuk_in(conversatie, bericht)
             log("Posting bericht <{}>. Payload: {}".format(bericht['uri'], poststuk_in))
             post_result = post_kalliope_poststuk_in(PS_IN_PATH, session, poststuk_in)
@@ -148,5 +159,6 @@ def process_berichten_out():
                 graph = "http://mu.semte.ch/graphs/organizations/{}/LoketLB-berichtenGebruiker".format(bestuurseenheid_uuid)
                 q_sent = construct_bericht_sent_query(graph, bericht['uri'], ontvangen)
                 update(q_sent)
-                log("successfully sent bericht {} with {} bijlagen to Kalliope".format(bericht['uri'], len(bijlagen)))
+                log("successfully sent bericht {} with {} bijlagen to Kalliope".format(bericht['uri'],
+                                                                                       len(bijlagen)))
     pass
