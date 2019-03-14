@@ -71,7 +71,12 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
                 <{1[uri]}> a schema:Conversation;
                     <http://mu.semte.ch/vocabularies/core/uuid> "{1[uuid]}";
                     schema:identifier {1[dossiernummer]};
-                    ext:dossierUri "{1[dossierUri]}";
+     """
+    if conversatie["dossierUri"]:
+        q += """
+                        ext:dossierUri "{1[dossierUri]}";
+             """
+    q += """
                     schema:about {1[betreft]};
                     <http://purl.org/dc/terms/type> {1[type_communicatie]};
                     schema:processingTime "{1[reactietermijn]}";
@@ -86,7 +91,8 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
                     schema:recipient <{2[naar]}>.
             }}
         }}
-        """.format(graph_uri, conversatie, bericht)
+    """
+    q = q.format(graph_uri, conversatie, bericht)
     return q
 
 def construct_insert_bericht_query(graph_uri, bericht, conversatie_uri):
@@ -261,7 +267,6 @@ def construct_unsent_berichten_query(naar_uri):
         WHERE {{
             GRAPH ?g {{
                 ?conversatie a schema:Conversation;
-                    ext:dossierUri ?dossieruri;
                     schema:identifier ?dossiernummer;
                     schema:about ?betreft;
                     schema:hasPart ?bericht.
@@ -272,6 +277,9 @@ def construct_unsent_berichten_query(naar_uri):
                     schema:sender ?van;
                     schema:recipient <{0}>.
                 FILTER NOT EXISTS {{ ?bericht schema:dateReceived ?ontvangen. }}
+                OPTIONAL {{
+                    ?conversatie ext:dossierUri ?dossieruri.
+                }}
             }}
         }}
         """.format(naar_uri)

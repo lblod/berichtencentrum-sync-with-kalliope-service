@@ -69,7 +69,6 @@ def parse_kalliope_bijlage(ps_bijlage, session):
     """
     buffer = get_kalliope_bijlage(ps_bijlage['url'], session)
     m_type = magic.Magic(mime=True)
-    m_encoding = magic.Magic(mime_encoding=True) #mimeype and encoding seperate because of library quirk
     filesize = len(buffer)
     bijlage = {
         'uuid': helpers.generate_uuid(),
@@ -78,9 +77,9 @@ def parse_kalliope_bijlage(ps_bijlage, session):
         'id': ps_bijlage['url'].split('/')[-1],
         'name': ps_bijlage['naam'],
         'extension': os.path.splitext(ps_bijlage['naam'])[1].strip("."),
-        'mimetype': m_type.from_buffer(buffer) + "; charset=" + m_encoding.from_buffer(buffer),
+        'mimetype': m_type.from_buffer(buffer),
         'size': filesize,
-        'created': datetime.now().replace(microsecond=0).isoformat(),
+        'created': datetime.now(tz=TIMEZONE).replace(microsecond=0).isoformat(),
     }
     return bijlage
 
@@ -99,7 +98,7 @@ def get_kalliope_poststukken_uit(path, session, params):
         # TODO: paged response 
         return tuple(poststukken)
     else:
-        raise requests.exceptions.HTTPError('Failed to get Kalliope poststuk uit (statuscode {})'.format(r.status_code))
+        raise requests.exceptions.HTTPError('Failed to get Kalliope poststuk uit (statuscode {}): {}'.format(r.status_code, r.json()))
     
 def parse_kalliope_poststuk_uit(ps_uit, session):
     """
@@ -116,14 +115,15 @@ def parse_kalliope_poststuk_uit(ps_uit, session):
         raise ValueError("The bestemmeling has no URI. Probably this message isn't intended for Loket")
     def pythonize_iso_timestamp(timestamp):
         """ Convert ISO 8601 timestamp to python .fromisoformat()-compliant format """
+        timestamp = timestamp.replace('Z', '+00:00')
         def repl(matchobj):
             hh, mm = matchobj.group(1)[0:2], matchobj.group(1)[2:4]
             return "+{}:{}".format(hh, mm)
         return re.sub(r'\+(\d{4})', repl, timestamp)
-    verzonden =  datetime.fromisoformat(pythonize_iso_timestamp(ps_uit['creatieDatum'])).astimezone(TIMEZONE).isoformat()
+    verzonden =  datetime.fromisoformat(pythonize_iso_timestamp(ps_uit['creatieDatum'])).astimezone(TIMEZONE).replace(microsecond=0).isoformat()
     ontvangen = datetime.now(tz=TIMEZONE).replace(microsecond=0).isoformat()
     inhoud = ps_uit['inhoud'] if ps_uit['inhoud'] else ""
-    dossiernummer = ps_uit['dossier']['naam'] # NOTE: Will become ps_uit['dossierNummer'] in future API version
+    dossiernummer = ps_uit['dossierNummer']
     betreft = ps_uit['betreft']
     type_communicatie = ps_uit['typeCommunicatie']
     reactietermijn = "P30D"
@@ -134,8 +134,8 @@ def parse_kalliope_poststuk_uit(ps_uit, session):
                         betreft,
                         type_communicatie,
                         reactietermijn)
-    conversatie['dossierUri'] =  ps_uit['dossier']['uri'] # TEMP: As kalliope identifier for Dossier while dossiernummer doesn't exist
-
+    conversatie['dossierUri'] =  ps_uit['dossier']['uri'] if ps_uit['dossier'] else None
+    
     bericht['bijlagen'] = []
     for ps_bijlage in ps_uit['bijlages']:
         try:
@@ -164,12 +164,12 @@ def construct_kalliope_poststuk_in(conversatie, bericht):
     poststuk_in = [
         ('uri', (None, bericht['uri'], 'text/plain')),
         ('afzender_uri', (None, bericht['van'], 'text/plain')),
-        ('dossier_uri', (None, conversatie['dossierUri'], 'text/plain')), # NOTE: optional # TEMP: As kalliope identifier for Dossier while dossiernummer doesn't exist
-        ('origineel_bericht_uri', (None, conversatie['origineelBerichtUri'], 'text/plain')), # NOTE: optional # TEMP: As kalliope identifier for Dossier while dossiernummer doesn't exist
+        ('origineel_bericht_uri', (None, conversatie['origineelBerichtUri'], 'text/plain')), # NOTE: optional
         ('betreft', (None, conversatie['betreft'], 'text/plain')), # NOTE: Is always the same across the whole conversation for what we are concerned 
-        # 'origineelBerichtUri': conversatie['berichten'][0]['uri'], # NOTE: optional
         ('inhoud', (None, bericht['inhoud'], 'text/plain')), # NOTE: optional
     ]
+    if 'dossierUri' in conversatie:
+        poststuk_in.append(('dossier_uri', (None, conversatie['dossierUri'], 'text/plain')))
     poststuk_in.extend(files)
     return poststuk_in
 

@@ -1,6 +1,7 @@
 import os
 from datetime import datetime, timedelta
 from pytz import timezone
+import pytz
 import helpers
 from helpers import log
 from .sudo_query_helpers import query, update
@@ -35,12 +36,12 @@ def process_berichten_in():
 
     :returns: None
     """
-    vanaf = datetime.now(tz=TIMEZONE) - timedelta(days=MAX_MESSAGE_AGE)
-    tot = datetime.now(tz=TIMEZONE)
+    vanaf = datetime.now(tz=TIMEZONE).replace(microsecond=0) - timedelta(days=MAX_MESSAGE_AGE)
+    tot = datetime.now(tz=TIMEZONE).replace(microsecond=0)
     log("Pulling poststukken from kalliope API for period {} - {}".format(vanaf.isoformat(), tot.isoformat()))
     api_query_params = {
-        'vanaf': vanaf.isoformat(),
-        'tot': tot.isoformat(),
+        'vanaf': vanaf.astimezone(tz=pytz.utc).isoformat().replace('+00:00', 'Z'), # API only supports Z-style timezone info
+        'tot': tot.astimezone(tz=pytz.utc).isoformat().replace('+00:00', 'Z'),
         # 'dossierTypes': "https://kalliope.abb.vlaanderen.be/ld/algemeen/dossierType/klacht",
         'aantal': str(1000)
     }
@@ -122,10 +123,11 @@ def process_berichten_out():
             origineel_bericht_uri = query(q_origineel)['results']['bindings'][0]['origineelbericht']['value']
             conversatie = {
                 'dossiernummer': bericht_res['dossiernummer']['value'],
-                'dossierUri': bericht_res['dossieruri']['value'], # TEMP: As kalliope identifier for Dossier while dossiernummer doesn't exist
                 'betreft': bericht_res['betreft']['value'],
                 'origineelBerichtUri': origineel_bericht_uri
             }
+            if 'dossieruri' in bericht_res:
+                conversatie['dossierUri'] = bericht_res['dossieruri']['value']
             q_bijlagen = construct_select_bijlagen_query(PUBLIC_GRAPH, bericht['uri']) # TEMP: bijlage in public graph
             bijlagen = query(q_bijlagen)['results']['bindings']
             bericht['bijlagen'] = []
