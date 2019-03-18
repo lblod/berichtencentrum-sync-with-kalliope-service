@@ -42,8 +42,8 @@ def process_berichten_in():
     log("Pulling poststukken from kalliope API for period {} - {}".format(vanaf.isoformat(),
                                                                           tot.isoformat()))
     api_query_params = {
-        'vanaf': vanaf.astimezone(tz=pytz.utc).isoformat().replace('+00:00', 'Z'), # API only supports Z-style timezone info
-        'tot': tot.astimezone(tz=pytz.utc).isoformat().replace('+00:00', 'Z'),
+        'vanaf': vanaf.isoformat(),
+        'tot': tot.isoformat(),
         # 'dossierTypes': "https://kalliope.abb.vlaanderen.be/ld/algemeen/dossierType/klacht",
         'aantal': str(1000)
     }
