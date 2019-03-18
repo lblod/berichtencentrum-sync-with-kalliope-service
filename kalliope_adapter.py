@@ -139,15 +139,7 @@ def parse_kalliope_poststuk_uit(ps_uit, session):
                                   type_communicatie,
                                   reactietermijn)
     conversatie['dossierUri'] = ps_uit['dossier']['uri'] if ps_uit['dossier'] else None
-
-    bericht['bijlagen'] = []
-    for ps_bijlage in ps_uit['bijlages']:
-        try:
-            bijlage = parse_kalliope_bijlage(ps_bijlage, session)
-            bericht['bijlagen'].append(bijlage)
-        except Exception as e:
-            helpers.log("Something went wrong while parsing a bijlage for bericht {} sent @ {}".format(conversatie['betreft'],
-                                                                                                       bericht['verzonden'])) 
+    bericht['bijlagen_refs'] = ps_uit['bijlages']
 
     return (conversatie, bericht)
 

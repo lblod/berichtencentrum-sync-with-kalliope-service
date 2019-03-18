@@ -6,6 +6,7 @@ import helpers
 from helpers import log
 from .sudo_query_helpers import query, update
 from .kalliope_adapter import parse_kalliope_poststuk_uit
+from .kalliope_adapter import parse_kalliope_bijlage
 from .kalliope_adapter import  construct_kalliope_poststuk_in
 from .kalliope_adapter import  open_kalliope_api_session
 from .kalliope_adapter import  get_kalliope_poststukken_uit
@@ -68,6 +69,15 @@ def process_berichten_in():
             if not query_result: #Bericht is not in our DB yet. We should insert it.
                 log("Bericht '{}' - {} is not in DB yet.".format(conversatie['betreft'],
                                                                  bericht['verzonden']))
+                # Fetch attachments & parse
+                bericht['bijlagen'] = []
+                for ps_bijlage in bericht['bijlagen_refs']:
+                    try:
+                        bijlage = parse_kalliope_bijlage(ps_bijlage, session)
+                        bericht['bijlagen'].append(bijlage)
+                    except Exception as e:
+                        helpers.log("Something went wrong while parsing a bijlage for bericht {} sent @ {}".format(conversatie['betreft'],
+                                                                                                                   bericht['verzonden'])) 
                 def save_bijlagen(bijlagen):
                     for bijlage in bijlagen:
                         bijlage['uri'] = "http://mu.semte.ch/services/file-service/files/{}".format(bijlage['id'])
