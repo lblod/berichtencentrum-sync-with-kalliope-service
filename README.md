@@ -34,3 +34,7 @@ Optional environment variables:
 
 * `RUN_INTERVAL`: How frequent the service to poll the API must run (in minutes), _default: 5_
 * `MAX_MESSAGE_AGE`: Max age of the messages requested to the API (in days), _default: 3_. This value could theoretically be equal to that of `RUN_INTERVAL`, but a margin is advised to take eventual application or API downtime into account (to not miss any older messages).
+
+## Usage
+
+Note that this service relies on the message-property `schema:dateReceived` not being set for finding messages that still need to be sent via the Kalliope API.

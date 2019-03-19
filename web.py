@@ -13,31 +13,3 @@ scheduler.add_job(func=process_berichten_out, trigger="interval", minutes=RUN_IN
 log("Registered a task for fetching and processing messages to Kalliope every {} minutes".format(RUN_INTERVAL))
 scheduler.start()
 
-
-################# TEMP: test routes ############################################
-
-import flask
-from .queries import construct_unsent_berichten_query
-from .queries import construct_conversatie_exists_query
-from .queries import construct_insert_conversatie_query
-from .mocks import mock_bericht, mock_conversatie
-
-ABB_URI = "http://data.lblod.info/id/bestuurseenheden/141d9d6b-54af-4d17-b313-8d1c30bc3f5b"
-PUBLIC_GRAPH = "http://mu.semte.ch/graphs/public"
-
-@app.route('/unsent/')
-def unsent():
-    q = construct_unsent_berichten_query(PUBLIC_GRAPH, ABB_URI)
-    return flask.jsonify(helpers.query(q))
-
-@app.route("/conversatie_exists/<dossiernummer>")
-def exists(dossiernummer):
-    q = construct_conversatie_exists_query(PUBLIC_GRAPH, dossiernummer)
-    return flask.jsonify(helpers.query(q))
-
-@app.route("/mock_insert/<dossiernummer>")
-def mock(dossiernummer):
-    b = mock_bericht()
-    c = mock_conversatie(dossiernummer)
-    q = construct_insert_conversatie_query(PUBLIC_GRAPH, c, b)
-    return flask.jsonify(helpers.update(q))

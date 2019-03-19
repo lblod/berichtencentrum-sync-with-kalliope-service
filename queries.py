@@ -71,7 +71,12 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
                 <{1[uri]}> a schema:Conversation;
                     <http://mu.semte.ch/vocabularies/core/uuid> "{1[uuid]}";
                     schema:identifier {1[dossiernummer]};
-                    ext:dossierUri "{1[dossierUri]}";
+     """
+    if conversatie["dossierUri"]:
+        q += """
+                        ext:dossierUri "{1[dossierUri]}";
+             """
+    q += """
                     schema:about {1[betreft]};
                     <http://purl.org/dc/terms/type> {1[type_communicatie]};
                     schema:processingTime "{1[reactietermijn]}";
@@ -86,7 +91,8 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
                     schema:recipient <{2[naar]}>.
             }}
         }}
-        """.format(graph_uri, conversatie, bericht)
+    """
+    q = q.format(graph_uri, conversatie, bericht)
     return q
 
 def construct_insert_bericht_query(graph_uri, bericht, conversatie_uri):
@@ -94,7 +100,7 @@ def construct_insert_bericht_query(graph_uri, bericht, conversatie_uri):
     Construct a SPARQL query for inserting a bericht and attaching it to an existing conversatie.
 
     :param graph_uri: string
-    :param bericht: dict containing escaped properties for bericht
+    :param bericht: dict containing properties for bericht
     :param conversatie_uri: string containing the uri of the conversatie that the bericht has to get attached to
     :returns: string containing SPARQL query
     """
@@ -123,9 +129,11 @@ def construct_insert_bijlage_query(bericht_graph_uri, bijlage_graph_uri, bericht
     """
     Construct a SPARQL query for inserting a bijlage and attaching it to an existing bericht.
 
-    :param graph_uri: string
-    :param bericht: dict containing escaped properties for bericht
-    :param conversatie_uri: string containing the uri of the conversatie that the bericht has to get attached to
+    :param bericht_graph_uri: string
+    :param bijlage_graph_uri: string
+    :param bericht_uri: string
+    :param bijlage: dict containing escaped properties for bijlage
+    :param file: dict containing escaped properties for file (similar to bijlage, see mu-file-service)
     :returns: string containing SPARQL query
     """
     bijlage = copy.deepcopy(bijlage) # For not modifying the pass-by-name original
@@ -170,6 +178,7 @@ def construct_insert_bijlage_query(bericht_graph_uri, bijlage_graph_uri, bericht
 def construct_update_last_bericht_query_part1():
     """
     Construct a SPARQL query for keeping the ext:lastMessage of each conversation up to date.
+    Part 1/2 (query constructed in 2 parts because Virtuoso)
 
     :returns: string containing SPARQL query
     """
@@ -208,6 +217,7 @@ def construct_update_last_bericht_query_part1():
 def construct_update_last_bericht_query_part2():
     """
     Construct a SPARQL query for keeping the ext:lastMessage of each conversation up to date.
+    Part 2/2 (query constructed in 2 parts because Virtuoso)
 
     :returns: string containing SPARQL query
     """
@@ -246,8 +256,7 @@ def construct_unsent_berichten_query(naar_uri):
     """
     Construct a SPARQL query for retrieving all messages for a given recipient that haven't been received yet by the other party.
 
-    :param graph_uri: string
-    :param naar_uri: URI of the recpient for which we want to retrieve messages that have yet to be sent.
+    :param naar_uri: URI of the recipient for which we want to retrieve messages that have yet to be sent.
     :returns: string containing SPARQL query
     """
     q = """
@@ -258,7 +267,6 @@ def construct_unsent_berichten_query(naar_uri):
         WHERE {{
             GRAPH ?g {{
                 ?conversatie a schema:Conversation;
-                    ext:dossierUri ?dossieruri;
                     schema:identifier ?dossiernummer;
                     schema:about ?betreft;
                     schema:hasPart ?bericht.
@@ -269,6 +277,9 @@ def construct_unsent_berichten_query(naar_uri):
                     schema:sender ?van;
                     schema:recipient <{0}>.
                 FILTER NOT EXISTS {{ ?bericht schema:dateReceived ?ontvangen. }}
+                OPTIONAL {{
+                    ?conversatie ext:dossierUri ?dossieruri.
+                }}
             }}
         }}
         """.format(naar_uri)
@@ -305,7 +316,7 @@ def construct_select_bijlagen_query(bijlagen_graph_uri, bericht_uri):
 
 def construct_bericht_sent_query(graph_uri, bericht_uri, verzonden):
     """
-    Construct a SPARQL query for marking a bericht as received by the other party.
+    Construct a SPARQL query for marking a bericht as received by the other party (and thus 'sent' by us)
 
     :param graph_uri: string
     :param bericht_uri: URI of the bericht we would like to mark as sent.
@@ -332,6 +343,7 @@ def construct_select_original_bericht_query(bericht_uri):
     """
     Construct a SPARQL query for selecting the first message in a conversation
 
+    :param bericht_uri: URI of a bericht in a conversation
     :returns: string containing SPARQL query
     """
     q = """

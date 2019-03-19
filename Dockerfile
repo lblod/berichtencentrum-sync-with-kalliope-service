@@ -9,4 +9,7 @@ ENV RUN_INTERVAL 5
 ENV MAX_MESSAGE_AGE 3
 
 
+ADD certs /usr/local/share/ca-certificates/
+RUN update-ca-certificates
+
 RUN mkdir -p /data/files
