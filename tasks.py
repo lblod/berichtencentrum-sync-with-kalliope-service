@@ -164,7 +164,12 @@ def process_berichten_out():
 
             poststuk_in = construct_kalliope_poststuk_in(conversatie, bericht)
             log("Posting bericht <{}>. Payload: {}".format(bericht['uri'], poststuk_in))
-            post_result = post_kalliope_poststuk_in(PS_IN_PATH, session, poststuk_in)
+            try:
+                post_result = post_kalliope_poststuk_in(PS_IN_PATH, session, poststuk_in)
+            except Exception as e:
+                log("Something went wrong while posting following poststuk in, skipping: {}\n{}".format(poststuk_in,
+                                                                                                   e))
+                continue
             if post_result:
                 ontvangen = datetime.now(tz=TIMEZONE).replace(microsecond=0).isoformat() # We consider the moment when the api-call succeeded the 'ontvangen'-time
                 bestuurseenheid_uuid = bericht['van'].split('/')[-1] # NOTE: Add graph as argument to query because Virtuoso
