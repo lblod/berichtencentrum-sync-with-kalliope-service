@@ -118,11 +118,20 @@ def parse_kalliope_poststuk_uit(ps_uit, session):
         raise ValueError("The bestemmeling has no URI. Probably this message isn't intended for Loket")
     def pythonize_iso_timestamp(timestamp):
         """ Convert ISO 8601 timestamp to python .fromisoformat()-compliant format """
+        # 'Z'-timezone to '+00:00'-timezone
         timestamp = timestamp.replace('Z', '+00:00')
+        # '+0000'-timezone to '+00:00'-timezone
         def repl(matchobj):
             hh, mm = matchobj.group(1)[0:2], matchobj.group(1)[2:4]
             return "+{}:{}".format(hh, mm)
-        return re.sub(r'\+(\d{4})', repl, timestamp)
+        timestamp = re.sub(r'\+(\d{4})', repl, timestamp)
+        # '.39' microseconds to '.390000' microseconds
+        def repl2(matchobj):
+            ms = matchobj.group(1)
+            sign = matchobj.group(2)
+            return ".{}{}".format(ms.ljust(6, '0'), sign)
+        timestamp = re.sub(r'\.(\d{0,5})($|\+|-)', repl2, timestamp)
+        return timestamp
     verzonden = datetime.fromisoformat(pythonize_iso_timestamp(ps_uit['creatieDatum'])) \
                         .astimezone(TIMEZONE).replace(microsecond=0)                    \
                         .isoformat()
