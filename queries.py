@@ -252,7 +252,7 @@ def construct_update_last_bericht_query_part2():
         """
     return q
 
-def construct_unsent_berichten_query(naar_uri):
+def construct_unsent_berichten_query(naar_uri, max_sending_attempts):
     """
     Construct a SPARQL query for retrieving all messages for a given recipient that haven't been received yet by the other party.
 
@@ -280,9 +280,13 @@ def construct_unsent_berichten_query(naar_uri):
                 OPTIONAL {{
                     ?conversatie ext:dossierUri ?dossieruri.
                 }}
+                BIND(0 AS ?default_attempts)
+                OPTIONAL {{ ?bericht ext:failedSendingAttempts ?attempts. }}
+                BIND(COALESCE(?attempts, ?default_attempts) AS ?result_attempts)
+                FILTER(?result_attempts < {1})
             }}
         }}
-        """.format(naar_uri)
+        """.format(naar_uri, max_sending_attempts)
     return q
 
 def construct_select_bijlagen_query(bijlagen_graph_uri, bericht_uri):
@@ -312,6 +316,41 @@ def construct_select_bijlagen_query(bijlagen_graph_uri, bericht_uri):
             }}
         }}
         """.format(bijlagen_graph_uri, bericht_uri)
+    return q
+
+def construct_increment_bericht_attempts_query(graph_uri, bericht_uri):
+    """
+    Construct a SPARQL query for incrementing (+1) the counter that keeps track of how many times 
+    the service attempted to send out a certain message without succes.
+
+    :param graph_uri: string
+    :param bericht_uri: URI of the bericht.
+    :returns: string containing SPARQL query
+    """
+    q = """
+        PREFIX schema: <http://schema.org/>
+        PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+
+        DELETE {{
+            GRAPH <{0}> {{
+                <{1}> ext:failedSendingAttempts ?result_attempts.
+            }}
+        }}
+        INSERT {{
+            GRAPH <{0}> {{
+                <{1}> ext:failedSendingAttempts ?incremented_attempts.
+            }}
+        }}
+        WHERE {{
+            GRAPH <{0}> {{
+                <{1}> a schema:Message.
+                OPTIONAL {{ <{1}> ext:failedSendingAttempts ?attempts. }}
+                BIND(0 AS ?default_attempts)
+                BIND(COALESCE(?attempts, ?default_attempts) AS ?result_attempts)
+                BIND((?result_attempts + 1) AS ?incremented_attempts)
+            }}
+        }}
+        """.format(graph_uri, bericht_uri)
     return q
 
 def construct_bericht_sent_query(graph_uri, bericht_uri, verzonden):

@@ -21,6 +21,7 @@ from .queries import construct_insert_conversatie_query
 from .queries import construct_insert_bericht_query
 from .queries import construct_unsent_berichten_query
 from .queries import construct_select_bijlagen_query
+from .queries import construct_increment_bericht_attempts_query
 from .queries import construct_bericht_sent_query
 from .queries import construct_update_last_bericht_query_part1
 from .queries import construct_update_last_bericht_query_part2
@@ -33,6 +34,7 @@ PUBLIC_GRAPH = "http://mu.semte.ch/graphs/public"
 PS_UIT_PATH = os.environ.get('KALLIOPE_PS_UIT_ENDPOINT')
 PS_IN_PATH = os.environ.get('KALLIOPE_PS_IN_ENDPOINT')
 MAX_MESSAGE_AGE = int(os.environ.get('MAX_MESSAGE_AGE')) #in days
+MAX_SENDING_ATTEMPTS = int(os.environ.get('MAX_SENDING_ATTEMPTS'))
 
 def process_berichten_in():
     """
@@ -54,7 +56,7 @@ def process_berichten_in():
         try:
             poststukken = get_kalliope_poststukken_uit(PS_UIT_PATH, session, api_query_params)
             log('Retrieved {} poststukken uit from Kalliope'.format(len(poststukken)))
-        except requests.exceptions.HTTPError as e:
+        except requests.exceptions.RequestException as e:
             log("Something went wrong while accessing the Kalliope API. Aborting: {}".format(e))
             return
 
@@ -130,7 +132,7 @@ def process_berichten_out():
 
     :returns: None
     """
-    q = construct_unsent_berichten_query(ABB_URI)
+    q = construct_unsent_berichten_query(ABB_URI, MAX_SENDING_ATTEMPTS)
     berichten = query(q)['results']['bindings']
     log("Found {} berichten that need to be sent to the Kalliope API".format(len(berichten)))
     if len(berichten) == 0:
@@ -166,17 +168,18 @@ def process_berichten_out():
                 bericht['bijlagen'].append(bijlage)
 
             poststuk_in = construct_kalliope_poststuk_in(conversatie, bericht)
+            bestuurseenheid_uuid = bericht['van'].split('/')[-1] # NOTE: Add graph as argument to query because Virtuoso
+            graph = "http://mu.semte.ch/graphs/organizations/{}/LoketLB-berichtenGebruiker".format(bestuurseenheid_uuid)
             log("Posting bericht <{}>. Payload: {}".format(bericht['uri'], poststuk_in))
             try:
                 post_result = post_kalliope_poststuk_in(PS_IN_PATH, session, poststuk_in)
-            except requests.exceptions.HTTPError as e:
+            except requests.exceptions.RequestException as e:
                 log("Something went wrong while posting following poststuk in, skipping: {}\n{}".format(poststuk_in,
                                                                                                    e))
+                update(construct_increment_bericht_attempts_query(graph, bericht['uri']))
                 continue
             if post_result:
                 ontvangen = datetime.now(tz=TIMEZONE).replace(microsecond=0).isoformat() # We consider the moment when the api-call succeeded the 'ontvangen'-time
-                bestuurseenheid_uuid = bericht['van'].split('/')[-1] # NOTE: Add graph as argument to query because Virtuoso
-                graph = "http://mu.semte.ch/graphs/organizations/{}/LoketLB-berichtenGebruiker".format(bestuurseenheid_uuid)
                 q_sent = construct_bericht_sent_query(graph, bericht['uri'], ontvangen)
                 update(q_sent)
                 log("successfully sent bericht {} with {} bijlagen to Kalliope".format(bericht['uri'],

@@ -7,7 +7,7 @@ ENV MU_SPARQL_UPDATEPOINT "http://virtuoso:8890/sparql"
 
 ENV RUN_INTERVAL 5
 ENV MAX_MESSAGE_AGE 3
-
+ENV MAX_SENDING_ATTEMPTS 3
 
 ADD certs /usr/local/share/ca-certificates/
 RUN update-ca-certificates
