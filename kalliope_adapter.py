@@ -13,6 +13,8 @@ ABB_URI = "http://data.lblod.info/id/bestuurseenheden/141d9d6b-54af-4d17-b313-8d
 BIJLAGEN_FOLDER_PATH = "/data/files"
 CERT_BUNDLE_PATH = "/etc/ssl/certs/ca-certificates.crt"
 
+MAX_REQ_CHUNK_SIZE = 10
+
 def new_conversatie(dossiernummer,
                     betreft,
                     type_communicatie,
@@ -85,23 +87,39 @@ def parse_kalliope_bijlage(ps_bijlage, session):
     }
     return bijlage
 
-def get_kalliope_poststukken_uit(path, session, params):
+def get_kalliope_poststukken_uit(path, session, from_,
+                                 to=datetime.now(tz=TIMEZONE),
+                                 dossier_types=None):
     """
     Perform the API-call to get all poststukken-uit that are ready to be processed.
 
     :param path: url of the api endpoint that we want to fetch
     :param session: a Kalliope session, as returned by open_kalliope_api_session()
-    :param url_params: dict of url parameters for the api call
+    :param from_: start boundary of timerange for which messages are requested
+    :param to: end boundary of timerange for which messages are requested
+    :param dossier_types: Only return messages associated to these types of dossier
     :returns: tuple of poststukken
     """
-    r = session.get(path, params=params)
-    if r.status_code == requests.codes.ok:
-        poststukken = r.json()['poststukken']
-        # TODO: paged response 
-        return tuple(poststukken)
-    else:
-        raise requests.exceptions.HTTPError('Failed to get Kalliope poststuk uit (statuscode {}): {}'.format(r.status_code,
-                                                                                                             r.json()))
+    params = {
+        'vanaf': from_.replace(microsecond=0).isoformat(),
+        'tot': to.replace(microsecond=0).isoformat(),
+        'aantal': MAX_REQ_CHUNK_SIZE
+    }
+    if dossier_types:
+        params['dossierTypes'] = ','.join(dossier_types)
+    poststukken = []
+    req_url = requests.Request('GET', path, params=params).prepare().url
+    while req_url:
+        helpers.log("literally requesting: {}".format(req_url))
+        r = session.get(req_url)
+        if r.status_code == requests.codes.ok:
+            r_content = r.json()
+            poststukken += r_content['poststukken']
+            req_url = r_content['volgende']
+        else:
+            raise requests.exceptions.HTTPError('Failed to get Kalliope poststuk uit (statuscode {}): {}'.format(r.status_code,
+                                                                                                                 r.json()))
+    return poststukken
     
 def parse_kalliope_poststuk_uit(ps_uit, session):
     """
