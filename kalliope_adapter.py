@@ -97,12 +97,12 @@ def get_kalliope_poststukken_uit(path, session, params):
     r = session.get(path, params=params)
     if r.status_code == requests.codes.ok:
         poststukken = r.json()['poststukken']
-        # TODO: paged response 
+        # TODO: paged response
         return tuple(poststukken)
     else:
         raise requests.exceptions.HTTPError('Failed to get Kalliope poststuk uit (statuscode {}): {}'.format(r.status_code,
                                                                                                              r.json()))
-    
+
 def parse_kalliope_poststuk_uit(ps_uit, session):
     """
     Parse the response from the Kalliope API into our bericht format
@@ -171,7 +171,7 @@ def construct_kalliope_poststuk_in(conversatie, bericht):
         'uri': bericht['uri'],
         'afzenderUri': bericht['van'],
         'origineelBerichtUri': conversatie['origineelBerichtUri'], # NOTE: optional
-        'betreft': conversatie['betreft'], # NOTE: Is always the same across the whole conversation for what we are concerned 
+        'betreft': conversatie['betreft'], # NOTE: Is always the same across the whole conversation for what we are concerned
         'inhoud': bericht['inhoud'] # NOTE: optional
     }
     if 'dossierUri' in conversatie:
@@ -198,4 +198,49 @@ def post_kalliope_poststuk_in(path, session, params):
         return r.json()
     else:
         raise requests.exceptions.HTTPError('Failed to post Kalliope poststuk-in (statuscode {}): {}'.format(r.status_code,
+                                                                                                             r.json()))
+
+def construct_kalliope_inzending_in(inzending):
+    """
+    Prepare the payload for sending inzendingen to the Kalliope API.
+
+    :param inzending: inzending object of the inzending_in we want to send
+    :returns: inzending_in parameters object as consumed by requests
+    """
+    files = []
+    for bijlage in inzending['bijlagen']:
+        filepath = os.path.join(BIJLAGEN_FOLDER_PATH, bijlage['filepath'])
+        buffer = open(filepath, 'rb')
+        files.append(('files', (bijlage['name'], buffer, bijlage['type']))) # http://docs.python-requests.org/en/master/user/advanced/#post-multiple-multipart-encoded-files
+
+    data = {
+        'uri': inzending['uri'],
+        'afzenderUri': inzending['afzenderUri'],
+        'betreft': inzending['betreft'],
+        'inhoud': inzending['inhoud'],
+        'typePoststuk': inzending['typePoststuk'],
+        'typeMelding': inzending['typeMelding']
+    }
+
+    # NOTE: Parameters are sent as file-like objects, API expects a 'Content-Type'-header for each parameter
+    inzending_in = [
+        ('data', (None, json.dumps(data), 'application/json')),
+    ]
+    inzending_in.extend(files)
+    return inzending_in
+
+def post_kalliope_inzending_in(path, session, params):
+    """
+    Perform the API-call to send a new inzending to Kalliope.
+
+    :param path: url of the api endpoint that we want to send to
+    :param session: a Kalliope session, as returned by open_kalliope_api_session()
+    :param url_params: dict of url parameters for the api call
+    :returns: response dict
+    """
+    r = session.post(path, files=params)
+    if r.status_code == requests.codes.ok:
+        return r.json()
+    else:
+        raise requests.exceptions.HTTPError('Failed to post Kalliope inzending-in (statuscode {}): {}'.format(r.status_code,
                                                                                                              r.json()))

@@ -152,7 +152,7 @@ def construct_insert_bijlage_query(bericht_graph_uri, bijlage_graph_uri, bericht
 
         INSERT DATA {{
             GRAPH <{0}> {{
-                <{2}> nie:hasPart <{3[uri]}>.     
+                <{2}> nie:hasPart <{3[uri]}>.
             }}
             GRAPH <{1}> {{
                 <{3[uri]}> a nfo:FileDataObject;
@@ -195,7 +195,7 @@ def construct_update_last_bericht_query_part1():
             GRAPH ?g {
                 ?conversation a schema:Conversation;
                     schema:hasPart ?newMessage;
-                    ext:lastMessage ?message. 
+                    ext:lastMessage ?message.
             }
             {
                 SELECT (?message AS ?newMessage) WHERE {
@@ -320,7 +320,7 @@ def construct_select_bijlagen_query(bijlagen_graph_uri, bericht_uri):
 
 def construct_increment_bericht_attempts_query(graph_uri, bericht_uri):
     """
-    Construct a SPARQL query for incrementing (+1) the counter that keeps track of how many times 
+    Construct a SPARQL query for incrementing (+1) the counter that keeps track of how many times
     the service attempted to send out a certain message without succes.
 
     :param graph_uri: string
@@ -412,7 +412,7 @@ def construct_select_original_bericht_query(bericht_uri):
         """.format(bericht_uri)
     return q
 
-def construct_unsent_inzendingen_query(max_sending_attempts):
+def construct_unsent_inzendingen_query(max_sending_attempts, starting_date_inzending_sending):
     """
     Construct a SPARQL query for retrieving all messages for a given recipient that haven't been received yet by the other party.
 
@@ -464,7 +464,10 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
                 ?inzending a toezicht:InzendingVoorToezicht ;
                     dct:subject ?bestuurseenheid ;
                     adms:status <http://data.lblod.info/document-statuses/verstuurd> ;
-                    toezicht:decisionType ?decisionType .
+                    toezicht:decisionType ?decisionType ;
+                    nmo:sentDate ?sentDate .
+
+                FILTER (?sentDate > "{2}"^^xsd:dateTime)
 
                 FILTER ( ?decisionType IN ( {1} ) )
 
@@ -479,5 +482,98 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
                 OPTIONAL {{ ?decisionType skos:prefLabel ?decisionTypeLabel }} .
             }}
         }}
-        """.format(max_sending_attempts, separator.join(allowedDecisionTypesList))
+        """.format(max_sending_attempts, separator.join(allowedDecisionTypesList), starting_date_inzending_sending)
+    return q
+
+def construct_select_inzending_bijlagen_query(bijlagen_graph_uri, inzending_uri):
+    """
+    Construct a SPARQL query for retrieving all bijlages for a given inzending.
+
+    :param bijlagen_graph_uri: string, graph where file information is stored
+    :param bericht_uri: URI of the inzending for which we want to retrieve bijlagen.
+    :returns: string containing SPARQL query
+    """
+    q = """
+        PREFIX toezicht: <http://mu.semte.ch/vocabularies/ext/supervision/>
+        PREFIX schema: <http://schema.org/>
+        PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
+        PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
+        PREFIX dct: <http://purl.org/dc/terms/>
+
+        SELECT ?bijlagenaam ?file ?type
+        WHERE {{
+            GRAPH ?g {{
+                <{1}> a toezicht:InzendingVoorToezicht;
+                    nie:hasPart ?bijlage.
+            }}
+            GRAPH <{0}> {{
+                ?bijlage a nfo:FileDataObject;
+                    nfo:fileName ?bijlagenaam;
+                    dct:format ?type.
+                ?file nie:dataSource ?bijlage.
+            }}
+        }}
+        """.format(bijlagen_graph_uri, inzending_uri)
+    return q
+
+def construct_increment_inzending_attempts_query(graph_uri, inzending_uri):
+    """
+    Construct a SPARQL query for incrementing (+1) the counter that keeps track of how many times
+    the service attempted to send out a certain inzending without succes.
+
+    :param graph_uri: string
+    :param inzending_uri: URI of the bericht.
+    :returns: string containing SPARQL query
+    """
+    q = """
+        PREFIX toezicht: <http://mu.semte.ch/vocabularies/ext/supervision/>
+        PREFIX schema: <http://schema.org/>
+        PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+
+        DELETE {{
+            GRAPH <{0}> {{
+                <{1}> ext:failedSendingAttempts ?result_attempts.
+            }}
+        }}
+        INSERT {{
+            GRAPH <{0}> {{
+                <{1}> ext:failedSendingAttempts ?incremented_attempts.
+            }}
+        }}
+        WHERE {{
+            GRAPH <{0}> {{
+                <{1}> a toezicht:InzendingVoorToezicht.
+                OPTIONAL {{ <{1}> ext:failedSendingAttempts ?attempts. }}
+                BIND(0 AS ?default_attempts)
+                BIND(COALESCE(?attempts, ?default_attempts) AS ?result_attempts)
+                BIND((?result_attempts + 1) AS ?incremented_attempts)
+            }}
+        }}
+        """.format(graph_uri, inzending_uri)
+    return q
+
+def construct_inzending_sent_query(graph_uri, inzending_uri, verzonden):
+    """
+    Construct a SPARQL query for marking a bericht as received by the other party (and thus 'sent' by us)
+
+    :param graph_uri: string
+    :param bericht_uri: URI of the bericht we would like to mark as sent.
+    :param verzonden: ISO-string representation of the datetetime when the message was sent
+    :returns: string containing SPARQL query
+    """
+    q = """
+        PREFIX toezicht: <http://mu.semte.ch/vocabularies/ext/supervision/>
+        PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
+
+        INSERT {{
+            GRAPH <{0}> {{
+                <{1}> nmo:receivedDate "{2}"^^xsd:dateTime .
+            }}
+        }}
+        WHERE {{
+            GRAPH <{0}> {{
+                <{1}> a toezicht:InzendingVoorToezicht .
+            }}
+        }}
+        """.format(graph_uri, inzending_uri, verzonden)
     return q
