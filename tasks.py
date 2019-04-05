@@ -108,19 +108,11 @@ def process_berichten_in():
 
     :returns: None
     """
-    vanaf = datetime.now(tz=TIMEZONE).replace(microsecond=0) - timedelta(days=MAX_MESSAGE_AGE)
-    tot = datetime.now(tz=TIMEZONE).replace(microsecond=0)
-    log("Pulling poststukken from kalliope API for period {} - {}".format(vanaf.isoformat(),
-                                                                          tot.isoformat()))
-    api_query_params = {
-        'vanaf': vanaf.isoformat(),
-        'tot': tot.isoformat(),
-        # 'dossierTypes': "https://kalliope.abb.vlaanderen.be/ld/algemeen/dossierType/klacht",
-        'aantal': str(1000)
-    }
+    vanaf = datetime.now(tz=TIMEZONE) - timedelta(days=MAX_MESSAGE_AGE)
+    log("Pulling poststukken from kalliope API for period {} - now".format(vanaf.isoformat()))
     with open_kalliope_api_session() as session:
         try:
-            poststukken = get_kalliope_poststukken_uit(PS_UIT_PATH, session, api_query_params)
+            poststukken = get_kalliope_poststukken_uit(PS_UIT_PATH, session, vanaf)
             log('Retrieved {} poststukken uit from Kalliope'.format(len(poststukken)))
         except requests.exceptions.RequestException as e:
             log("Something went wrong while accessing the Kalliope API. Aborting: {}".format(e))
