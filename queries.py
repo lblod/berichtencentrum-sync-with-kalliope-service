@@ -458,13 +458,14 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
         PREFIX adms: <http://www.w3.org/ns/adms#>
         PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 
-        SELECT DISTINCT ?inzending ?bestuurseenheid ?decisionType ?decisionTypeLabel
+        SELECT DISTINCT ?inzending ?bestuurseenheid ?decisionType ?sessionDate ?decisionTypeLabel
         WHERE {{
             GRAPH ?g {{
                 ?inzending a toezicht:InzendingVoorToezicht ;
                     dct:subject ?bestuurseenheid ;
                     adms:status <http://data.lblod.info/document-statuses/verstuurd> ;
                     toezicht:decisionType ?decisionType ;
+                    toezicht:sessionDate ?sessionDate ;
                     nmo:sentDate ?sentDate .
 
                 FILTER ( ?decisionType IN ( {1} ) )

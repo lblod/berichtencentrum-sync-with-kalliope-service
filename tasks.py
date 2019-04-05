@@ -58,11 +58,12 @@ def process_inzendingen():
         return
 
     with open_kalliope_api_session() as session:
+        log('Session params : {}'.format(session.params))
         for inzending_res in inzendingen:
             inzending = {
                 'uri': inzending_res['inzending']['value'],
                 'afzenderUri': inzending_res['bestuurseenheid']['value'],
-                'betreft': inzending_res['decisionTypeLabel']['value'],
+                'betreft': inzending_res['decisionTypeLabel']['value'] + ' ' + inzending_res['sessionDate']['value'],
                 'inhoud': '',
                 'typePoststuk': 'https://kalliope.abb.vlaanderen.be/ld/algemeen/dossierType/besluit',
                 'typeMelding': inzending_res['decisionType']['value'],
