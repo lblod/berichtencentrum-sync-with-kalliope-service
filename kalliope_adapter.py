@@ -225,12 +225,6 @@ def construct_kalliope_inzending_in(inzending):
     :param inzending: inzending object of the inzending_in we want to send
     :returns: inzending_in parameters object as consumed by requests
     """
-    files = []
-    for bijlage in inzending['bijlagen']:
-        filepath = os.path.join(BIJLAGEN_FOLDER_PATH, bijlage['filepath'])
-        buffer = open(filepath, 'rb')
-        files.append(('files', (bijlage['name'], buffer, bijlage['type']))) # http://docs.python-requests.org/en/master/user/advanced/#post-multiple-multipart-encoded-files
-
     data = {
         'uri': inzending['uri'],
         'afzenderUri': inzending['afzenderUri'],
@@ -244,7 +238,6 @@ def construct_kalliope_inzending_in(inzending):
     inzending_in = [
         ('data', (None, json.dumps(data), 'application/json')),
     ]
-    inzending_in.extend(files)
     return inzending_in
 
 def post_kalliope_inzending_in(path, session, params):

@@ -24,6 +24,7 @@ Required environment variables:
 * `KALLIOPE_API_PASSWORD`
 * `KALLIOPE_PS_UIT_ENDPOINT`
 * `KALLIOPE_PS_IN_ENDPOINT`
+* `INZENDING_BASE_URL`
 
 
 Optional environment variables:

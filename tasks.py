@@ -29,7 +29,6 @@ from .queries import construct_update_last_bericht_query_part1
 from .queries import construct_update_last_bericht_query_part2
 from .queries import construct_select_original_bericht_query
 from .queries import construct_unsent_inzendingen_query
-from .queries import construct_select_inzending_bijlagen_query
 from .queries import construct_increment_inzending_attempts_query
 from .queries import construct_inzending_sent_query
 from .kalliope_adapter import BIJLAGEN_FOLDER_PATH
@@ -42,6 +41,7 @@ PS_IN_PATH = os.environ.get('KALLIOPE_PS_IN_ENDPOINT')
 INZENDING_IN_PATH = os.environ.get('KALLIOPE_PS_IN_ENDPOINT')
 MAX_MESSAGE_AGE = int(os.environ.get('MAX_MESSAGE_AGE')) #in days
 MAX_SENDING_ATTEMPTS = int(os.environ.get('MAX_SENDING_ATTEMPTS'))
+INZENDING_BASE_URL = os.environ.get('INZENDING_BASE_URL')
 
 def process_inzendingen():
     """
@@ -58,27 +58,15 @@ def process_inzendingen():
         return
 
     with open_kalliope_api_session() as session:
-        log('Session params : {}'.format(session.params))
         for inzending_res in inzendingen:
             inzending = {
                 'uri': inzending_res['inzending']['value'],
                 'afzenderUri': inzending_res['bestuurseenheid']['value'],
                 'betreft': inzending_res['decisionTypeLabel']['value'] + ' ' + inzending_res['sessionDate']['value'],
-                'inhoud': '',
+                'inhoud': INZENDING_BASE_URL + '/' + inzending_res['inzendingUuid']['value'],
                 'typePoststuk': 'https://kalliope.abb.vlaanderen.be/ld/algemeen/dossierType/besluit',
                 'typeMelding': inzending_res['decisionType']['value'],
             }
-
-            q_bijlagen = construct_select_inzending_bijlagen_query(PUBLIC_GRAPH, inzending['uri'])
-            bijlagen = query(q_bijlagen)['results']['bindings']
-            inzending['bijlagen'] = []
-            for bijlage_res in bijlagen:
-                bijlage = {
-                    'name': bijlage_res['bijlagenaam']['value'],
-                    'filepath': bijlage_res['file']['value'].strip("share://"),
-                    'type': bijlage_res['type']['value'],
-                }
-                inzending['bijlagen'].append(bijlage)
 
             inzending_in = construct_kalliope_inzending_in(inzending)
 
@@ -98,8 +86,7 @@ def process_inzendingen():
                 ontvangen = datetime.now(tz=TIMEZONE).replace(microsecond=0).isoformat() # We consider the moment when the api-call succeeded the 'ontvangen'-time
                 q_sent = construct_inzending_sent_query(graph, inzending['uri'], ontvangen)
                 update(q_sent)
-                log("successfully sent inzending {} with {} bijlagen to Kalliope".format(inzending['uri'],
-                                                                                       len(bijlagen)))
+                log("successfully sent inzending {} to Kalliope".format(inzending['uri']))
     pass
 
 def process_berichten_in():

@@ -458,10 +458,11 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
         PREFIX adms: <http://www.w3.org/ns/adms#>
         PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 
-        SELECT DISTINCT ?inzending ?bestuurseenheid ?decisionType ?sessionDate ?decisionTypeLabel
+        SELECT DISTINCT ?inzending ?inzendingUuid ?bestuurseenheid ?decisionType ?sessionDate ?decisionTypeLabel
         WHERE {{
             GRAPH ?g {{
                 ?inzending a toezicht:InzendingVoorToezicht ;
+                    <http://mu.semte.ch/vocabularies/core/uuid> ?inzendingUuid ;
                     dct:subject ?bestuurseenheid ;
                     adms:status <http://data.lblod.info/document-statuses/verstuurd> ;
                     toezicht:decisionType ?decisionType ;
@@ -482,37 +483,6 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
             }}
         }}
         """.format(max_sending_attempts, separator.join(allowedDecisionTypesList))
-    return q
-
-def construct_select_inzending_bijlagen_query(bijlagen_graph_uri, inzending_uri):
-    """
-    Construct a SPARQL query for retrieving all bijlages for a given inzending.
-
-    :param bijlagen_graph_uri: string, graph where file information is stored
-    :param bericht_uri: URI of the inzending for which we want to retrieve bijlagen.
-    :returns: string containing SPARQL query
-    """
-    q = """
-        PREFIX toezicht: <http://mu.semte.ch/vocabularies/ext/supervision/>
-        PREFIX schema: <http://schema.org/>
-        PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
-        PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
-        PREFIX dct: <http://purl.org/dc/terms/>
-
-        SELECT ?bijlagenaam ?file ?type
-        WHERE {{
-            GRAPH ?g {{
-                <{1}> a toezicht:InzendingVoorToezicht;
-                    nie:hasPart ?bijlage.
-            }}
-            GRAPH <{0}> {{
-                ?bijlage a nfo:FileDataObject;
-                    nfo:fileName ?bijlagenaam;
-                    dct:format ?type.
-                ?file nie:dataSource ?bijlage.
-            }}
-        }}
-        """.format(bijlagen_graph_uri, inzending_uri)
     return q
 
 def construct_increment_inzending_attempts_query(graph_uri, inzending_uri):
