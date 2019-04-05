@@ -42,7 +42,6 @@ PS_IN_PATH = os.environ.get('KALLIOPE_PS_IN_ENDPOINT')
 INZENDING_IN_PATH = os.environ.get('KALLIOPE_PS_IN_ENDPOINT')
 MAX_MESSAGE_AGE = int(os.environ.get('MAX_MESSAGE_AGE')) #in days
 MAX_SENDING_ATTEMPTS = int(os.environ.get('MAX_SENDING_ATTEMPTS'))
-STARTING_DATE_INZENDING_SENDING = "2019-04-03T00:00:00" if os.environ.get('STARTING_DATE_INZENDING_SENDING') is None else os.environ.get('STARTING_DATE_INZENDING_SENDING') #days
 
 def process_inzendingen():
     """
@@ -51,7 +50,7 @@ def process_inzendingen():
 
     :returns: None
     """
-    q = construct_unsent_inzendingen_query(MAX_SENDING_ATTEMPTS, STARTING_DATE_INZENDING_SENDING)
+    q = construct_unsent_inzendingen_query(MAX_SENDING_ATTEMPTS)
     inzendingen = query(q)['results']['bindings']
     log("Found {} inzendingen that need to be sent to the Kalliope API".format(len(inzendingen)))
 

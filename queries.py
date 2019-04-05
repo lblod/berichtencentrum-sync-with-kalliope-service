@@ -412,7 +412,7 @@ def construct_select_original_bericht_query(bericht_uri):
         """.format(bericht_uri)
     return q
 
-def construct_unsent_inzendingen_query(max_sending_attempts, starting_date_inzending_sending):
+def construct_unsent_inzendingen_query(max_sending_attempts):
     """
     Construct a SPARQL query for retrieving all messages for a given recipient that haven't been received yet by the other party.
 
@@ -467,8 +467,6 @@ def construct_unsent_inzendingen_query(max_sending_attempts, starting_date_inzen
                     toezicht:decisionType ?decisionType ;
                     nmo:sentDate ?sentDate .
 
-                FILTER (?sentDate > "{2}"^^xsd:dateTime)
-
                 FILTER ( ?decisionType IN ( {1} ) )
 
                 FILTER NOT EXISTS {{ ?inzending nmo:receivedDate ?receivedDate. }}
@@ -482,7 +480,7 @@ def construct_unsent_inzendingen_query(max_sending_attempts, starting_date_inzen
                 OPTIONAL {{ ?decisionType skos:prefLabel ?decisionTypeLabel }} .
             }}
         }}
-        """.format(max_sending_attempts, separator.join(allowedDecisionTypesList), starting_date_inzending_sending)
+        """.format(max_sending_attempts, separator.join(allowedDecisionTypesList))
     return q
 
 def construct_select_inzending_bijlagen_query(bijlagen_graph_uri, inzending_uri):
