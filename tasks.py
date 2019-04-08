@@ -62,7 +62,7 @@ def process_inzendingen():
             inzending = {
                 'uri': inzending_res['inzending']['value'],
                 'afzenderUri': inzending_res['bestuurseenheid']['value'],
-                'betreft': inzending_res['decisionTypeLabel']['value'] + ' ' + inzending_res['sessionDate']['value'],
+                'betreft': inzending_res['decisionTypeLabel']['value'] + ' ' + inzending_res['sessionDate']['value'].split('T')[0],
                 'inhoud': INZENDING_BASE_URL + '/' + inzending_res['inzendingUuid']['value'],
                 'typePoststuk': 'https://kalliope.abb.vlaanderen.be/ld/algemeen/dossierType/besluit',
                 'typeMelding': inzending_res['decisionType']['value'],
