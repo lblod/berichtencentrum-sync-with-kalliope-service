@@ -150,7 +150,7 @@ def parse_kalliope_poststuk_uit(ps_uit, session):
             return ".{}{}".format(ms.ljust(6, '0'), sign)
         timestamp = re.sub(r'\.(\d{0,5})($|\+|-)', repl2, timestamp)
         return timestamp
-    verzonden = datetime.fromisoformat(pythonize_iso_timestamp(ps_uit['creatieDatum'])) \
+    verzonden = datetime.fromisoformat(pythonize_iso_timestamp(ps_uit['verzendDatum'])) \
                         .astimezone(TIMEZONE).replace(microsecond=0)                    \
                         .isoformat()
     ontvangen = datetime.now(tz=TIMEZONE).replace(microsecond=0).isoformat()
