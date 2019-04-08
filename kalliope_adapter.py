@@ -120,7 +120,7 @@ def get_kalliope_poststukken_uit(path, session, from_,
             raise requests.exceptions.HTTPError('Failed to get Kalliope poststuk uit (statuscode {}): {}'.format(r.status_code,
                                                                                                                  r.json()))
     return poststukken
-    
+
 def parse_kalliope_poststuk_uit(ps_uit, session):
     """
     Parse the response from the Kalliope API into our bericht format
@@ -150,7 +150,7 @@ def parse_kalliope_poststuk_uit(ps_uit, session):
             return ".{}{}".format(ms.ljust(6, '0'), sign)
         timestamp = re.sub(r'\.(\d{0,5})($|\+|-)', repl2, timestamp)
         return timestamp
-    verzonden = datetime.fromisoformat(pythonize_iso_timestamp(ps_uit['creatieDatum'])) \
+    verzonden = datetime.fromisoformat(pythonize_iso_timestamp(ps_uit['verzendDatum'])) \
                         .astimezone(TIMEZONE).replace(microsecond=0)                    \
                         .isoformat()
     ontvangen = datetime.now(tz=TIMEZONE).replace(microsecond=0).isoformat()
@@ -189,7 +189,7 @@ def construct_kalliope_poststuk_in(conversatie, bericht):
         'uri': bericht['uri'],
         'afzenderUri': bericht['van'],
         'origineelBerichtUri': conversatie['origineelBerichtUri'], # NOTE: optional
-        'betreft': conversatie['betreft'], # NOTE: Is always the same across the whole conversation for what we are concerned 
+        'betreft': conversatie['betreft'], # NOTE: Is always the same across the whole conversation for what we are concerned
         'inhoud': bericht['inhoud'] # NOTE: optional
     }
     if 'dossierUri' in conversatie:
