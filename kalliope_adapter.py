@@ -88,7 +88,7 @@ def parse_kalliope_bijlage(ps_bijlage, session):
     return bijlage
 
 def get_kalliope_poststukken_uit(path, session, from_,
-                                 to=datetime.now(tz=TIMEZONE),
+                                 to=None,
                                  dossier_types=None):
     """
     Perform the API-call to get all poststukken-uit that are ready to be processed.
@@ -102,11 +102,13 @@ def get_kalliope_poststukken_uit(path, session, from_,
     """
     params = {
         'vanaf': from_.replace(microsecond=0).isoformat(),
-        'tot': to.replace(microsecond=0).isoformat(),
         'aantal': MAX_REQ_CHUNK_SIZE
     }
+    if to:
+        params['tot'] = to.replace(microsecond=0).isoformat()
     if dossier_types:
         params['dossierTypes'] = ','.join(dossier_types)
+
     poststukken = []
     req_url = requests.Request('GET', path, params=params).prepare().url
     while req_url:
