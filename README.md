@@ -9,7 +9,8 @@ To add the service to your stack, add the following snippet to `docker-compose.y
       KALLIOPE_API_PASSWORD: "***"
       KALLIOPE_PS_UIT_ENDPOINT: "https://kalliope-svc-test.abb.vlaanderen.be/glapi/poststuk-uit"
       KALLIOPE_PS_IN_ENDPOINT: "https://kalliope-svc-test.abb.vlaanderen.be/glapi/poststuk-in"
-      RUN_INTERVAL: 5
+      RUN_INTERVAL_BERICHTEN: 5
+      RUN_INTERVAL_INZENDINGEN: 720
     volumes:
       - ./data/files:/data/files
 ```
@@ -25,15 +26,14 @@ Required environment variables:
 * `KALLIOPE_PS_UIT_ENDPOINT`
 * `KALLIOPE_PS_IN_ENDPOINT`
 * `INZENDING_BASE_URL`
-
+* `RUN_INTERVAL_BERICHTEN`: How frequent the service to poll the API for berichten must run (in minutes)
+* `RUN_INTERVAL_INZENDINGEN`: How frequent the service to poll the API for inzendingen must run (in minutes)
 
 Optional environment variables:
 
 * `MU_APPLICATION_GRAPH`
 * `MU_SPARQL_ENDPOINT`
 * `MU_SPARQL_UPDATEPOINT`
-
-* `RUN_INTERVAL`: How frequent the service to poll the API must run (in minutes), _default: 5_
 * `MAX_MESSAGE_AGE`: Max age of the messages requested to the API (in days), _default: 3_. This value could theoretically be equal to that of `RUN_INTERVAL`, but a margin is advised to take eventual application or API downtime into account (to not miss any older messages).
 * `MAX_SENDING_ATTEMPTS`: How many times the service can attempt to send out a certain message, _default: 3_. Prevents the API from getting the same request (that it won't accept) over and over again.
 
