@@ -207,7 +207,7 @@ def process_berichten_out():
             for bijlage_res in bijlagen:
                 bijlage = {
                     'name': bijlage_res['bijlagenaam']['value'],
-                    'filepath': bijlage_res['file']['value'].strip("share://"),
+                    'filepath': bijlage_res['file']['value'].replace("share://", "", 1),
                     'type': bijlage_res['type']['value'],
                 }
                 bericht['bijlagen'].append(bijlage)
