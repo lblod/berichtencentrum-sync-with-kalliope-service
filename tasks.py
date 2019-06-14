@@ -22,6 +22,7 @@ from .queries import construct_insert_bijlage_query
 from .queries import construct_insert_conversatie_query
 from .queries import construct_insert_bericht_query
 from .queries import construct_unsent_berichten_query
+from .queries import construct_update_conversatie_type_query
 from .queries import construct_select_bijlagen_query
 from .queries import construct_increment_bericht_attempts_query
 from .queries import construct_bericht_sent_query
@@ -154,6 +155,8 @@ def process_berichten_in():
                                                                                             bericht['verzonden']))
                     q_bericht = construct_insert_bericht_query(graph, bericht, conversatie_uri)
                     result = update(q_bericht)
+                    q_type_communicatie = construct_update_conversatie_type_query(graph, conversatie_uri, bericht['type_communicatie'])
+                    result = update(q_type_communicatie)
                     save_bijlagen(bericht['bijlagen'])
                 else: #conversatie to which the bericht is linked does not exist yet.
                     log("Non-existing conversation '{}' inserting new conversation + message sent @ {}".format(conversatie['betreft'],

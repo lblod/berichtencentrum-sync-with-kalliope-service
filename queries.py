@@ -59,7 +59,7 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
     conversatie = copy.deepcopy(conversatie) # For not modifying the pass-by-name original
     conversatie['dossiernummer'] = escape_helpers.sparql_escape_string(conversatie['dossiernummer'])
     conversatie['betreft'] = escape_helpers.sparql_escape_string(conversatie['betreft'])
-    conversatie['type_communicatie'] = escape_helpers.sparql_escape_string(conversatie['type_communicatie'])
+    conversatie['current_type_communicatie'] = escape_helpers.sparql_escape_string(conversatie['current_type_communicatie'])
     bericht = copy.deepcopy(bericht) # For not modifying the pass-by-name original
     bericht['inhoud'] = escape_helpers.sparql_escape_string(bericht['inhoud'])
     q = """
@@ -78,7 +78,7 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
              """
     q += """
                     schema:about {1[betreft]};
-                    <http://purl.org/dc/terms/type> {1[type_communicatie]};
+                    <http://purl.org/dc/terms/type> {1[current_type_communicatie]};
                     schema:processingTime "{1[reactietermijn]}";
                     schema:hasPart <{2[uri]}>.
 
@@ -87,6 +87,7 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
                     schema:dateSent "{2[verzonden]}"^^xsd:dateTime;
                     schema:dateReceived "{2[ontvangen]}"^^xsd:dateTime;
                     schema:text {2[inhoud]};
+                    <http://purl.org/dc/terms/type> {2[type_communicatie]};
                     schema:sender <{2[van]}>;
                     schema:recipient <{2[naar]}>.
             }}
@@ -125,6 +126,38 @@ def construct_insert_bericht_query(graph_uri, bericht, conversatie_uri):
         """.format(graph_uri, bericht, conversatie_uri)
     return q
 
+def construct_update_conversatie_type_query(graph_uri, conversatie_uri, type_communicatie):
+    """
+    Construct a SPARQL query for updating the type-communicatie of a conversatie.
+
+    :param graph_uri: string
+    :param conversatie_uri: string containing the uri of the conversatie we want to update
+    :param type_communicatie: string containing the type-communicatie
+
+    :returns: string containing SPARQL query
+    """
+    q = """
+        DELETE {{
+            GRAPH <{0}> {{
+                <{1}> a schema:Conversation;
+                    <http://purl.org/dc/terms/type> ?type.
+            }}
+        }}
+        INSERT {{
+            GRAPH <{0}> {{
+                <{1}> a schema:Conversation;
+                    <http://purl.org/dc/terms/type> <{2}>.
+            }}
+        }}
+        WHERE {{
+            GRAPH <{0}> {{
+                <{1}> a schema:Conversation;
+                    <http://purl.org/dc/terms/type> ?type.
+            }}
+        }}
+        """.format(graph_uri, conversatie_uri, type_communicatie)
+    return q
+
 def construct_insert_bijlage_query(bericht_graph_uri, bijlage_graph_uri, bericht_uri, bijlage, file):
     """
     Construct a SPARQL query for inserting a bijlage and attaching it to an existing bericht.
@@ -143,7 +176,7 @@ def construct_insert_bijlage_query(bericht_graph_uri, bijlage_graph_uri, bericht
     file['name'] = escape_helpers.sparql_escape_string(file['name'])
     q = """
         PREFIX schema: <http://schema.org/>
-        PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
+        PREFIX nfo: <http://www.semanticdesktop.org/ontologies/007/03/22/nfo#>
         PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
         PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
         PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>

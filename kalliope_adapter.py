@@ -17,14 +17,14 @@ MAX_REQ_CHUNK_SIZE = 10
 
 def new_conversatie(dossiernummer,
                     betreft,
-                    type_communicatie,
+                    current_type_communicatie,
                     reactietermijn,
                     berichten=[]):
     conversatie = {}
     conversatie['uuid'] = helpers.generate_uuid()
     conversatie['dossiernummer'] = dossiernummer
     conversatie['betreft'] = betreft
-    conversatie['type_communicatie'] = type_communicatie
+    conversatie['current_type_communicatie'] = current_type_communicatie
     conversatie['reactietermijn'] = reactietermijn
     conversatie['berichten'] = list(berichten)
     return conversatie
@@ -33,7 +33,8 @@ def new_bericht(verzonden,
                 ontvangen,
                 van,
                 naar,
-                inhoud):
+                inhoud,
+                type_communicatie):
     bericht = {}
     bericht['uuid'] = helpers.generate_uuid()
     bericht['verzonden'] = verzonden
@@ -41,6 +42,7 @@ def new_bericht(verzonden,
     bericht['van'] = van
     bericht['naar'] = naar
     bericht['inhoud'] = inhoud
+    bericht['type_communicatie'] = type_communicatie
     return bericht
 
 def open_kalliope_api_session(verify=CERT_BUNDLE_PATH):
@@ -162,7 +164,7 @@ def parse_kalliope_poststuk_uit(ps_uit, session):
     type_communicatie = ps_uit['typeCommunicatie']
     reactietermijn = "P30D"
 
-    bericht = new_bericht(verzonden, ontvangen, van, naar, inhoud)
+    bericht = new_bericht(verzonden, ontvangen, van, naar, inhoud, type_communicatie)
     bericht['uri'] = ps_uit['uri']
     conversatie = new_conversatie(dossiernummer,
                                   betreft,
