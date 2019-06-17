@@ -499,12 +499,13 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
                     dct:subject ?bestuurseenheid ;
                     adms:status <http://data.lblod.info/document-statuses/verstuurd> ;
                     toezicht:decisionType ?decisionType ;
-                    toezicht:sessionDate ?sessionDate ;
                     nmo:sentDate ?sentDate .
 
                 FILTER ( ?decisionType IN ( {1} ) )
 
                 FILTER NOT EXISTS {{ ?inzending nmo:receivedDate ?receivedDate. }}
+
+                OPTIONAL {{ ?inzending toezicht:sessionDate ?sessionDate. }}
 
                 BIND(0 AS ?default_attempts)
                 OPTIONAL {{ ?inzending ext:failedSendingAttempts ?attempts. }}

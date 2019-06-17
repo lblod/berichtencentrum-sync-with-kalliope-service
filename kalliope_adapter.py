@@ -82,7 +82,7 @@ def parse_kalliope_bijlage(ps_bijlage, session):
         'url': ps_bijlage['url'],
         'id': ps_bijlage['url'].split('/')[-1],
         'name': ps_bijlage['naam'],
-        'extension': os.path.splitext(ps_bijlage['naam'])[1].strip("."),
+        'extension': os.path.splitext(ps_bijlage['naam'])[1].lstrip("."),
         'mimetype': m_type.from_buffer(buffer),
         'size': filesize,
         'created': datetime.now(tz=TIMEZONE).replace(microsecond=0).isoformat(),

@@ -63,7 +63,7 @@ def process_inzendingen():
             inzending = {
                 'uri': inzending_res['inzending']['value'],
                 'afzenderUri': inzending_res['bestuurseenheid']['value'],
-                'betreft': inzending_res['decisionTypeLabel']['value'] + ' ' + inzending_res['sessionDate']['value'].split('T')[0],
+                'betreft': inzending_res['decisionTypeLabel']['value'] + ' ' + inzending_res.get('sessionDate', {}).get('value', '').split('T')[0],
                 'inhoud': INZENDING_BASE_URL + '/' + inzending_res['inzendingUuid']['value'],
                 'typePoststuk': 'https://kalliope.abb.vlaanderen.be/ld/algemeen/dossierType/besluit',
                 'typeMelding': inzending_res['decisionType']['value'],
@@ -210,7 +210,7 @@ def process_berichten_out():
             for bijlage_res in bijlagen:
                 bijlage = {
                     'name': bijlage_res['bijlagenaam']['value'],
-                    'filepath': bijlage_res['file']['value'].strip("share://"),
+                    'filepath': bijlage_res['file']['value'].replace("share://", "", 1),
                     'type': bijlage_res['type']['value'],
                 }
                 bericht['bijlagen'].append(bijlage)
