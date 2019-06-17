@@ -78,7 +78,7 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
              """
     q += """
                     schema:about {1[betreft]};
-                    <http://purl.org/dc/terms/type> {1[current_type_communicatie]};
+                    <http://mu.semte.ch/vocabularies/ext/currentType> {1[current_type_communicatie]};
                     schema:processingTime "{1[reactietermijn]}";
                     schema:hasPart <{2[uri]}>.
 
@@ -87,7 +87,7 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
                     schema:dateSent "{2[verzonden]}"^^xsd:dateTime;
                     schema:dateReceived "{2[ontvangen]}"^^xsd:dateTime;
                     schema:text {2[inhoud]};
-                    <http://mu.semte.ch/vocabularies/ext/currentType> "{2[type_communicatie]}";
+                    <http://purl.org/dc/terms/type> "{2[type_communicatie]}";
                     schema:sender <{2[van]}>;
                     schema:recipient <{2[naar]}>.
             }}
@@ -120,7 +120,8 @@ def construct_insert_bericht_query(graph_uri, bericht, conversatie_uri):
                     schema:dateReceived "{1[ontvangen]}"^^xsd:dateTime;
                     schema:text {1[inhoud]};
                     schema:sender <{1[van]}>;
-                    schema:recipient <{1[naar]}>.
+                    schema:recipient <{1[naar]}>;
+                    <http://purl.org/dc/terms/type> "{1[type_communicatie]}".
             }}
         }}
         """.format(graph_uri, bericht, conversatie_uri)
@@ -137,22 +138,24 @@ def construct_update_conversatie_type_query(graph_uri, conversatie_uri, type_com
     :returns: string containing SPARQL query
     """
     q = """
+        PREFIX schema: <http://schema.org/>
+
         DELETE {{
             GRAPH <{0}> {{
                 <{1}> a schema:Conversation;
-                    <http://purl.org/dc/terms/type> ?type.
+                    <http://mu.semte.ch/vocabularies/ext/currentType> ?type.
             }}
         }}
         INSERT {{
             GRAPH <{0}> {{
                 <{1}> a schema:Conversation;
-                    <http://purl.org/dc/terms/type> <{2}>.
+                    <http://mu.semte.ch/vocabularies/ext/currentType> "{2}".
             }}
         }}
         WHERE {{
             GRAPH <{0}> {{
                 <{1}> a schema:Conversation;
-                    <http://purl.org/dc/terms/type> ?type.
+                    <http://mu.semte.ch/vocabularies/ext/currentType> ?type.
             }}
         }}
         """.format(graph_uri, conversatie_uri, type_communicatie)
