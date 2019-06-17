@@ -87,7 +87,7 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
                     schema:dateSent "{2[verzonden]}"^^xsd:dateTime;
                     schema:dateReceived "{2[ontvangen]}"^^xsd:dateTime;
                     schema:text {2[inhoud]};
-                    <http://purl.org/dc/terms/type> {2[type_communicatie]};
+                    <http://purl.org/dc/terms/type> "{2[type_communicatie]}";
                     schema:sender <{2[van]}>;
                     schema:recipient <{2[naar]}>.
             }}
