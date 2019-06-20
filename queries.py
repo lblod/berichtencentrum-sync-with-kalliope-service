@@ -179,7 +179,7 @@ def construct_insert_bijlage_query(bericht_graph_uri, bijlage_graph_uri, bericht
     file['name'] = escape_helpers.sparql_escape_string(file['name'])
     q = """
         PREFIX schema: <http://schema.org/>
-        PREFIX nfo: <http://www.semanticdesktop.org/ontologies/007/03/22/nfo#>
+        PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
         PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
         PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
         PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
