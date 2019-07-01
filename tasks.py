@@ -187,49 +187,56 @@ def process_berichten_out():
         return
     with open_kalliope_api_session() as session:
         for bericht_res in berichten:
-            bericht = {
-                'uri': bericht_res['bericht']['value'],
-                'van': bericht_res['van']['value'],
-                'verzonden': bericht_res['verzonden']['value'],
-                'inhoud': bericht_res['inhoud']['value'],
-            }
-            q_origineel = construct_select_original_bericht_query(bericht['uri'])
-            origineel_bericht_uri = query(q_origineel)['results']['bindings'][0]['origineelbericht']['value']
-            REPLY_SUBJECT_PREFIX = "Reactie op "
-            betreft = REPLY_SUBJECT_PREFIX + bericht_res['betreft']['value']
-            conversatie = {
-                'dossiernummer': bericht_res['dossiernummer']['value'],
-                'betreft': betreft,
-                'origineelBerichtUri': origineel_bericht_uri
-            }
-            if 'dossieruri' in bericht_res:
-                conversatie['dossierUri'] = bericht_res['dossieruri']['value']
-            q_bijlagen = construct_select_bijlagen_query(PUBLIC_GRAPH, bericht['uri']) # TEMP: bijlage in public graph
-            bijlagen = query(q_bijlagen)['results']['bindings']
-            bericht['bijlagen'] = []
-            for bijlage_res in bijlagen:
-                bijlage = {
-                    'name': bijlage_res['bijlagenaam']['value'],
-                    'filepath': bijlage_res['file']['value'].replace("share://", "", 1),
-                    'type': bijlage_res['type']['value'],
-                }
-                bericht['bijlagen'].append(bijlage)
-
-            poststuk_in = construct_kalliope_poststuk_in(conversatie, bericht)
-            bestuurseenheid_uuid = bericht['van'].split('/')[-1] # NOTE: Add graph as argument to query because Virtuoso
-            graph = "http://mu.semte.ch/graphs/organizations/{}/LoketLB-berichtenGebruiker".format(bestuurseenheid_uuid)
-            log("Posting bericht <{}>. Payload: {}".format(bericht['uri'], poststuk_in))
             try:
-                post_result = post_kalliope_poststuk_in(PS_IN_PATH, session, poststuk_in)
-            except requests.exceptions.RequestException as e:
-                log("Something went wrong while posting following poststuk in, skipping: {}\n{}".format(poststuk_in,
-                                                                                                   e))
-                update(construct_increment_bericht_attempts_query(graph, bericht['uri']))
-                continue
-            if post_result:
-                ontvangen = datetime.now(tz=TIMEZONE).replace(microsecond=0).isoformat() # We consider the moment when the api-call succeeded the 'ontvangen'-time
-                q_sent = construct_bericht_sent_query(graph, bericht['uri'], ontvangen)
-                update(q_sent)
-                log("successfully sent bericht {} with {} bijlagen to Kalliope".format(bericht['uri'],
-                                                                                       len(bijlagen)))
+                bericht = {
+                    'uri': bericht_res['bericht']['value'],
+                    'van': bericht_res['van']['value'],
+                    'verzonden': bericht_res['verzonden']['value'],
+                    'inhoud': bericht_res['inhoud']['value'],
+                }
+                q_origineel = construct_select_original_bericht_query(bericht['uri'])
+                origineel_bericht_uri = query(q_origineel)['results']['bindings'][0]['origineelbericht']['value']
+                REPLY_SUBJECT_PREFIX = "Reactie op "
+                betreft = REPLY_SUBJECT_PREFIX + bericht_res['betreft']['value']
+                conversatie = {
+                    'dossiernummer': bericht_res['dossiernummer']['value'],
+                    'betreft': betreft,
+                    'origineelBerichtUri': origineel_bericht_uri
+                }
+                if 'dossieruri' in bericht_res:
+                    conversatie['dossierUri'] = bericht_res['dossieruri']['value']
+                q_bijlagen = construct_select_bijlagen_query(PUBLIC_GRAPH, bericht['uri']) # TEMP: bijlage in public graph
+                bijlagen = query(q_bijlagen)['results']['bindings']
+                bericht['bijlagen'] = []
+                for bijlage_res in bijlagen:
+                    bijlage = {
+                        'name': bijlage_res['bijlagenaam']['value'],
+                        'filepath': bijlage_res['file']['value'].replace("share://", "", 1),
+                        'type': bijlage_res['type']['value'],
+                    }
+                    bericht['bijlagen'].append(bijlage)
+
+                poststuk_in = construct_kalliope_poststuk_in(conversatie, bericht)
+                bestuurseenheid_uuid = bericht['van'].split('/')[-1] # NOTE: Add graph as argument to query because Virtuoso
+                graph = "http://mu.semte.ch/graphs/organizations/{}/LoketLB-berichtenGebruiker".format(bestuurseenheid_uuid)
+                log("Posting bericht <{}>. Payload: {}".format(bericht['uri'], poststuk_in))
+
+                raise Exception('x should not exceed 5. The value of x was: {}'.format(x))
+
+                try:
+                    post_result = post_kalliope_poststuk_in(PS_IN_PATH, session, poststuk_in)
+                except requests.exceptions.RequestException as e:
+                    log("Something went wrong while posting following poststuk in, skipping: {}\n{}".format(poststuk_in,
+                                                                                                       e))
+                    update(construct_increment_bericht_attempts_query(graph, bericht['uri']))
+                    continue
+                if post_result:
+                    ontvangen = datetime.now(tz=TIMEZONE).replace(microsecond=0).isoformat() # We consider the moment when the api-call succeeded the 'ontvangen'-time
+                    q_sent = construct_bericht_sent_query(graph, bericht['uri'], ontvangen)
+                    update(q_sent)
+                    log("successfully sent bericht {} with {} bijlagen to Kalliope".format(bericht['uri'],
+                                                                                           len(bijlagen)))
+
+            except Exception as e:
+                helpers.log("Something went wrong while sending bericht {}".format(bericht))
     pass
