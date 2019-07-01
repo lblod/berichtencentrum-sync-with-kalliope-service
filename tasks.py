@@ -221,8 +221,6 @@ def process_berichten_out():
                 graph = "http://mu.semte.ch/graphs/organizations/{}/LoketLB-berichtenGebruiker".format(bestuurseenheid_uuid)
                 log("Posting bericht <{}>. Payload: {}".format(bericht['uri'], poststuk_in))
 
-                raise Exception('x should not exceed 5. The value of x was: {}'.format(x))
-
                 try:
                     post_result = post_kalliope_poststuk_in(PS_IN_PATH, session, poststuk_in)
                 except requests.exceptions.RequestException as e:
