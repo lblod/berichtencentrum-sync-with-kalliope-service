@@ -236,5 +236,5 @@ def process_berichten_out():
                                                                                            len(bijlagen)))
 
             except Exception as e:
-                helpers.log("Something went wrong while sending bericht {}".format(bericht))
+                helpers.log("Something went wrong while sending bericht {} : {}".format(bericht, e))
     pass
