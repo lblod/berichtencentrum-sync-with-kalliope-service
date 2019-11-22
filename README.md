@@ -9,8 +9,8 @@ To add the service to your stack, add the following snippet to `docker-compose.y
       KALLIOPE_API_PASSWORD: "***"
       KALLIOPE_PS_UIT_ENDPOINT: "https://kalliope-svc-test.abb.vlaanderen.be/glapi/poststuk-uit"
       KALLIOPE_PS_IN_ENDPOINT: "https://kalliope-svc-test.abb.vlaanderen.be/glapi/poststuk-in"
-      RUN_INTERVAL_BERICHTEN: 5
-      RUN_INTERVAL_INZENDINGEN: 720
+      BERICHTEN_CRON_PATTERN: "*/5 * * * *"
+      INZENDINGEN_CRON_PATTERN: "* 22 * * *"
     volumes:
       - ./data/files:/data/files
 ```
@@ -26,8 +26,8 @@ Required environment variables:
 * `KALLIOPE_PS_UIT_ENDPOINT`
 * `KALLIOPE_PS_IN_ENDPOINT`
 * `INZENDING_BASE_URL`
-* `RUN_INTERVAL_BERICHTEN`: How frequent the service to poll the API for berichten must run (in minutes)
-* `RUN_INTERVAL_INZENDINGEN`: How frequent the service to poll the API for inzendingen must run (in minutes)
+* `BERICHTEN_CRON_PATTERN`: Pattern of the cron job that polls the API for berichten
+* `INZENDINGEN_CRON_PATTERN`: Pattern of the cron job that polls the API for inzendingen
 
 Optional environment variables:
 
