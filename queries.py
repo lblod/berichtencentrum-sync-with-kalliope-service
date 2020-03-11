@@ -2,6 +2,15 @@
 import copy
 import escape_helpers
 
+# TODO Remove this escape method and use the mu one once PR has been merged: https://github.com/MikiDi/mu-python-template/pull/2
+import re
+def sparql_escape_string(obj):
+    obj = str(obj)
+    def replacer(a):
+        return "\\"+a.group(0)
+    return '"""' + re.sub(r'[\\\'"]', replacer, obj) + '"""'
+
+
 def construct_conversatie_exists_query(graph_uri, dossiernummer):
     """
     Construct a query for selecting a conversatie based on dossiernummer (thereby also testing if the conversatie already exists)
@@ -61,7 +70,7 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
     conversatie['betreft'] = escape_helpers.sparql_escape_string(conversatie['betreft'])
     conversatie['current_type_communicatie'] = escape_helpers.sparql_escape_string(conversatie['current_type_communicatie'])
     bericht = copy.deepcopy(bericht) # For not modifying the pass-by-name original
-    bericht['inhoud'] = escape_helpers.sparql_escape_string(bericht['inhoud'])
+    bericht['inhoud'] = sparql_escape_string(bericht['inhoud'])
     q = """
         PREFIX schema: <http://schema.org/>
         PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
@@ -106,7 +115,7 @@ def construct_insert_bericht_query(graph_uri, bericht, conversatie_uri):
     :returns: string containing SPARQL query
     """
     bericht = copy.deepcopy(bericht) # For not modifying the pass-by-name original
-    bericht['inhoud'] = escape_helpers.sparql_escape_string(bericht['inhoud'])
+    bericht['inhoud'] = sparql_escape_string(bericht['inhoud'])
     q = """
         PREFIX schema: <http://schema.org/>
 

@@ -154,17 +154,29 @@ def process_berichten_in():
                     log("Existing conversation '{}' inserting new message sent @ {}".format(conversatie['betreft'],
                                                                                             bericht['verzonden']))
                     q_bericht = construct_insert_bericht_query(graph, bericht, conversatie_uri)
-                    result = update(q_bericht)
-                    q_type_communicatie = construct_update_conversatie_type_query(graph, conversatie_uri, bericht['type_communicatie'])
-                    result = update(q_type_communicatie)
-                    save_bijlagen(bericht['bijlagen'])
+                    try:
+                        result = update(q_bericht)
+                        q_type_communicatie = construct_update_conversatie_type_query(graph, conversatie_uri, bericht['type_communicatie'])
+                        result = update(q_type_communicatie)
+                        save_bijlagen(bericht['bijlagen'])
+                    except Exception as e:
+                        log("Something went wrong inserting new message or conversation, skipping: {}\n{}".format(poststuk,
+                                                                                                           e))
+                        continue
+
                 else: #conversatie to which the bericht is linked does not exist yet.
                     log("Non-existing conversation '{}' inserting new conversation + message sent @ {}".format(conversatie['betreft'],
                                                                                                                bericht['verzonden']))
                     conversatie['uri'] = "http://data.lblod.info/id/conversaties/{}".format(conversatie['uuid'])
                     q_conversatie = construct_insert_conversatie_query(graph, conversatie, bericht)
-                    result = update(q_conversatie)
-                    save_bijlagen(bericht['bijlagen'])
+                    try:
+                        result = update(q_conversatie)
+                        save_bijlagen(bericht['bijlagen'])
+                    except Exception as e:
+                        log("Something went wrong inserting new message, skipping: {}\n{}".format(poststuk,
+                                                                                           e))
+                        continue
+
                 # Updating ext:lastMessage link for each conversation (in 2 parts because Virtuoso)
                 update(construct_update_last_bericht_query_part1())
                 update(construct_update_last_bericht_query_part2())
