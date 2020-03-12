@@ -491,7 +491,8 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
         '<http://data.lblod.info/DecisionType/012ee8325a88bf82c32b06bea1a0c54c6abf116304daa5bdd82b0c9f910a9c41>',
         '<http://data.lblod.info/DecisionType/3814e7380c3823eb7cd6d835738ae96382e1b76e82acca848f9055d922f84f3c>',
         '<http://data.lblod.info/DecisionType/fe25499216a96fc3da8ef79294acdf64f0fb838ef388f46ea6036b8e7eb6545c>',
-        '<http://data.lblod.info/DecisionType/36979ac1d57b103ec10732be09705e0183863c3db9726b6352344500e392f33c>'
+        '<http://data.lblod.info/DecisionType/36979ac1d57b103ec10732be09705e0183863c3db9726b6352344500e392f33c>',
+        '<http://data.lblod.info/DecisionType/15150f3d5ec59c5f202fd2d8bb289de12b15adf98c660c535468fac0c7ff5ba2>'
     ]
     separator = ', '
 
