@@ -466,59 +466,64 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
     """
 
     allowedDecisionTypesList = [
-        '<http://data.lblod.info/DecisionType/9ce1fbfa68b14a5599b266f0e0211bf34b6be9d3792e4ee4a893de6525bd1331>',
-        '<http://data.lblod.info/DecisionType/80536574a0ec8ea88685510b713aa566a5f16cfd575fabd8f7943bccaaad00e4>',
-        '<http://data.lblod.info/DecisionType/4c7e8ce005e798d980ad0b7548b55a461cb6983c18eafbbb5e5cae617aae2e3d>',
-        '<http://data.lblod.info/DecisionType/26697366c439cac0fd35581416baffec2368d765d61888bfb4bafd22ddbc8b33>',
-        '<http://data.lblod.info/DecisionType/d6e90eb6e3ceda4f9a47b214b3ab47274670d3621f34bf8984f4c7d99f97dcc2>',
-        '<http://data.lblod.info/DecisionType/a6f91929f3d9625991863c2fec4f6a4fe4287753eaefb901faaaa61002ba378a>',
-        '<http://data.lblod.info/DecisionType/c52ff4c14694c22c55dcf01b3f30b5dc00bc8b264260488b2d14de80953964be>',
-        '<http://data.lblod.info/DecisionType/e95eb08daa9892357e52914596cf77945c4a3086d850344ed17c80c96b9686a7>',
-        '<http://data.lblod.info/DecisionType/898539285cb768813b1078651adc0c31c057423dbf421e254c5ded013a436284>',
-        '<http://data.lblod.info/DecisionType/1c0a7dae2be26ee48a31ca80508fbc6defb046791655283b5b91ee0d5242e675>',
-        '<http://data.lblod.info/DecisionType/d68c36802386c988df798ed577b96d8e0f010441f74628f4d2dbd3196c1c6ac3>',
-        '<http://data.lblod.info/DecisionType/ce6b083256a2cda03c31f71e412747f079fc956ddeb2fa954725807e3fa03ea3>',
-        '<http://data.lblod.info/DecisionType/072413568f428f8490f55729f8e577979fcb9a28c4fc0727fbf539677bef1dce>',
-        '<http://data.lblod.info/DecisionType/f1befb94c7f074a34d1e2b594141e6e53ce63b7c65a349885d1026779df581ed>',
-        '<http://data.lblod.info/DecisionType/e9d17bc6fb58ea6049d702294672e135d4952963d938c665eaa7cee3817f1c06>',
-        '<http://data.lblod.info/DecisionType/6921c32162d2340fc4808e2b3e2ac4164d2fd53d9d4a722a894015fd2a559588>',
-        '<http://data.lblod.info/DecisionType/31174a1b9ba5400d8ccb6d3ecad0cf43372b54a362e1ae9abf597a67120119ca>',
-        '<http://data.lblod.info/DecisionType/14fbb6a2cc518a9e116835e3c9c3bdd858feac647e29334e404ac5a2dfa80ccb>',
-        '<http://data.lblod.info/DecisionType/8ff851da2264fc1d6afb57ac23c7a4d492a509870674dd419572048ecdd63b5d>',
-        '<http://data.lblod.info/DecisionType/600799c1f8e1a64b370b5f16507d0a8e76dae56118340fcae7d4887ee46bdbbd>',
-        '<http://data.lblod.info/DecisionType/04e8ea609fa954e1e3324afee57c358f8cb324e4b57277b54f1734c331922f5e>',
-        '<http://data.lblod.info/DecisionType/9fb28f4a126a4f02940408344c37b81c32f567c30a7b0390dee14e8ead197b64>',
-        '<http://data.lblod.info/DecisionType/012ee8325a88bf82c32b06bea1a0c54c6abf116304daa5bdd82b0c9f910a9c41>',
-        '<http://data.lblod.info/DecisionType/3814e7380c3823eb7cd6d835738ae96382e1b76e82acca848f9055d922f84f3c>',
-        '<http://data.lblod.info/DecisionType/fe25499216a96fc3da8ef79294acdf64f0fb838ef388f46ea6036b8e7eb6545c>',
-        '<http://data.lblod.info/DecisionType/36979ac1d57b103ec10732be09705e0183863c3db9726b6352344500e392f33c>',
-        '<http://data.lblod.info/DecisionType/15150f3d5ec59c5f202fd2d8bb289de12b15adf98c660c535468fac0c7ff5ba2>'
+        '<https://data.vlaanderen.be/id/concept/BesluitDocumentType/0ee460b1-5ef4-4d4a-b5e1-e2d7c1d5086e>',
+        '<https://data.vlaanderen.be/id/concept/BesluitDocumentType/8e791b27-7600-4577-b24e-c7c29e0eb773>',
+        '<https://data.vlaanderen.be/id/concept/BesluitType/f8c070bd-96e4-43a1-8c6e-532bcd771251>',
+        '<https://data.vlaanderen.be/id/concept/BesluitType/40831a2c-771d-4b41-9720-0399998f1873>',
+        '<https://data.vlaanderen.be/id/concept/BesluitType/380674ee-0894-4c41-bcc1-9deaeb9d464c>',
+        '<https://data.vlaanderen.be/id/concept/BesluitType/f56c645d-b8e1-4066-813d-e213f5bc529f>',
+        '<https://data.vlaanderen.be/id/concept/BesluitType/e44c535d-4339-4d15-bdbf-d4be6046de2c>',
+        '<https://data.vlaanderen.be/id/concept/BesluitType/c945b531-4742-43fe-af55-b13da6ecc6fe>',
+        '<https://data.vlaanderen.be/id/concept/BesluitType/bd0b0c42-ba5e-4acc-b644-95f6aad904c7>',
+        '<https://data.vlaanderen.be/id/concept/BesluitType/1105564e-30c7-4371-a864-6b7329cdae6f>',
+        '<https://data.vlaanderen.be/id/concept/BesluitType/e27ef237-29de-49b8-be22-4ee2ab2d4e5b>',
+        '<https://data.vlaanderen.be/id/concept/BesluitType/dbc58656-b0a5-4e43-8e9e-701acb75f9b0>',
+        '<https://data.vlaanderen.be/id/concept/BesluitType/b69c9f18-967c-4feb-90a8-8eea3c8ce46b>',
+        '<https://data.vlaanderen.be/id/concept/BesluitType/4efa4632-efc6-40d5-815a-dec785fbceac>',
+        '<https://data.vlaanderen.be/id/concept/BesluitType/9f12dc58-18ba-4a1f-9e7a-cf73d0b4f025>',
+        '<https://data.vlaanderen.be/id/concept/BesluitType/849c66c2-ba33-4ac1-a693-be48d8ac7bc7>',
+        '<https://data.vlaanderen.be/id/concept/BesluitType/82d0696e-1225-4684-826a-923b2453f5e3>',
+        '<https://data.vlaanderen.be/id/concept/BesluitType/c417f3da-a3bd-47c5-84bf-29007323a362>',
+        '<https://data.vlaanderen.be/id/concept/BesluitType/2f189152-1786-4b55-a3a9-d7f06de63f1c>',
+        '<https://data.vlaanderen.be/id/concept/BesluitType/a0a709a7-ac07-4457-8d40-de4aea9b1432>',
+        '<https://data.vlaanderen.be/id/concept/BesluitType/3fcf7dba-2e5b-4955-a489-6dd8285c013b>',
+        '<https://data.vlaanderen.be/id/concept/BesluitType/79414af4-4f57-4ca3-aaa4-f8f1e015e71c>',
+        '<https://data.vlaanderen.be/id/concept/BesluitType/df261490-cc74-4f80-b783-41c35e720b46>',
+        '<https://data.vlaanderen.be/id/concept/BesluitType/b25faa84-3ab5-47ae-98c0-1b389c77b827>',
+        '<https://data.vlaanderen.be/id/concept/BesluitType/8bdc614a-d2f2-44c0-8cb1-447b1017d312>',
+        '<https://data.vlaanderen.be/id/concept/BesluitType/d9c3d177-6dc6-4775-8c6a-1055a9cbdcc6>',
+        '<https://data.vlaanderen.be/id/concept/BesluitType/bf72e38a-2c73-4484-b82f-c642a4c39d0c>'
     ]
     separator = ', '
 
     q = """
-        PREFIX toezicht: <http://mu.semte.ch/vocabularies/ext/supervision/>
-        PREFIX dct: <http://purl.org/dc/terms/>
-        PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
-        PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
-        PREFIX adms: <http://www.w3.org/ns/adms#>
-        PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+        PREFIX meb:     <http://rdf.myexperiment.org/ontologies/base/>
+        PREFIX dct:     <http://purl.org/dc/terms/>
+        PREFIX nmo:     <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
+        PREFIX ext:     <http://mu.semte.ch/vocabularies/ext/>
+        PREFIX adms:    <http://www.w3.org/ns/adms#>
+        PREFIX skos:    <http://www.w3.org/2004/02/skos/core#>
+        PREFIX prov:    <http://www.w3.org/ns/prov#>
+        PREFIX eli:     <http://data.europa.eu/eli/ontology#>
+        PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
+        PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
 
         SELECT DISTINCT ?inzending ?inzendingUuid ?bestuurseenheid ?decisionType ?sessionDate ?decisionTypeLabel
         WHERE {{
             GRAPH ?g {{
-                ?inzending a toezicht:InzendingVoorToezicht ;
-                    <http://mu.semte.ch/vocabularies/core/uuid> ?inzendingUuid ;
-                    dct:subject ?bestuurseenheid ;
-                    adms:status <http://data.lblod.info/document-statuses/verstuurd> ;
-                    toezicht:decisionType ?decisionType ;
-                    nmo:sentDate ?sentDate .
+                ?submission a meb:Submission ;
+                    adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
+                    prov:generated ?inzending .
+
+                ?inzending <http://mu.semte.ch/vocabularies/core/uuid> ?inzendingUuid ;
+                    eli:passed_by ?bestuursorgaanInTijd ;
+                    dct:type ?decisionType .
 
                 FILTER ( ?decisionType IN ( {1} ) )
 
-                FILTER NOT EXISTS {{ ?inzending nmo:receivedDate ?receivedDate. }}
+                FILTER NOT EXISTS {{ ?submission nmo:receivedDate ?receivedDate. }}
 
-                OPTIONAL {{ ?inzending toezicht:sessionDate ?sessionDate. }}
+                OPTIONAL {{ ?inzending ext:sessionStartedAtTime ?sessionDate. }}
 
                 BIND(0 AS ?default_attempts)
                 OPTIONAL {{ ?inzending ext:failedSendingAttempts ?attempts. }}
@@ -527,6 +532,9 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
             }}
             GRAPH ?h {{
                 OPTIONAL {{ ?decisionType skos:prefLabel ?decisionTypeLabel }} .
+            }}
+            GRAPH ?i {{
+                ?bestuursorgaanInTijd mandaat:isTijdspecialisatieVan/besluit:bestuurt ?bestuurseenheid .
             }}
         }}
         """.format(max_sending_attempts, separator.join(allowedDecisionTypesList))
@@ -542,8 +550,7 @@ def construct_increment_inzending_attempts_query(graph_uri, inzending_uri):
     :returns: string containing SPARQL query
     """
     q = """
-        PREFIX toezicht: <http://mu.semte.ch/vocabularies/ext/supervision/>
-        PREFIX schema: <http://schema.org/>
+        PREFIX melding: <http://lblod.data.gift/vocabularies/automatische-melding/>
         PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 
         DELETE {{
@@ -558,8 +565,9 @@ def construct_increment_inzending_attempts_query(graph_uri, inzending_uri):
         }}
         WHERE {{
             GRAPH <{0}> {{
-                <{1}> a toezicht:InzendingVoorToezicht.
-                OPTIONAL {{ <{1}> ext:failedSendingAttempts ?attempts. }}
+                <{1}> a melding:FormData .
+
+                OPTIONAL {{ ?submission ext:failedSendingAttempts ?attempts. }}
                 BIND(0 AS ?default_attempts)
                 BIND(COALESCE(?attempts, ?default_attempts) AS ?result_attempts)
                 BIND((?result_attempts + 1) AS ?incremented_attempts)
@@ -578,7 +586,7 @@ def construct_inzending_sent_query(graph_uri, inzending_uri, verzonden):
     :returns: string containing SPARQL query
     """
     q = """
-        PREFIX toezicht: <http://mu.semte.ch/vocabularies/ext/supervision/>
+        PREFIX melding: <http://lblod.data.gift/vocabularies/automatische-melding/>
         PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
 
         INSERT {{
@@ -588,7 +596,7 @@ def construct_inzending_sent_query(graph_uri, inzending_uri, verzonden):
         }}
         WHERE {{
             GRAPH <{0}> {{
-                <{1}> a toezicht:InzendingVoorToezicht .
+                <{1}> a melding:FormData .
             }}
         }}
         """.format(graph_uri, inzending_uri, verzonden)
