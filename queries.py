@@ -526,7 +526,7 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
                 OPTIONAL {{ ?inzending ext:sessionStartedAtTime ?sessionDate. }}
 
                 BIND(0 AS ?default_attempts)
-                OPTIONAL {{ ?inzending ext:failedSendingAttempts ?attempts. }}
+                OPTIONAL {{ ?submission ext:failedSendingAttempts ?attempts. }}
                 BIND(COALESCE(?attempts, ?default_attempts) AS ?result_attempts)
                 FILTER(?result_attempts < {0})
             }}
@@ -550,22 +550,24 @@ def construct_increment_inzending_attempts_query(graph_uri, inzending_uri):
     :returns: string containing SPARQL query
     """
     q = """
-        PREFIX melding: <http://lblod.data.gift/vocabularies/automatische-melding/>
         PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+        PREFIX meb: <http://rdf.myexperiment.org/ontologies/base/>
+        PREFIX prov: <http://www.w3.org/ns/prov#>
 
         DELETE {{
             GRAPH <{0}> {{
-                <{1}> ext:failedSendingAttempts ?result_attempts.
+                ?submission ext:failedSendingAttempts ?result_attempts.
             }}
         }}
         INSERT {{
             GRAPH <{0}> {{
-                <{1}> ext:failedSendingAttempts ?incremented_attempts.
+                ?submission ext:failedSendingAttempts ?incremented_attempts.
             }}
         }}
         WHERE {{
             GRAPH <{0}> {{
-                <{1}> a melding:FormData .
+                ?submission a meb:Submission ;
+                    prov:generated <{1}> .
 
                 OPTIONAL {{ ?submission ext:failedSendingAttempts ?attempts. }}
                 BIND(0 AS ?default_attempts)
@@ -586,17 +588,19 @@ def construct_inzending_sent_query(graph_uri, inzending_uri, verzonden):
     :returns: string containing SPARQL query
     """
     q = """
-        PREFIX melding: <http://lblod.data.gift/vocabularies/automatische-melding/>
+        PREFIX meb: <http://rdf.myexperiment.org/ontologies/base/>
         PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
+        PREFIX prov: <http://www.w3.org/ns/prov#>
 
         INSERT {{
             GRAPH <{0}> {{
-                <{1}> nmo:receivedDate "{2}"^^xsd:dateTime .
+                ?submission nmo:receivedDate "{2}"^^xsd:dateTime .
             }}
         }}
         WHERE {{
             GRAPH <{0}> {{
-                <{1}> a melding:FormData .
+                ?submission a meb:Submission ;
+                    prov:generated <{1}> .
             }}
         }}
         """.format(graph_uri, inzending_uri, verzonden)
