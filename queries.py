@@ -513,10 +513,10 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
             GRAPH ?g {{
                 ?submission a meb:Submission ;
                     adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
+                    <http://purl.org/pav/createdBy> ?bestuurseenheid;
                     prov:generated ?inzending .
 
                 ?inzending <http://mu.semte.ch/vocabularies/core/uuid> ?inzendingUuid ;
-                    eli:passed_by ?bestuursorgaanInTijd ;
                     dct:type ?decisionType .
 
                 FILTER ( ?decisionType IN ( {1} ) )
@@ -532,9 +532,6 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
             }}
             GRAPH ?h {{
                 OPTIONAL {{ ?decisionType skos:prefLabel ?decisionTypeLabel }} .
-            }}
-            GRAPH ?i {{
-                ?bestuursorgaanInTijd mandaat:isTijdspecialisatieVan/besluit:bestuurt ?bestuurseenheid .
             }}
         }}
         """.format(max_sending_attempts, separator.join(allowedDecisionTypesList))
