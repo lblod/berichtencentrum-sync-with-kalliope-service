@@ -511,19 +511,19 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
         SELECT DISTINCT ?inzending ?inzendingUuid ?bestuurseenheid ?decisionType ?sessionDate ?decisionTypeLabel
         WHERE {{
             GRAPH ?g {{
-                ?submission a meb:Submission ;
+                ?inzending a meb:Submission ;
                     adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
+                    <http://mu.semte.ch/vocabularies/core/uuid> ?inzendingUuid ;
                     <http://purl.org/pav/createdBy> ?bestuurseenheid;
-                    prov:generated ?inzending .
+                    prov:generated ?formData .
 
-                ?inzending <http://mu.semte.ch/vocabularies/core/uuid> ?inzendingUuid ;
-                    dct:type ?decisionType .
+                ?formData dct:type ?decisionType .
 
                 FILTER ( ?decisionType IN ( {1} ) )
 
                 FILTER NOT EXISTS {{ ?submission nmo:receivedDate ?receivedDate. }}
 
-                OPTIONAL {{ ?inzending ext:sessionStartedAtTime ?sessionDate. }}
+                OPTIONAL {{ ?formData ext:sessionStartedAtTime ?sessionDate. }}
 
                 BIND(0 AS ?default_attempts)
                 OPTIONAL {{ ?submission ext:failedSendingAttempts ?attempts. }}

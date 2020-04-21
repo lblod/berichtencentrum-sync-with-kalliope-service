@@ -46,14 +46,14 @@ INZENDING_BASE_URL = os.environ.get('INZENDING_BASE_URL')
 
 def process_inzendingen():
     """
-    Fetch inzendingen that have to be sent to Kalliope from the triple store,
+    Fetch submissions that have to be sent to Kalliope from the triple store,
         convert them to the correct format for the Kalliope API, post them and finally mark them as sent.
 
     :returns: None
     """
     q = construct_unsent_inzendingen_query(MAX_SENDING_ATTEMPTS)
     inzendingen = query(q)['results']['bindings']
-    log("Found {} inzendingen that need to be sent to the Kalliope API".format(len(inzendingen)))
+    log("Found {} submissions that need to be sent to the Kalliope API".format(len(inzendingen)))
 
     if len(inzendingen) == 0:
         return
@@ -87,7 +87,7 @@ def process_inzendingen():
                 ontvangen = datetime.now(tz=TIMEZONE).replace(microsecond=0).isoformat() # We consider the moment when the api-call succeeded the 'ontvangen'-time
                 q_sent = construct_inzending_sent_query(graph, inzending['uri'], ontvangen)
                 update(q_sent)
-                log("successfully sent inzending {} to Kalliope".format(inzending['uri']))
+                log("successfully sent submission {} to Kalliope".format(inzending['uri']))
     pass
 
 def process_berichten_in():
