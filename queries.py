@@ -521,12 +521,12 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
 
                 FILTER ( ?decisionType IN ( {1} ) )
 
-                FILTER NOT EXISTS {{ ?submission nmo:receivedDate ?receivedDate. }}
+                FILTER NOT EXISTS {{ ?inzending nmo:receivedDate ?receivedDate. }}
 
                 OPTIONAL {{ ?formData ext:sessionStartedAtTime ?sessionDate. }}
 
                 BIND(0 AS ?default_attempts)
-                OPTIONAL {{ ?submission ext:failedSendingAttempts ?attempts. }}
+                OPTIONAL {{ ?inzending ext:failedSendingAttempts ?attempts. }}
                 BIND(COALESCE(?attempts, ?default_attempts) AS ?result_attempts)
                 FILTER(?result_attempts < {0})
             }}
