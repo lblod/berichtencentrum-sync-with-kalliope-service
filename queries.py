@@ -555,20 +555,19 @@ def construct_increment_inzending_attempts_query(graph_uri, inzending_uri):
 
         DELETE {{
             GRAPH <{0}> {{
-                ?submission ext:failedSendingAttempts ?result_attempts.
+                <{1}> ext:failedSendingAttempts ?result_attempts.
             }}
         }}
         INSERT {{
             GRAPH <{0}> {{
-                ?submission ext:failedSendingAttempts ?incremented_attempts.
+                <{1}> ext:failedSendingAttempts ?incremented_attempts.
             }}
         }}
         WHERE {{
             GRAPH <{0}> {{
-                ?submission a meb:Submission ;
-                    prov:generated <{1}> .
+                <{1}> a meb:Submission .
 
-                OPTIONAL {{ ?submission ext:failedSendingAttempts ?attempts. }}
+                OPTIONAL {{ <{1}> ext:failedSendingAttempts ?attempts. }}
                 BIND(0 AS ?default_attempts)
                 BIND(COALESCE(?attempts, ?default_attempts) AS ?result_attempts)
                 BIND((?result_attempts + 1) AS ?incremented_attempts)
@@ -591,15 +590,9 @@ def construct_inzending_sent_query(graph_uri, inzending_uri, verzonden):
         PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
         PREFIX prov: <http://www.w3.org/ns/prov#>
 
-        INSERT {{
+        INSERT DATA {{
             GRAPH <{0}> {{
-                ?submission nmo:receivedDate "{2}"^^xsd:dateTime .
-            }}
-        }}
-        WHERE {{
-            GRAPH <{0}> {{
-                ?submission a meb:Submission ;
-                    prov:generated <{1}> .
+                <{1}> nmo:receivedDate "{2}"^^xsd:dateTime .
             }}
         }}
         """.format(graph_uri, inzending_uri, verzonden)
