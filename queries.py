@@ -521,7 +521,7 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
 
                 ?formData dct:type ?decisionType .
 
-                VALUES ?decisionType { {1} }
+                VALUES ?decisionType {{ {1} }}
 
                 FILTER NOT EXISTS {{ ?inzending nmo:receivedDate ?receivedDate. }}
 
