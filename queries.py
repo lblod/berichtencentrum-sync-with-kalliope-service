@@ -496,7 +496,7 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
         '<https://data.vlaanderen.be/id/concept/BesluitType/4350cdda-8291-4055-9026-5c7429357fce>',
         '<https://data.vlaanderen.be/id/concept/BesluitType/6af621e2-c807-479e-a6f2-2d64d8339491>'
     ]
-    separator = ', '
+    separator = ' '
 
     q = """
         PREFIX meb:     <http://rdf.myexperiment.org/ontologies/base/>
@@ -521,7 +521,7 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
 
                 ?formData dct:type ?decisionType .
 
-                FILTER ( ?decisionType IN ( {1} ) )
+                VALUES ?decisionType { {1} }
 
                 FILTER NOT EXISTS {{ ?inzending nmo:receivedDate ?receivedDate. }}
 
