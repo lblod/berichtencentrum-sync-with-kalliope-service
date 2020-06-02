@@ -1,6 +1,10 @@
 #!/usr/bin/python3
 import copy
 import escape_helpers
+import helpers
+from datetime import datetime
+from pytz import timezone
+TIMEZONE = timezone('Europe/Brussels')
 
 # TODO Remove this escape method and use the mu one once PR has been merged: https://github.com/MikiDi/mu-python-template/pull/2
 import re
@@ -601,4 +605,35 @@ def construct_inzending_sent_query(graph_uri, inzending_uri, verzonden):
             }}
         }}
         """.format(graph_uri, inzending_uri, verzonden)
+    return q
+
+def construct_create_kalliope_sync_error_query(graph_uri, poststuk_uri, message, error):
+    now = ontvangen = datetime.now(tz=TIMEZONE).replace(microsecond=0).isoformat()
+    uuid = helpers.generate_uuid()
+    error_uri = "http://data.lblod.info/kalliope-sync-errors/" + uuid
+    """
+    Construct a SPARQL query for creating a new KalliopeSyncError
+
+    :param graph_uri: string
+    :param poststuk_uri: URI of the message that triggered an error
+    :param message: string describing the error
+    :param error: error catched by the exception catcher
+    :returns: string containing SPARQL query
+    """
+    q = """
+        PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        PREFIX pav: <http://purl.org/pav/>
+
+        INSERT DATA {{
+            GRAPH <{0}> {{
+                <{5}> a ext:KalliopeSyncError ;
+                    rdfs:label "{2}" ;
+                    ext:errorMessage "{3}" ;
+                    ext:processedMessage <{1}> ;
+                    pav:createdOn "{4}"^^xsd:dateTime ;
+                    pav:createdBy <http://lblod.data.gift/services/berichtencentrum-sync-with-kalliope-service> .
+            }}
+        }}
+        """.format(graph_uri, poststuk_uri, message, error, now, error_uri)
     return q

@@ -40,3 +40,11 @@ Optional environment variables:
 ## Usage
 
 Note that this service relies on the message-property `schema:dateReceived` not being set for finding messages that still need to be sent via the Kalliope API.
+
+## Develoment
+
+To retrieve poststukken to be able to test, this command can be helpful :
+
+```
+curl -u username:password --insecure 'http://<ip-address>:8090/api/poststuk-uit?vanaf=2020-05-01T00%3A00%3A00%2B02%3A00&aantal=10'
+```

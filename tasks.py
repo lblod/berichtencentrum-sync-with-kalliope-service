@@ -32,6 +32,7 @@ from .queries import construct_select_original_bericht_query
 from .queries import construct_unsent_inzendingen_query
 from .queries import construct_increment_inzending_attempts_query
 from .queries import construct_inzending_sent_query
+from .queries import construct_create_kalliope_sync_error_query
 from .kalliope_adapter import BIJLAGEN_FOLDER_PATH
 
 TIMEZONE = timezone('Europe/Brussels')
@@ -110,8 +111,9 @@ def process_berichten_in():
             try:
                 (conversatie, bericht) = parse_kalliope_poststuk_uit(poststuk, session)
             except Exception as e:
-                log("Something went wrong parsing following poststuk uit, skipping: {}\n{}".format(poststuk,
-                                                                                                   e))
+                message = "Something went wrong parsing following poststuk uit"
+                update(construct_create_kalliope_sync_error_query(PUBLIC_GRAPH, poststuk['uri'], message, e))
+                log("{}, skipping: {}\n{}".format(message, poststuk, e))
                 continue
             bestuurseenheid_uuid = bericht['naar'].split('/')[-1]
             graph = "http://mu.semte.ch/graphs/organizations/{}/LoketLB-berichtenGebruiker".format(bestuurseenheid_uuid)
@@ -119,7 +121,7 @@ def process_berichten_in():
             query_result = query(q)['results']['bindings']
             if not query_result: #Bericht is not in our DB yet. We should insert it.
                 log("Bericht '{}' - {} is not in DB yet.".format(conversatie['betreft'],
-                                                                 bericht['verzonden']))
+                                                                bericht['verzonden']))
                 # Fetch attachments & parse
                 bericht['bijlagen'] = []
                 for ps_bijlage in bericht['bijlagen_refs']:
@@ -127,8 +129,10 @@ def process_berichten_in():
                         bijlage = parse_kalliope_bijlage(ps_bijlage, session)
                         bericht['bijlagen'].append(bijlage)
                     except Exception as e:
-                        helpers.log("Something went wrong while parsing a bijlage for bericht {} sent @ {}".format(conversatie['betreft'],
-                                                                                                                   bericht['verzonden']))
+                        message = "Something went wrong while parsing a bijlage for bericht {} sent @ {}".format(conversatie['betreft'],
+                                                                                                                bericht['verzonden'])
+                        update(construct_create_kalliope_sync_error_query(PUBLIC_GRAPH, poststuk['uri'], message, e))
+                        helpers.log(message)
                 def save_bijlagen(bijlagen):
                     for bijlage in bijlagen:
                         bijlage['uri'] = "http://mu.semte.ch/services/file-service/files/{}".format(bijlage['id'])
@@ -142,10 +146,10 @@ def process_berichten_in():
                         f = open(filepath, 'wb')
                         f.write(bijlage['buffer'])
                         q_bijlage = construct_insert_bijlage_query(graph,
-                                                                   PUBLIC_GRAPH,
-                                                                   bericht['uri'],
-                                                                   bijlage,
-                                                                   file) # TEMP: bijlage in public graph
+                                                                PUBLIC_GRAPH,
+                                                                bericht['uri'],
+                                                                bijlage,
+                                                                file) # TEMP: bijlage in public graph
                         result = update(q_bijlage)
                 q2 = construct_conversatie_exists_query(graph, conversatie['dossiernummer'])
                 query_result2 = query(q2)['results']['bindings']
@@ -160,8 +164,9 @@ def process_berichten_in():
                         result = update(q_type_communicatie)
                         save_bijlagen(bericht['bijlagen'])
                     except Exception as e:
-                        log("Something went wrong inserting new message or conversation, skipping: {}\n{}".format(poststuk,
-                                                                                                           e))
+                        message = "Something went wrong inserting new message or conversation"
+                        update(construct_create_kalliope_sync_error_query(PUBLIC_GRAPH, poststuk['uri'], message, e))
+                        log("{}, skipping: {}\n{}".format(message, poststuk, e))
                         continue
 
                 else: #conversatie to which the bericht is linked does not exist yet.
@@ -173,8 +178,9 @@ def process_berichten_in():
                         result = update(q_conversatie)
                         save_bijlagen(bericht['bijlagen'])
                     except Exception as e:
-                        log("Something went wrong inserting new message, skipping: {}\n{}".format(poststuk,
-                                                                                           e))
+                        message = "Something went wrong inserting new message"
+                        update(construct_create_kalliope_sync_error_query(PUBLIC_GRAPH, poststuk['uri'], message, e))
+                        log("{}, skipping: {}\n{}".format(message, poststuk, e))
                         continue
 
                 # Updating ext:lastMessage link for each conversation (in 2 parts because Virtuoso)
