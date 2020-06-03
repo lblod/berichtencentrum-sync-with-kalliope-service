@@ -111,7 +111,7 @@ def process_berichten_in():
             try:
                 (conversatie, bericht) = parse_kalliope_poststuk_uit(poststuk, session)
             except Exception as e:
-                message = "Something went wrong parsing following poststuk uit"
+                message = "Something went wrong parsing poststuk uit"
                 update(construct_create_kalliope_sync_error_query(PUBLIC_GRAPH, poststuk['uri'], message, e))
                 log("{}, skipping: {}\n{}".format(message, poststuk, e))
                 continue
