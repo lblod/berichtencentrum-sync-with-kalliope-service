@@ -137,7 +137,7 @@ def parse_kalliope_poststuk_uit(ps_uit, session):
     if ps_uit['bestemmeling']['uri']:
         naar = ps_uit['bestemmeling']['uri']
     else:
-        raise ValueError("The bestemmeling has no URI. Probably this message isn't intended for Loket")
+        raise ValueError("The bestemmeling from message {} has no URI. Probably this message isn't intended for Loket".format(ps_uit['uri']))
     def pythonize_iso_timestamp(timestamp):
         """ Convert ISO 8601 timestamp to python .fromisoformat()-compliant format """
         # 'Z'-timezone to '+00:00'-timezone
