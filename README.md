@@ -41,6 +41,8 @@ Optional environment variables:
 
 Note that this service relies on the message-property `schema:dateReceived` not being set for finding messages that still need to be sent via the Kalliope API.
 
+When an error is encoutered by the service, it will generate a [KalliopeSyncError](https://github.com/lblod/sync-with-kalliope-error-notification-service#kalliope-sync-error) that will be then processed and sent as an email.
+
 ## Develoment
 
 To retrieve poststukken to be able to test, this command can be helpful :
