@@ -104,7 +104,9 @@ def process_berichten_in():
             poststukken = get_kalliope_poststukken_uit(PS_UIT_PATH, session, vanaf)
             log('Retrieved {} poststukken uit from Kalliope'.format(len(poststukken)))
         except requests.exceptions.RequestException as e:
-            log("Something went wrong while accessing the Kalliope API. Aborting: {}".format(e))
+            message = "Something went wrong while accessing the Kalliope API. Aborting: {}".format(e)
+            update(construct_create_kalliope_sync_error_query(PUBLIC_GRAPH, None, message, e))
+            log(message)
             return
 
         for poststuk in poststukken:

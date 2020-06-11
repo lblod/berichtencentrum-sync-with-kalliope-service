@@ -616,10 +616,16 @@ def construct_create_kalliope_sync_error_query(graph_uri, poststuk_uri, message,
                 <{5}> a ext:KalliopeSyncError ;
                     rdfs:label "{2}" ;
                     ext:errorMessage "{3}" ;
-                    ext:processedMessage <{1}> ;
+    """
+    if poststuk_uri is not None:
+        q += """
+                       ext:processedMessage <{1}> ;
+             """
+    q += """
                     pav:createdOn "{4}"^^xsd:dateTime ;
                     pav:createdBy <http://lblod.data.gift/services/berichtencentrum-sync-with-kalliope-service> .
             }}
         }}
-        """.format(graph_uri, poststuk_uri, message, error, now, error_uri)
+    """
+    q = q.format(graph_uri, poststuk_uri, message, error, now, error_uri)
     return q
