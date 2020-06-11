@@ -79,9 +79,11 @@ def process_inzendingen():
             try:
                 post_result = post_kalliope_inzending_in(INZENDING_IN_PATH, session, inzending_in)
             except requests.exceptions.RequestException as e:
-                log("Something went wrong while posting following inzending in, skipping: {}\n{}".format(inzending_in,
-                                                                                                   e))
+                message = "Something went wrong while posting following inzending in, skipping: {}\n{}".format(inzending_in,
+                                                                                                   e)
+                update(construct_create_kalliope_sync_error_query(PUBLIC_GRAPH, inzending['uri'], message, e))
                 update(construct_increment_inzending_attempts_query(graph, inzending['uri']))
+                log(message)
                 continue
 
             if post_result:
@@ -244,9 +246,11 @@ def process_berichten_out():
                 try:
                     post_result = post_kalliope_poststuk_in(PS_IN_PATH, session, poststuk_in)
                 except requests.exceptions.RequestException as e:
-                    log("Something went wrong while posting following poststuk in, skipping: {}\n{}".format(poststuk_in,
-                                                                                                       e))
+                    message = "Something went wrong while posting following poststuk in, skipping: {}\n{}".format(poststuk_in,
+                                                                                                                  e)
+                    update(construct_create_kalliope_sync_error_query(PUBLIC_GRAPH, bericht['uri'], message, e))
                     update(construct_increment_bericht_attempts_query(graph, bericht['uri']))
+                    log(message)
                     continue
                 if post_result:
                     ontvangen = datetime.now(tz=TIMEZONE).replace(microsecond=0).isoformat() # We consider the moment when the api-call succeeded the 'ontvangen'-time
