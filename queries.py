@@ -2,6 +2,7 @@
 import copy
 import escape_helpers
 import helpers
+from helpers import log
 from datetime import datetime
 from pytz import timezone
 import re
@@ -630,7 +631,7 @@ def construct_inzending_sent_query(graph_uri, inzending_uri, verzonden):
 
 
 def construct_create_kalliope_sync_error_query(graph_uri, poststuk_uri, message, error):
-    now = ontvangen = datetime.now(tz=TIMEZONE).replace(microsecond=0).isoformat()
+    now = datetime.now(tz=TIMEZONE).replace(microsecond=0).isoformat()
     uuid = helpers.generate_uuid()
     error_uri = "http://data.lblod.info/kalliope-sync-errors/" + uuid
     """
@@ -650,8 +651,8 @@ def construct_create_kalliope_sync_error_query(graph_uri, poststuk_uri, message,
         INSERT DATA {{
             GRAPH <{0}> {{
                 <{5}> a ext:KalliopeSyncError ;
-                    rdfs:label "{2}" ;
-                    ext:errorMessage "{3}" ;
+                    rdfs:label {2} ;
+                    ext:errorMessage {3} ;
     """
     if poststuk_uri is not None:
         q += """
@@ -663,5 +664,10 @@ def construct_create_kalliope_sync_error_query(graph_uri, poststuk_uri, message,
             }}
         }}
     """
-    q = q.format(graph_uri, poststuk_uri, message, error, now, error_uri)
+    q = q.format(graph_uri,
+                 poststuk_uri,
+                 escape_helpers.sparql_escape_string(message),
+                 escape_helpers.sparql_escape_string(error),
+                 now,
+                 error_uri)
     return q
