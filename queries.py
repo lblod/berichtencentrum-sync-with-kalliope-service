@@ -6,6 +6,7 @@ from datetime import datetime
 from pytz import timezone
 TIMEZONE = timezone('Europe/Brussels')
 
+
 def construct_conversatie_exists_query(graph_uri, dossiernummer):
     """
     Construct a query for selecting a conversatie based on dossiernummer (thereby also testing if the conversatie already exists)
@@ -27,6 +28,7 @@ def construct_conversatie_exists_query(graph_uri, dossiernummer):
         }}
         """.format(graph_uri, dossiernummer)
     return q
+
 
 def construct_bericht_exists_query(graph_uri, bericht_uri):
     """
@@ -50,6 +52,7 @@ def construct_bericht_exists_query(graph_uri, bericht_uri):
         }}
         """.format(graph_uri, bericht_uri)
     return q
+
 
 def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
     """
@@ -100,6 +103,7 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
     q = q.format(graph_uri, conversatie, bericht)
     return q
 
+
 def construct_insert_bericht_query(graph_uri, bericht, conversatie_uri):
     """
     Construct a SPARQL query for inserting a bericht and attaching it to an existing conversatie.
@@ -130,6 +134,7 @@ def construct_insert_bericht_query(graph_uri, bericht, conversatie_uri):
         }}
         """.format(graph_uri, bericht, conversatie_uri)
     return q
+
 
 def construct_update_conversatie_type_query(graph_uri, conversatie_uri, type_communicatie):
     """
@@ -164,6 +169,7 @@ def construct_update_conversatie_type_query(graph_uri, conversatie_uri, type_com
         }}
         """.format(graph_uri, conversatie_uri, type_communicatie)
     return q
+
 
 def construct_insert_bijlage_query(bericht_graph_uri, bijlage_graph_uri, bericht_uri, bijlage, file):
     """
@@ -215,6 +221,7 @@ def construct_insert_bijlage_query(bericht_graph_uri, bijlage_graph_uri, bericht
         """.format(bericht_graph_uri, bijlage_graph_uri, bericht_uri, bijlage, file)
     return q
 
+
 def construct_update_last_bericht_query_part1():
     """
     Construct a SPARQL query for keeping the ext:lastMessage of each conversation up to date.
@@ -254,6 +261,7 @@ def construct_update_last_bericht_query_part1():
         """
     return q
 
+
 def construct_update_last_bericht_query_part2():
     """
     Construct a SPARQL query for keeping the ext:lastMessage of each conversation up to date.
@@ -292,6 +300,7 @@ def construct_update_last_bericht_query_part2():
         """
     return q
 
+
 def construct_unsent_berichten_query(naar_uri, max_sending_attempts):
     """
     Construct a SPARQL query for retrieving all messages for a given recipient that haven't been received yet by the other party.
@@ -329,6 +338,7 @@ def construct_unsent_berichten_query(naar_uri, max_sending_attempts):
         """.format(naar_uri, max_sending_attempts)
     return q
 
+
 def construct_select_bijlagen_query(bijlagen_graph_uri, bericht_uri):
     """
     Construct a SPARQL query for retrieving all bijlages for a given bericht.
@@ -357,6 +367,7 @@ def construct_select_bijlagen_query(bijlagen_graph_uri, bericht_uri):
         }}
         """.format(bijlagen_graph_uri, bericht_uri)
     return q
+
 
 def construct_increment_bericht_attempts_query(graph_uri, bericht_uri):
     """
@@ -393,6 +404,7 @@ def construct_increment_bericht_attempts_query(graph_uri, bericht_uri):
         """.format(graph_uri, bericht_uri)
     return q
 
+
 def construct_bericht_sent_query(graph_uri, bericht_uri, verzonden):
     """
     Construct a SPARQL query for marking a bericht as received by the other party (and thus 'sent' by us)
@@ -417,6 +429,7 @@ def construct_bericht_sent_query(graph_uri, bericht_uri, verzonden):
         }}
         """.format(graph_uri, bericht_uri, verzonden)
     return q
+
 
 def construct_select_original_bericht_query(bericht_uri):
     """
@@ -451,6 +464,7 @@ def construct_select_original_bericht_query(bericht_uri):
         }}
         """.format(bericht_uri)
     return q
+
 
 def construct_unsent_inzendingen_query(max_sending_attempts):
     """
@@ -534,6 +548,7 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
         """.format(max_sending_attempts, separator.join(allowedDecisionTypesList))
     return q
 
+
 def construct_increment_inzending_attempts_query(graph_uri, inzending_uri):
     """
     Construct a SPARQL query for incrementing (+1) the counter that keeps track of how many times
@@ -571,6 +586,7 @@ def construct_increment_inzending_attempts_query(graph_uri, inzending_uri):
         """.format(graph_uri, inzending_uri)
     return q
 
+
 def construct_inzending_sent_query(graph_uri, inzending_uri, verzonden):
     """
     Construct a SPARQL query for marking a bericht as received by the other party (and thus 'sent' by us)
@@ -592,6 +608,7 @@ def construct_inzending_sent_query(graph_uri, inzending_uri, verzonden):
         }}
         """.format(graph_uri, inzending_uri, verzonden)
     return q
+
 
 def construct_create_kalliope_sync_error_query(graph_uri, poststuk_uri, message, error):
     now = ontvangen = datetime.now(tz=TIMEZONE).replace(microsecond=0).isoformat()
