@@ -67,42 +67,66 @@ def process_inzendingen():
     q = construct_unsent_inzendingen_query(MAX_SENDING_ATTEMPTS)
     inzendingen = query(q)['results']['bindings']
     log("Found {} submissions that need to be sent to the Kalliope API".format(len(inzendingen)))
-
     if len(inzendingen) == 0:
         return
 
     with open_kalliope_api_session() as session:
         for inzending_res in inzendingen:
-            inzending = {
-                'uri': inzending_res['inzending']['value'],
-                'afzenderUri': inzending_res['bestuurseenheid']['value'],
-                'betreft': inzending_res['decisionTypeLabel']['value'] + ' ' + inzending_res.get('sessionDate', {}).get('value', '').split('T')[0],
-                'inhoud': INZENDING_BASE_URL + '/' + inzending_res['inzendingUuid']['value'],
-                'typePoststuk': 'https://kalliope.abb.vlaanderen.be/ld/algemeen/dossierType/besluit',
-                'typeMelding': inzending_res['decisionType']['value'],
-            }
-
-            inzending_in = construct_kalliope_inzending_in(inzending)
-
-            bestuurseenheid_uuid = inzending['afzenderUri'].split('/')[-1] # NOTE: Add graph as argument to query because Virtuoso
-            graph = "http://mu.semte.ch/graphs/organizations/{}/LoketLB-toezichtGebruiker".format(bestuurseenheid_uuid)
-            log("Posting inzending <{}>. Payload: {}".format(inzending['uri'], inzending_in))
-
             try:
-                post_result = post_kalliope_inzending_in(INZENDING_IN_PATH, session, inzending_in)
-            except requests.exceptions.RequestException as e:
-                message = "Something went wrong while posting following inzending in, skipping: {}\n{}".format(inzending_in,
-                                                                                                   e)
-                update(construct_create_kalliope_sync_error_query(PUBLIC_GRAPH, inzending['uri'], message, e))
-                update(construct_increment_inzending_attempts_query(graph, inzending['uri']))
-                log(message)
-                continue
 
-            if post_result:
-                ontvangen = datetime.now(tz=TIMEZONE).replace(microsecond=0).isoformat() # We consider the moment when the api-call succeeded the 'ontvangen'-time
-                q_sent = construct_inzending_sent_query(graph, inzending['uri'], ontvangen)
-                update(q_sent)
-                log("successfully sent submission {} to Kalliope".format(inzending['uri']))
+                inzending = {
+                    'uri': inzending_res['inzending']['value'],
+                    'afzenderUri': inzending_res['bestuurseenheid']['value'],
+                    'betreft': inzending_res['decisionTypeLabel']['value'] + ' ' +
+                    inzending_res.get('sessionDate', {}).get('value', '').split('T')[0],
+                    'inhoud': INZENDING_BASE_URL + '/' + inzending_res['inzendingUuid']['value'],
+                    'typePoststuk': 'https://kalliope.abb.vlaanderen.be/ld/algemeen/dossierType/besluit',
+                    'typeMelding': inzending_res['decisionType']['value'],
+                }
+
+                inzending_in = construct_kalliope_inzending_in(inzending)
+
+                #  NOTE: Add graph as argument to query because Virtuoso
+                bestuurseenheid_uuid = inzending['afzenderUri'].split('/')[-1]
+                graph = \
+                    "http://mu.semte.ch/graphs/organizations/{}/LoketLB-toezichtGebruiker".format(bestuurseenheid_uuid)
+                log("Posting inzending <{}>. Payload: {}".format(inzending['uri'], inzending_in))
+
+                try:
+                    post_result = post_kalliope_inzending_in(INZENDING_IN_PATH, session, inzending_in)
+                except Exception as e:
+                    message = """
+                              Something went wrong while posting following inzending in, skipping: {}\n{}
+                              """.format(inzending_in, e)
+
+                    error_query = construct_create_kalliope_sync_error_query(PUBLIC_GRAPH, inzending['uri'], message, e)
+                    update(error_query)
+                    attempt_query = construct_increment_inzending_attempts_query(graph, inzending['uri'])
+                    update(attempt_query)
+                    log(message)
+
+                    continue
+
+                if post_result:
+                    #  We consider the moment when the api-call succeeded the 'ontvangen'-time
+                    ontvangen = datetime.now(tz=TIMEZONE).replace(microsecond=0).isoformat()
+                    q_sent = construct_inzending_sent_query(graph, inzending['uri'], ontvangen)
+                    update(q_sent)
+                    log("successfully sent submission {} to Kalliope".format(inzending['uri']))
+
+            except Exception as e:
+                inzending_uri = inzending_res.get('inzending', {}).get('value')
+                message = """
+                           General error while trying to process inzending {}.
+                            Error: {}
+                          """.format(inzending_uri, e)
+                error_query = construct_create_kalliope_sync_error_query(PUBLIC_GRAPH, inzending_uri, message, e)
+                update_with_suppressed_fail(error_query)
+                # TODO: graph here should be re-thought...
+                # attempt_query = construct_increment_inzending_attempts_query(graph, inzending_uri)
+                # update_with_suppressed_fail(attempt_query)
+                log(message)
+
     pass
 
 
