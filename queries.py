@@ -4,7 +4,26 @@ import escape_helpers
 import helpers
 from datetime import datetime
 from pytz import timezone
+import re
+
 TIMEZONE = timezone('Europe/Brussels')
+
+
+def sparql_escape_string(obj):
+    log("""Warning: using a monkey patched
+         sparql_escape_string.
+         TODO: move this to template""")
+
+    obj = str(obj)
+
+    def replacer(a):
+        return "\\"+a.group(0)
+
+    return '"""' + re.sub(r'[\\\"]', replacer, obj) + '"""'
+
+
+# monkey patch escape_helpers. TODO: mov
+escape_helpers.sparql_escape_string = sparql_escape_string
 
 
 def construct_conversatie_exists_query(graph_uri, dossiernummer):
