@@ -45,6 +45,18 @@ MAX_SENDING_ATTEMPTS = int(os.environ.get('MAX_SENDING_ATTEMPTS'))
 INZENDING_BASE_URL = os.environ.get('INZENDING_BASE_URL')
 
 
+def update_with_suppressed_fail(query_string):
+    try:
+        update(query_string)
+    except Exception as e:
+        log("""
+              WARNING: an error occured during the update_with_suppressed_fail.
+                       Message {}
+                       Query {}
+            """.format(e, query_string))
+        log("""WARNING: I am sorry you have to read this message""")
+
+
 def process_inzendingen():
     """
     Fetch submissions that have to be sent to Kalliope from the triple store,
