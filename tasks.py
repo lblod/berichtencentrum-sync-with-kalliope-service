@@ -1,7 +1,6 @@
 import os
 from datetime import datetime, timedelta
 from pytz import timezone
-import pytz
 
 import requests.exceptions
 
@@ -41,9 +40,10 @@ PUBLIC_GRAPH = "http://mu.semte.ch/graphs/public"
 PS_UIT_PATH = os.environ.get('KALLIOPE_PS_UIT_ENDPOINT')
 PS_IN_PATH = os.environ.get('KALLIOPE_PS_IN_ENDPOINT')
 INZENDING_IN_PATH = os.environ.get('KALLIOPE_PS_IN_ENDPOINT')
-MAX_MESSAGE_AGE = int(os.environ.get('MAX_MESSAGE_AGE')) #in days
+MAX_MESSAGE_AGE = int(os.environ.get('MAX_MESSAGE_AGE'))  # in days
 MAX_SENDING_ATTEMPTS = int(os.environ.get('MAX_SENDING_ATTEMPTS'))
 INZENDING_BASE_URL = os.environ.get('INZENDING_BASE_URL')
+
 
 def process_inzendingen():
     """
@@ -92,6 +92,7 @@ def process_inzendingen():
                 update(q_sent)
                 log("successfully sent submission {} to Kalliope".format(inzending['uri']))
     pass
+
 
 def process_berichten_in():
     """
@@ -194,6 +195,7 @@ def process_berichten_in():
                 log("Bericht '{}' - {} already exists in our DB, skipping ...".format(conversatie['betreft'],
                                                                                       bericht['verzonden']))
                 pass
+
 
 def process_berichten_out():
     """
