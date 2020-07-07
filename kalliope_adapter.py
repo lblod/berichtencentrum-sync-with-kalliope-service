@@ -121,8 +121,12 @@ def get_kalliope_poststukken_uit(path, session, from_,
             poststukken += r_content['poststukken']
             req_url = r_content['volgende']
         else:
+            try:
+                errorDescription = r.json()
+            except Exception as e:
+                errorDescription = r
             raise requests.exceptions.HTTPError('Failed to get Kalliope poststuk uit (statuscode {}): {}'.format(r.status_code,
-                                                                                                                 r.json()))
+                                                                                                                 errorDescription))
     return poststukken
 
 def parse_kalliope_poststuk_uit(ps_uit, session):
@@ -219,8 +223,12 @@ def post_kalliope_poststuk_in(path, session, params):
     if r.status_code == requests.codes.ok:
         return r.json()
     else:
+        try:
+            errorDescription = r.json()
+        except Exception as e:
+            errorDescription = r
         raise requests.exceptions.HTTPError('Failed to post Kalliope poststuk-in (statuscode {}): {}'.format(r.status_code,
-                                                                                                             r.json()))
+                                                                                                             errorDescription))
 
 def construct_kalliope_inzending_in(inzending):
     """
@@ -257,5 +265,9 @@ def post_kalliope_inzending_in(path, session, params):
     if r.status_code == requests.codes.ok:
         return r.json()
     else:
+        try:
+            errorDescription = r.json()
+        except Exception as e:
+            errorDescription = r
         raise requests.exceptions.HTTPError('Failed to post Kalliope inzending-in (statuscode {}): {}'.format(r.status_code,
-                                                                                                             r.json()))
+                                                                                                             errorDescription))
