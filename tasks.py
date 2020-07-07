@@ -73,7 +73,6 @@ def process_inzendingen():
     with open_kalliope_api_session() as session:
         for inzending_res in inzendingen:
             try:
-
                 inzending = {
                     'uri': inzending_res['inzending']['value'],
                     'afzenderUri': inzending_res['bestuurseenheid']['value'],
@@ -165,15 +164,16 @@ def process_berichten_in():
                                                                 bericht['verzonden']))
                 # Fetch attachments & parse
                 bericht['bijlagen'] = []
-                for ps_bijlage in bericht['bijlagen_refs']:
-                    try:
+                try:
+                    for ps_bijlage in bericht['bijlagen_refs']:
                         bijlage = parse_kalliope_bijlage(ps_bijlage, session)
                         bericht['bijlagen'].append(bijlage)
-                    except Exception as e:
-                        message = "Something went wrong while parsing a bijlage for bericht {} sent @ {}".format(conversatie['betreft'],
-                                                                                                                bericht['verzonden'])
-                        update(construct_create_kalliope_sync_error_query(PUBLIC_GRAPH, poststuk['uri'], message, e))
-                        helpers.log(message)
+                except Exception as e:
+                    message = "Something went wrong while parsing a bijlage for bericht {} sent @ {}".format(conversatie['betreft'],
+                                                                                                            bericht['verzonden'])
+                    update(construct_create_kalliope_sync_error_query(PUBLIC_GRAPH, poststuk['uri'], message, e))
+                    helpers.log(message)
+                    continue
                 def save_bijlagen(bijlagen):
                     for bijlage in bijlagen:
                         bijlage['uri'] = "http://mu.semte.ch/services/file-service/files/{}".format(bijlage['id'])
@@ -298,5 +298,11 @@ def process_berichten_out():
                                                                                            len(bijlagen)))
 
             except Exception as e:
-                helpers.log("Something went wrong while sending bericht {} : {}".format(bericht, e))
+                message = """
+                            General error while trying to send bericht {}.
+                            Error: {}
+                          """.format(bericht['uri'] if 'bericht' in locals() else "[No message defined]", e)
+                error_query = construct_create_kalliope_sync_error_query(PUBLIC_GRAPH, bericht['uri'] if 'bericht' in locals() else None, message, e)
+                update_with_suppressed_fail(error_query)
+                log(message)
     pass
