@@ -21,12 +21,9 @@ from update_with_supressed_fail import update_with_suppressed_fail
 TIMEZONE = timezone('Europe/Brussels')
 ABB_URI = "http://data.lblod.info/id/bestuurseenheden/141d9d6b-54af-4d17-b313-8d1c30bc3f5b"
 PUBLIC_GRAPH = "http://mu.semte.ch/graphs/public"
-PS_UIT_PATH = os.environ.get('KALLIOPE_PS_UIT_ENDPOINT')
-PS_IN_PATH = os.environ.get('KALLIOPE_PS_IN_ENDPOINT')
-INZENDING_IN_PATH = os.environ.get('KALLIOPE_PS_IN_ENDPOINT')
-MAX_MESSAGE_AGE = int(os.environ.get('MAX_MESSAGE_AGE'))  # in days
 MAX_SENDING_ATTEMPTS = int(os.environ.get('MAX_SENDING_ATTEMPTS'))
 INZENDING_BASE_URL = os.environ.get('INZENDING_BASE_URL')
+PS_IN_PATH = os.environ.get('KALLIOPE_PS_IN_ENDPOINT')
 
 
 def process_berichten_out():
@@ -52,7 +49,10 @@ def process_berichten_out():
                     "http://mu.semte.ch/graphs/organizations/{}/LoketLB-berichtenGebruiker".format(bestuurseenheid_uuid)
                 log("Posting bericht <{}>. Payload: {}".format(bericht['uri'], poststuk_in))
 
-                send_message(session, poststuk_in, bericht, bijlagen, graph)
+                post_result = send_message(session, poststuk_in, bericht, bijlagen, graph)
+                if post_result:
+                    set_message_as_sent(bericht, bijlagen, graph)
+
             except Exception as e:
                 message = """
                             General error while trying to send bericht {}.
@@ -108,7 +108,7 @@ def get_initial_message_uri(bericht):
 
 def send_message(session, poststuk_in, bericht, bijlagen, graph):
     try:
-        post_result = post_kalliope_poststuk_in(PS_IN_PATH, session, poststuk_in)
+        return post_kalliope_poststuk_in(PS_IN_PATH, session, poststuk_in)
     except requests.exceptions.RequestException as e:
         message = "Something went wrong while posting following poststuk in, skipping: {}\n{}".format(poststuk_in,
                                                                                                       e)
@@ -116,8 +116,6 @@ def send_message(session, poststuk_in, bericht, bijlagen, graph):
         update(construct_increment_bericht_attempts_query(graph, bericht['uri']))
         log(message)
         raise e
-    if post_result:
-        set_message_as_sent(bericht, bijlagen, graph)
 
 
 def set_message_as_sent(bericht, bijlagen, graph):
