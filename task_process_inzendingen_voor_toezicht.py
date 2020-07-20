@@ -3,7 +3,6 @@ from pytz import timezone
 from datetime import datetime
 from helpers import log
 from sudo_query_helpers import query, update
-from kalliope_adapter import construct_kalliope_inzending_in
 from kalliope_adapter import post_kalliope_inzending_in
 from kalliope_adapter import open_kalliope_api_session
 from queries import construct_unsent_inzendingen_query
@@ -14,12 +13,8 @@ from update_with_supressed_fail import update_with_suppressed_fail
 
 
 TIMEZONE = timezone('Europe/Brussels')
-ABB_URI = "http://data.lblod.info/id/bestuurseenheden/141d9d6b-54af-4d17-b313-8d1c30bc3f5b"
 PUBLIC_GRAPH = "http://mu.semte.ch/graphs/public"
-PS_UIT_PATH = os.environ.get('KALLIOPE_PS_UIT_ENDPOINT')
-PS_IN_PATH = os.environ.get('KALLIOPE_PS_IN_ENDPOINT')
 INZENDING_IN_PATH = os.environ.get('KALLIOPE_PS_IN_ENDPOINT')
-MAX_MESSAGE_AGE = int(os.environ.get('MAX_MESSAGE_AGE'))  # in days
 MAX_SENDING_ATTEMPTS = int(os.environ.get('MAX_SENDING_ATTEMPTS'))
 INZENDING_BASE_URL = os.environ.get('INZENDING_BASE_URL')
 

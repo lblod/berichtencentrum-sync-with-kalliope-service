@@ -16,6 +16,7 @@ CERT_BUNDLE_PATH = "/etc/ssl/certs/ca-certificates.crt"
 
 MAX_REQ_CHUNK_SIZE = 10
 
+
 def new_conversatie(dossiernummer,
                     betreft,
                     current_type_communicatie,
@@ -29,6 +30,7 @@ def new_conversatie(dossiernummer,
     conversatie['reactietermijn'] = reactietermijn
     conversatie['berichten'] = list(berichten)
     return conversatie
+
 
 def new_bericht(verzonden,
                 ontvangen,
@@ -46,11 +48,13 @@ def new_bericht(verzonden,
     bericht['type_communicatie'] = type_communicatie
     return bericht
 
+
 def open_kalliope_api_session(verify=CERT_BUNDLE_PATH):
     s = requests.Session()
     s.auth = (os.environ.get('KALLIOPE_API_USERNAME'), os.environ.get('KALLIOPE_API_PASSWORD'))
     s.verify = verify
     return s
+
 
 def get_kalliope_bijlage(path, session):
     """
@@ -64,7 +68,9 @@ def get_kalliope_bijlage(path, session):
     if r.status_code == requests.codes.ok:
         return r.content
     else:
-        raise requests.exceptions.HTTPError('Failed to get Kalliope poststuk bijlage (statuscode {})'.format(r.status_code))
+        raise requests.\
+              exceptions.HTTPError('Failed to get Kalliope poststuk bijlage (statuscode {})'.format(r.status_code))
+
 
 def parse_kalliope_bijlage(ps_bijlage, session):
     """
@@ -89,6 +95,7 @@ def parse_kalliope_bijlage(ps_bijlage, session):
         'created': datetime.now(tz=TIMEZONE).replace(microsecond=0).isoformat(),
     }
     return bijlage
+
 
 def get_kalliope_poststukken_uit(path, session, from_,
                                  to=None,
@@ -129,6 +136,7 @@ def get_kalliope_poststukken_uit(path, session, from_,
             raise requests.exceptions.HTTPError('Failed to get Kalliope poststuk uit (statuscode {}): {}'.format(r.status_code,
                                                                                                                  errorDescription))
     return poststukken
+
 
 def parse_kalliope_poststuk_uit(ps_uit, session):
     """
@@ -180,6 +188,7 @@ def parse_kalliope_poststuk_uit(ps_uit, session):
 
     return (conversatie, bericht)
 
+
 def construct_kalliope_poststuk_in(conversatie, bericht):
     """
     Prepare the payload for sending messages to the Kalliope API.
@@ -192,14 +201,15 @@ def construct_kalliope_poststuk_in(conversatie, bericht):
     for bijlage in bericht['bijlagen']:
         filepath = os.path.join(BIJLAGEN_FOLDER_PATH, bijlage['filepath'])
         buffer = open(filepath, 'rb')
-        files.append(('files', (bijlage['name'], buffer, bijlage['type']))) # http://docs.python-requests.org/en/master/user/advanced/#post-multiple-multipart-encoded-files
+        # See: http://docs.python-requests.org/en/master/user/advanced/#post-multiple-multipart-encoded-files
+        files.append(('files', (bijlage['name'], buffer, bijlage['type'])))
 
     data = {
         'uri': bericht['uri'],
         'afzenderUri': bericht['van'],
-        'origineelBerichtUri': conversatie['origineelBerichtUri'], # NOTE: optional
-        'betreft': conversatie['betreft'], # NOTE: Is always the same across the whole conversation for what we are concerned
-        'inhoud': bericht['inhoud'] # NOTE: optional
+        'origineelBerichtUri': conversatie['origineelBerichtUri'],  # NOTE: optional
+        'betreft': conversatie['betreft'],  # NOTE: Is always the same across the whole conversation in our case
+        'inhoud': bericht['inhoud']  # NOTE: optional
     }
     if 'dossierUri' in conversatie:
         data['dossierUri'] = conversatie['dossierUri']
@@ -210,6 +220,7 @@ def construct_kalliope_poststuk_in(conversatie, bericht):
     ]
     poststuk_in.extend(files)
     return poststuk_in
+
 
 def post_kalliope_poststuk_in(path, session, params):
     """
