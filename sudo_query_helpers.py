@@ -8,6 +8,7 @@ sparqlUpdate = SPARQLWrapper(os.environ.get('MU_SPARQL_UPDATEPOINT'), returnForm
 sparqlUpdate.method = 'POST'
 sparqlUpdate.addCustomHttpHeader('mu-auth-sudo', 'true')
 
+
 def query(the_query):
     """Execute the given SPARQL query (select/ask/construct)on the triple store and returns the results
     in the given returnFormat (JSON by default)."""
