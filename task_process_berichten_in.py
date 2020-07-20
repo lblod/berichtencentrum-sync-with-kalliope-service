@@ -24,14 +24,9 @@ from kalliope_adapter import BIJLAGEN_FOLDER_PATH
 from update_with_supressed_fail import update_with_suppressed_fail
 
 TIMEZONE = timezone('Europe/Brussels')
-ABB_URI = "http://data.lblod.info/id/bestuurseenheden/141d9d6b-54af-4d17-b313-8d1c30bc3f5b"
 PUBLIC_GRAPH = "http://mu.semte.ch/graphs/public"
 PS_UIT_PATH = os.environ.get('KALLIOPE_PS_UIT_ENDPOINT')
-PS_IN_PATH = os.environ.get('KALLIOPE_PS_IN_ENDPOINT')
-INZENDING_IN_PATH = os.environ.get('KALLIOPE_PS_IN_ENDPOINT')
 MAX_MESSAGE_AGE = int(os.environ.get('MAX_MESSAGE_AGE'))  # in days
-MAX_SENDING_ATTEMPTS = int(os.environ.get('MAX_SENDING_ATTEMPTS'))
-INZENDING_BASE_URL = os.environ.get('INZENDING_BASE_URL')
 
 
 def process_berichten_in():
@@ -62,6 +57,7 @@ def process_berichten_in():
                 message_in_db = is_message_in_db(bericht, graph)
 
                 if not message_in_db:  # Bericht is not in our DB yet. We should insert it.
+                    log("Bericht '{}' - {} is not in DB yet.".format(conversatie['betreft'], bericht['verzonden']))
                     insert_message_in_db(conversatie, bericht, poststuk, session, graph)
                 else:  # bericht already exists in our DB
                     log("Bericht '{}' - {} already exists in our DB, skipping ...".format(conversatie['betreft'],
@@ -84,7 +80,6 @@ def is_message_in_db(bericht, graph):
 
 
 def insert_message_in_db(conversatie, bericht, poststuk, session, graph):
-    log("Bericht '{}' - {} is not in DB yet.".format(conversatie['betreft'], bericht['verzonden']))
     # Fetch attachments & parse
     bericht['bijlagen'] = []
     try:
@@ -110,7 +105,7 @@ def insert_message_in_db(conversatie, bericht, poststuk, session, graph):
             q_type_communicatie =\
                 construct_update_conversatie_type_query(graph, conversatie_uri, bericht['type_communicatie'])
             update(q_type_communicatie)
-            save_bijlagen(bericht['bijlagen'])
+            # TODO: perhaps later first save bijlagen and the meta-data
             save_bijlagen(graph, PUBLIC_GRAPH, bericht, bericht['bijlagen'])
         except Exception as e:
             message = "Something went wrong inserting new message or conversation"
@@ -126,7 +121,6 @@ def insert_message_in_db(conversatie, bericht, poststuk, session, graph):
         q_conversatie = construct_insert_conversatie_query(graph, conversatie, bericht)
         try:
             update(q_conversatie)
-            save_bijlagen(bericht['bijlagen'])
             save_bijlagen(graph, PUBLIC_GRAPH, bericht, bericht['bijlagen'])
         except Exception as e:
             message = "Something went wrong inserting new message"
