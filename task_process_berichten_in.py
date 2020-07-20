@@ -111,6 +111,7 @@ def insert_message_in_db(conversatie, bericht, poststuk, session, graph):
                 construct_update_conversatie_type_query(graph, conversatie_uri, bericht['type_communicatie'])
             update(q_type_communicatie)
             save_bijlagen(bericht['bijlagen'])
+            save_bijlagen(graph, PUBLIC_GRAPH, bericht, bericht['bijlagen'])
         except Exception as e:
             message = "Something went wrong inserting new message or conversation"
             update(construct_create_kalliope_sync_error_query(PUBLIC_GRAPH, poststuk['uri'], message, e))
@@ -126,6 +127,7 @@ def insert_message_in_db(conversatie, bericht, poststuk, session, graph):
         try:
             update(q_conversatie)
             save_bijlagen(bericht['bijlagen'])
+            save_bijlagen(graph, PUBLIC_GRAPH, bericht, bericht['bijlagen'])
         except Exception as e:
             message = "Something went wrong inserting new message"
             update(construct_create_kalliope_sync_error_query(PUBLIC_GRAPH, poststuk['uri'], message, e))
