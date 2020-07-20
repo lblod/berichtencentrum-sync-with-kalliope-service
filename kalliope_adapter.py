@@ -7,6 +7,7 @@ import re
 import requests
 import magic
 import helpers
+from helpers import log
 
 TIMEZONE = timezone('Europe/Brussels')
 ABB_URI = "http://data.lblod.info/id/bestuurseenheden/141d9d6b-54af-4d17-b313-8d1c30bc3f5b"
@@ -230,29 +231,8 @@ def post_kalliope_poststuk_in(path, session, params):
         raise requests.exceptions.HTTPError('Failed to post Kalliope poststuk-in (statuscode {}): {}'.format(r.status_code,
                                                                                                              errorDescription))
 
-def construct_kalliope_inzending_in(inzending):
-    """
-    Prepare the payload for sending inzendingen to the Kalliope API.
 
-    :param inzending: inzending object of the inzending_in we want to send
-    :returns: inzending_in parameters object as consumed by requests
-    """
-    data = {
-        'uri': inzending['uri'],
-        'afzenderUri': inzending['afzenderUri'],
-        'betreft': inzending['betreft'],
-        'inhoud': inzending['inhoud'],
-        'typePoststuk': inzending['typePoststuk'],
-        'typeMelding': inzending['typeMelding']
-    }
-
-    # NOTE: Parameters are sent as file-like objects, API expects a 'Content-Type'-header for each parameter
-    inzending_in = [
-        ('data', (None, json.dumps(data), 'application/json')),
-    ]
-    return inzending_in
-
-def post_kalliope_inzending_in(path, session, params):
+def post_kalliope_inzending_in(path, session, inzending):
     """
     Perform the API-call to send a new inzending to Kalliope.
 
@@ -261,6 +241,11 @@ def post_kalliope_inzending_in(path, session, params):
     :param url_params: dict of url parameters for the api call
     :returns: response dict
     """
+    # NOTE: Parameters are sent as file-like objects, API expects a 'Content-Type'-header for each parameter
+    params = [
+        ('data', (None, json.dumps(inzending), 'application/json')),
+    ]
+    log("Posting inzending <{}>. Payload: {}".format(inzending['uri'], params))
     r = session.post(path, files=params)
     if r.status_code == requests.codes.ok:
         return r.json()
@@ -268,6 +253,7 @@ def post_kalliope_inzending_in(path, session, params):
         try:
             errorDescription = r.json()
         except Exception as e:
-            errorDescription = r
-        raise requests.exceptions.HTTPError('Failed to post Kalliope inzending-in (statuscode {}): {}'.format(r.status_code,
-                                                                                                             errorDescription))
+            errorDescription = e
+
+        e_msg = 'Failed to post Kalliope inzending-in (statuscode {}): {}'.format(r.status_code, errorDescription)
+        raise requests.exceptions.HTTPError(e_msg)
