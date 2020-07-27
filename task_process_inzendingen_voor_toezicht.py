@@ -2,14 +2,14 @@ import os
 from pytz import timezone
 from datetime import datetime
 from helpers import log
-from sudo_query_helpers import query, update
-from kalliope_adapter import post_kalliope_inzending_in
-from kalliope_adapter import open_kalliope_api_session
-from queries import construct_unsent_inzendingen_query
-from queries import construct_increment_inzending_attempts_query
-from queries import construct_inzending_sent_query
-from queries import construct_create_kalliope_sync_error_query
-from update_with_supressed_fail import update_with_suppressed_fail
+from .sudo_query_helpers import query, update
+from .kalliope_adapter import post_kalliope_inzending_in
+from .kalliope_adapter import open_kalliope_api_session
+from .queries import construct_unsent_inzendingen_query
+from .queries import construct_increment_inzending_attempts_query
+from .queries import construct_inzending_sent_query
+from .queries import construct_create_kalliope_sync_error_query
+from .update_with_supressed_fail import update_with_suppressed_fail
 
 
 TIMEZONE = timezone('Europe/Brussels')

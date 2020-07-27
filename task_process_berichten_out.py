@@ -5,17 +5,17 @@ from datetime import datetime
 import requests.exceptions
 
 from helpers import log
-from sudo_query_helpers import query, update
-from kalliope_adapter import construct_kalliope_poststuk_in
-from kalliope_adapter import open_kalliope_api_session
-from kalliope_adapter import post_kalliope_poststuk_in
-from queries import construct_unsent_berichten_query
-from queries import construct_select_bijlagen_query
-from queries import construct_increment_bericht_attempts_query
-from queries import construct_bericht_sent_query
-from queries import construct_select_original_bericht_query
-from queries import construct_create_kalliope_sync_error_query
-from update_with_supressed_fail import update_with_suppressed_fail
+from .sudo_query_helpers import query, update
+from .kalliope_adapter import construct_kalliope_poststuk_in
+from .kalliope_adapter import open_kalliope_api_session
+from .kalliope_adapter import post_kalliope_poststuk_in
+from .queries import construct_unsent_berichten_query
+from .queries import construct_select_bijlagen_query
+from .queries import construct_increment_bericht_attempts_query
+from .queries import construct_bericht_sent_query
+from .queries import construct_select_original_bericht_query
+from .queries import construct_create_kalliope_sync_error_query
+from .update_with_supressed_fail import update_with_suppressed_fail
 
 
 TIMEZONE = timezone('Europe/Brussels')

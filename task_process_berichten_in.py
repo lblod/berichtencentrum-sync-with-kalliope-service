@@ -6,22 +6,22 @@ import requests.exceptions
 
 import helpers
 from helpers import log
-from sudo_query_helpers import query, update
-from kalliope_adapter import parse_kalliope_poststuk_uit
-from kalliope_adapter import parse_kalliope_bijlage
-from kalliope_adapter import open_kalliope_api_session
-from kalliope_adapter import get_kalliope_poststukken_uit
-from queries import construct_bericht_exists_query
-from queries import construct_conversatie_exists_query
-from queries import construct_insert_bijlage_query
-from queries import construct_insert_conversatie_query
-from queries import construct_insert_bericht_query
-from queries import construct_update_conversatie_type_query
-from queries import construct_update_last_bericht_query_part1
-from queries import construct_update_last_bericht_query_part2
-from queries import construct_create_kalliope_sync_error_query
-from kalliope_adapter import BIJLAGEN_FOLDER_PATH
-from update_with_supressed_fail import update_with_suppressed_fail
+from .sudo_query_helpers import query, update
+from .kalliope_adapter import parse_kalliope_poststuk_uit
+from .kalliope_adapter import parse_kalliope_bijlage
+from .kalliope_adapter import open_kalliope_api_session
+from .kalliope_adapter import get_kalliope_poststukken_uit
+from .kalliope_adapter import BIJLAGEN_FOLDER_PATH
+from .queries import construct_bericht_exists_query
+from .queries import construct_conversatie_exists_query
+from .queries import construct_insert_bijlage_query
+from .queries import construct_insert_conversatie_query
+from .queries import construct_insert_bericht_query
+from .queries import construct_update_conversatie_type_query
+from .queries import construct_update_last_bericht_query_part1
+from .queries import construct_update_last_bericht_query_part2
+from .queries import construct_create_kalliope_sync_error_query
+from .update_with_supressed_fail import update_with_suppressed_fail
 
 TIMEZONE = timezone('Europe/Brussels')
 PUBLIC_GRAPH = "http://mu.semte.ch/graphs/public"

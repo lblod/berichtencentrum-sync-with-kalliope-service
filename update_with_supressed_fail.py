@@ -1,4 +1,4 @@
-from sudo_query_helpers import update
+from .sudo_query_helpers import update
 from helpers import log
 
 

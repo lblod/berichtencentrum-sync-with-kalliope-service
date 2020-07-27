@@ -2,9 +2,9 @@ import os
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from helpers import log
-from task_process_inzendingen_voor_toezicht import process_inzendingen
-from task_process_berichten_in import process_berichten_in
-from task_process_berichten_out import process_berichten_out
+from .task_process_inzendingen_voor_toezicht import process_inzendingen
+from .task_process_berichten_in import process_berichten_in
+from .task_process_berichten_out import process_berichten_out
 
 BERICHTEN_CRON_PATTERN = os.environ.get('BERICHTEN_CRON_PATTERN')
 INZENDINGEN_CRON_PATTERN = os.environ.get('INZENDINGEN_CRON_PATTERN')
