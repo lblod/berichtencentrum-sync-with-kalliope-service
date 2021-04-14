@@ -8,6 +8,7 @@ To add the service to your stack, add the following snippet to `docker-compose.y
       KALLIOPE_API_USERNAME: "***"
       KALLIOPE_API_PASSWORD: "***"
       KALLIOPE_PS_UIT_ENDPOINT: "https://kalliope-svc-test.abb.vlaanderen.be/glapi/poststuk-uit"
+      KALLIOPE_PS_UIT_CONFIRMATION_ENDPOINT: "https://kalliope-svc-test.abb.vlaanderen.be/glapi/poststuk-uit/ontvangstbevestiging"
       KALLIOPE_PS_IN_ENDPOINT: "https://kalliope-svc-test.abb.vlaanderen.be/glapi/poststuk-in"
       BERICHTEN_CRON_PATTERN: "*/5 * * * *"
       INZENDINGEN_CRON_PATTERN: "* 22 * * *"
@@ -24,6 +25,7 @@ Required environment variables:
 * `KALLIOPE_API_USERNAME`  
 * `KALLIOPE_API_PASSWORD`
 * `KALLIOPE_PS_UIT_ENDPOINT`
+* `KALLIOPE_PS_UIT_CONFIRMATION_ENDPOINT`
 * `KALLIOPE_PS_IN_ENDPOINT`
 * `INZENDING_BASE_URL`
 * `BERICHTEN_CRON_PATTERN`: Pattern of the cron job that polls the API for berichten
@@ -44,6 +46,18 @@ Note that this service relies on the message-property `schema:dateReceived` not 
 When an error is encoutered by the service, it will generate a [KalliopeSyncError](https://github.com/lblod/sync-with-kalliope-error-notification-service#kalliope-sync-error) that will be then processed and sent as an email.
 
 ## Develoment
+
+### Set up the stack
+
+```
+berichtencentrum-sync-with-kalliope:
+  build: /path/to/sources/berichtencentrum-sync-with-kalliope-service/
+  volumes:
+    - /path/to/sources/Loket/berichtencentrum-sync-with-kalliope-service/:/app/
+    - /path/to/sources/berichtencentrum-sync-with-kalliope-service/data/files/:/data/files/
+```
+
+### Test
 
 To retrieve poststukken to be able to test, this command can be helpful :
 

@@ -11,6 +11,8 @@ from .kalliope_adapter import parse_kalliope_poststuk_uit
 from .kalliope_adapter import parse_kalliope_bijlage
 from .kalliope_adapter import open_kalliope_api_session
 from .kalliope_adapter import get_kalliope_poststukken_uit
+from .kalliope_adapter import construct_kalliope_poststuk_uit_confirmation
+from .kalliope_adapter import post_kalliope_poststuk_uit_confirmation
 from .kalliope_adapter import BIJLAGEN_FOLDER_PATH
 from .queries import construct_bericht_exists_query
 from .queries import construct_conversatie_exists_query
@@ -26,6 +28,7 @@ from .update_with_supressed_fail import update_with_suppressed_fail
 TIMEZONE = timezone('Europe/Brussels')
 PUBLIC_GRAPH = "http://mu.semte.ch/graphs/public"
 PS_UIT_PATH = os.environ.get('KALLIOPE_PS_UIT_ENDPOINT')
+PS_UIT_CONFIRMATION_PATH = os.environ.get('KALLIOPE_PS_UIT_CONFIRMATION_ENDPOINT')
 MAX_MESSAGE_AGE = int(os.environ.get('MAX_MESSAGE_AGE'))  # in days
 
 
@@ -41,6 +44,7 @@ def process_berichten_in():
         try:
             poststukken = get_kalliope_poststukken_uit(PS_UIT_PATH, session, vanaf)
             log('Retrieved {} poststukken uit from Kalliope'.format(len(poststukken)))
+
         except requests.exceptions.RequestException as e:
             message = "Something went wrong while accessing the Kalliope API. Aborting: {}".format(e)
             update_with_suppressed_fail(construct_create_kalliope_sync_error_query(PUBLIC_GRAPH, None, message, e))
@@ -59,6 +63,13 @@ def process_berichten_in():
                 if not message_in_db:  # Bericht is not in our DB yet. We should insert it.
                     log("Bericht '{}' - {} is not in DB yet.".format(conversatie['betreft'], bericht['verzonden']))
                     insert_message_in_db(conversatie, bericht, poststuk, session, graph)
+
+                    poststuk_uit_confirmation = construct_kalliope_poststuk_uit_confirmation(bericht)
+                    post_result = post_kalliope_poststuk_uit_confirmation(PS_UIT_CONFIRMATION_PATH, session, poststuk_uit_confirmation)
+
+                    if post_result:
+                        log("successfully sent contirmation to Kalliope for message {}".format(bericht['uri']))
+
                 else:  # bericht already exists in our DB
                     log("Bericht '{}' - {} already exists in our DB, skipping ...".format(conversatie['betreft'],
                                                                                           bericht['verzonden']))

@@ -221,11 +221,23 @@ def construct_kalliope_poststuk_in(conversatie, bericht):
     poststuk_in.extend(files)
     return poststuk_in
 
+def construct_kalliope_poststuk_uit_confirmation(bericht):
+    """
+    Prepare the payload for sending a confirmation about well received messsages to the Kalliope API.
+
+    :param bericht: bericht object reprensenting the received message
+    :returns: data parameters object as consumed by requests
+    """
+
+    data = {
+        'uriPoststukUit': bericht['uri'],
+        'datumBeschikbaarheid': bericht['ontvangen'],
+    }
+    return data
 
 def post_kalliope_poststuk_in(path, session, params):
     """
     Perform the API-call to send a new poststuk to Kalliope.
-
     :param path: url of the api endpoint that we want to send to
     :param session: a Kalliope session, as returned by open_kalliope_api_session()
     :param url_params: dict of url parameters for the api call
@@ -242,6 +254,31 @@ def post_kalliope_poststuk_in(path, session, params):
         raise requests.exceptions.HTTPError('Failed to post Kalliope poststuk-in (statuscode {}): {}'.format(r.status_code,
                                                                                                              errorDescription))
 
+def post_kalliope_poststuk_uit_confirmation(path, session, data):
+    """
+    Perform the API-call to send information around the berichtencentrum to Kalliope.
+
+    :param path: url of the api endpoint that we want to send to
+    :param session: a Kalliope session, as returned by open_kalliope_api_session()
+    :param data: object of parameters for the api call
+    :returns: response dict
+    """
+
+    headers = {
+        "Content-type": "application/json",
+        "Accept": "application/json",
+    }
+
+    r = session.post(path, json=data, headers=headers)
+    if r.status_code == requests.codes.no_content:
+        return r.json()
+    else:
+        try:
+            errorDescription = r.json()
+        except Exception as e:
+            errorDescription = r
+        raise requests.exceptions.HTTPError('Failed to post Kalliope poststuck-uit-confirmation (statuscode {}): {}'.format(r.status_code,
+                                                                                                             errorDescription))
 
 def post_kalliope_inzending_in(path, session, inzending):
     """
