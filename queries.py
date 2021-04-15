@@ -155,7 +155,6 @@ def construct_insert_bericht_query(graph_uri, bericht, conversatie_uri):
         """.format(graph_uri, bericht, conversatie_uri)
     return q
 
-
 def construct_update_conversatie_type_query(graph_uri, conversatie_uri, type_communicatie):
     """
     Construct a SPARQL query for updating the type-communicatie of a conversatie.
@@ -673,4 +672,78 @@ def construct_create_kalliope_sync_error_query(graph_uri, poststuk_uri, message,
                  escape_helpers.sparql_escape_string(error),
                  now,
                  error_uri)
+    return q
+
+def construct_dossierbehandelaar_exists_query(graph_uri, dossierbehandelaar):
+    """
+    Construct a query for selecting a conversatie based on referentieABB (thereby also testing if the conversatie already exists)
+
+    :param graph_uri: string
+    :param referentieABB: string
+    :returns: string containing SPARQL query
+    """
+    identifier = escape_helpers.sparql_escape_string(dossierbehandelaar['identifier'])
+
+    q = """
+        PREFIX schema: <http://schema.org/>
+        PREFIX prov: <http://www.w3.org/ns/prov#>
+
+        SELECT DISTINCT ?dossierbehandelaar
+        WHERE {{
+            GRAPH <{}> {{
+                ?dossierbehandelaar a prov:Association ;
+                    schema:identifier {} .
+            }}
+        }}
+        """.format(graph_uri, identifier)
+    return q
+
+def construct_insert_dossierbehandelaar_query(graph_uri, bericht):
+    """
+    Construct a SPARQL query for inserting a new dossierbehandelaar.
+
+    :param graph_uri: string
+    :param bericht: dict containing properties for bericht
+    :returns: string containing SPARQL query
+    """
+
+    uuid = helpers.generate_uuid()
+    bericht['dossierbehandelaar']['uuid'] = uuid
+    bericht['dossierbehandelaar']['uri'] = "http://data.lblod.info/id/dossierbehandelaars/" + uuid
+
+    q = """
+        PREFIX schema: <http://schema.org/>
+        PREFIX prov: <http://www.w3.org/ns/prov#>
+        PREFIX adms: <http://www.w3.org/ns/adms#>
+
+        INSERT DATA {{
+            GRAPH <{0}> {{
+                <{1[uri]}> a prov:Association;
+                    prov:hadRole <http://data.lblod.info/association-role/249969e6-2bfa-48c2-9a37-3f0b97685a24>;
+                    <http://mu.semte.ch/vocabularies/core/uuid> "{1[uuid]}";
+                    adms:identifier "{1[identifier]}";
+                    schema:email "{1[email]}".
+            }}
+        }}
+        """.format(graph_uri, bericht['dossierbehandelaar'])
+    return q
+
+def construct_link_dossierbehandelaar_query(graph_uri, bericht):
+    """
+    Construct a SPARQL query for linking a dossierbehandelaar to a bericht.
+
+    :param graph_uri: string
+    :param bericht: dict containing properties for bericht
+    :returns: string containing SPARQL query
+    """
+
+    q = """
+        PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+
+        INSERT DATA {{
+            GRAPH <{0}> {{
+                <{1[uri]}> ext:heeftBehandelaar <{2[uri]}> .
+            }}
+        }}
+        """.format(graph_uri, bericht, bericht['dossierbehandelaar'])
     return q

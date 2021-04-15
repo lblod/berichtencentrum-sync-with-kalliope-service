@@ -23,6 +23,9 @@ from .queries import construct_update_conversatie_type_query
 from .queries import construct_update_last_bericht_query_part1
 from .queries import construct_update_last_bericht_query_part2
 from .queries import construct_create_kalliope_sync_error_query
+from .queries import construct_dossierbehandelaar_exists_query
+from .queries import construct_insert_dossierbehandelaar_query
+from .queries import construct_link_dossierbehandelaar_query
 from .update_with_supressed_fail import update_with_suppressed_fail
 
 TIMEZONE = timezone('Europe/Brussels')
@@ -68,7 +71,7 @@ def process_berichten_in():
                     post_result = post_kalliope_poststuk_uit_confirmation(PS_UIT_CONFIRMATION_PATH, session, poststuk_uit_confirmation)
 
                     if post_result:
-                        log("successfully sent contirmation to Kalliope for message {}".format(bericht['uri']))
+                        log("successfully sent confirmation to Kalliope for message {}".format(bericht['uri']))
 
                 else:  # bericht already exists in our DB
                     log("Bericht '{}' - {} already exists in our DB, skipping ...".format(conversatie['betreft'],
@@ -143,6 +146,8 @@ def insert_message_in_db(conversatie, bericht, poststuk, session, graph):
     update(construct_update_last_bericht_query_part1())
     update(construct_update_last_bericht_query_part2())
 
+    insert_dossierbehandelaar_in_db(graph, bericht)
+
 
 def save_bijlagen(bericht_graph_uri, file_graph, bericht, bijlagen):
     for bijlage in bijlagen:
@@ -162,3 +167,16 @@ def save_bijlagen(bericht_graph_uri, file_graph, bericht, bijlagen):
                                                    bijlage,
                                                    file)  # TEMP: bijlage in public graph
         update(q_bijlage)
+
+def insert_dossierbehandelaar_in_db(graph, bericht):
+    q_dossierbehandelaar_exists = construct_dossierbehandelaar_exists_query(graph, bericht['dossierbehandelaar'])
+    query_result_dossierbehandelaar_exists = query(q_dossierbehandelaar_exists)['results']['bindings']
+
+    if not query_result_dossierbehandelaar_exists:
+        q_dossierbehandelaar = construct_insert_dossierbehandelaar_query(graph, bericht)
+        update(q_dossierbehandelaar)
+    else:
+        bericht['dossierbehandelaar']['uri'] = query_result_dossierbehandelaar_exists[0]['dossierbehandelaar']['value']
+
+    q_link_dossierbehandelaar_bericht = construct_link_dossierbehandelaar_query(graph, bericht)
+    update(q_link_dossierbehandelaar_bericht)

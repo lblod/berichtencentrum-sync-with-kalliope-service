@@ -37,7 +37,8 @@ def new_bericht(verzonden,
                 van,
                 naar,
                 inhoud,
-                type_communicatie):
+                type_communicatie,
+                dossierbehandelaar):
     bericht = {}
     bericht['uuid'] = helpers.generate_uuid()
     bericht['verzonden'] = verzonden
@@ -46,6 +47,7 @@ def new_bericht(verzonden,
     bericht['naar'] = naar
     bericht['inhoud'] = inhoud
     bericht['type_communicatie'] = type_communicatie
+    bericht['dossierbehandelaar'] = dossierbehandelaar
     return bericht
 
 
@@ -176,8 +178,12 @@ def parse_kalliope_poststuk_uit(ps_uit, session):
     betreft = ps_uit['betreft']
     type_communicatie = ps_uit['typeCommunicatie']
     reactietermijn = "P30D"
+    dossierbehandelaar = {
+        'identifier': ps_uit['dossierbehandelaar']['id'],
+        'email': ps_uit['dossierbehandelaar']['email'],
+    }
 
-    bericht = new_bericht(verzonden, ontvangen, van, naar, inhoud, type_communicatie)
+    bericht = new_bericht(verzonden, ontvangen, van, naar, inhoud, type_communicatie, dossierbehandelaar)
     bericht['uri'] = ps_uit['uri']
     conversatie = new_conversatie(referentieABB,
                                   betreft,
@@ -262,7 +268,7 @@ def post_kalliope_poststuk_uit_confirmation(path, session, data):
     :param path: url of the api endpoint that we want to send to
     :param session: a Kalliope session, as returned by open_kalliope_api_session()
     :param data: object of parameters for the api call
-    :returns: response dict
+    :returns: True when we get a 204 response
     """
 
     headers = {
@@ -272,7 +278,7 @@ def post_kalliope_poststuk_uit_confirmation(path, session, data):
 
     r = session.post(path, json=data, headers=headers)
     if r.status_code == requests.codes.no_content:
-        return r.json()
+        return True
     else:
         try:
             errorDescription = r.json()
