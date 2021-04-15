@@ -104,7 +104,7 @@ def insert_message_in_db(conversatie, bericht, poststuk, session, graph):
         helpers.log(message)
         raise e
 
-    q2 = construct_conversatie_exists_query(graph, conversatie['dossiernummer'])
+    q2 = construct_conversatie_exists_query(graph, conversatie['referentieABB'])
     query_result2 = query(q2)['results']['bindings']
     if query_result2:  # The conversatie to which the bericht is linked exists.
         conversatie_uri = query_result2[0]['conversatie']['value']

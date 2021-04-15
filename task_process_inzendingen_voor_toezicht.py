@@ -82,8 +82,10 @@ def parse_inzending_sparql_response(inzending_res):
         'afzenderUri': inzending_res['bestuurseenheid']['value'],
         'betreft': inzending_res['decisionTypeLabel']['value'] + ' ' +
         inzending_res.get('sessionDate', {}).get('value', '').split('T')[0],
-        'inhoud': INZENDING_BASE_URL + '/' + inzending_res['inzendingUuid']['value'],
+        'urlToezicht': INZENDING_BASE_URL + '/' + inzending_res['inzendingUuid']['value'],
         'typePoststuk': 'https://kalliope.abb.vlaanderen.be/ld/algemeen/dossierType/besluit',
         'typeMelding': inzending_res['decisionType']['value'],
+        'datumVanVerzenden': inzending_res['datumVanVerzenden']['value'],
+        'boekjaar': inzending_res['boekjaar']['value'],
     }
     return inzending

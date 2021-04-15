@@ -81,7 +81,7 @@ def prepare_message_and_conversation(bericht_res):
     REPLY_SUBJECT_PREFIX = "Reactie op "
     betreft = REPLY_SUBJECT_PREFIX + bericht_res['betreft']['value']
     conversatie = {
-        'dossiernummer': bericht_res['dossiernummer']['value'],
+        'inhoud': bericht_res['inhoud']['value'],
         'betreft': betreft,
         'origineelBerichtUri': origineel_bericht_uri
     }

@@ -17,14 +17,14 @@ CERT_BUNDLE_PATH = "/etc/ssl/certs/ca-certificates.crt"
 MAX_REQ_CHUNK_SIZE = 10
 
 
-def new_conversatie(dossiernummer,
+def new_conversatie(referentieABB,
                     betreft,
                     current_type_communicatie,
                     reactietermijn,
                     berichten=[]):
     conversatie = {}
     conversatie['uuid'] = helpers.generate_uuid()
-    conversatie['dossiernummer'] = dossiernummer
+    conversatie['referentieABB'] = referentieABB
     conversatie['betreft'] = betreft
     conversatie['current_type_communicatie'] = current_type_communicatie
     conversatie['reactietermijn'] = reactietermijn
@@ -172,14 +172,14 @@ def parse_kalliope_poststuk_uit(ps_uit, session):
                         .isoformat()
     ontvangen = datetime.now(tz=TIMEZONE).replace(microsecond=0).isoformat()
     inhoud = ps_uit['inhoud'] if ps_uit['inhoud'] else ""
-    dossiernummer = ps_uit['dossierNummer']
+    referentieABB = ps_uit['referentieABB']
     betreft = ps_uit['betreft']
     type_communicatie = ps_uit['typeCommunicatie']
     reactietermijn = "P30D"
 
     bericht = new_bericht(verzonden, ontvangen, van, naar, inhoud, type_communicatie)
     bericht['uri'] = ps_uit['uri']
-    conversatie = new_conversatie(dossiernummer,
+    conversatie = new_conversatie(referentieABB,
                                   betreft,
                                   type_communicatie,
                                   reactietermijn)
@@ -209,7 +209,8 @@ def construct_kalliope_poststuk_in(conversatie, bericht):
         'afzenderUri': bericht['van'],
         'origineelBerichtUri': conversatie['origineelBerichtUri'],  # NOTE: optional
         'betreft': conversatie['betreft'],  # NOTE: Is always the same across the whole conversation in our case
-        'inhoud': bericht['inhoud']  # NOTE: optional
+        'inhoud': bericht['inhoud'],  # NOTE: optional
+        'datumVanVerzenden': bericht['verzonden'],
     }
     if 'dossierUri' in conversatie:
         data['dossierUri'] = conversatie['dossierUri']

@@ -27,15 +27,15 @@ def sparql_escape_string(obj):
 escape_helpers.sparql_escape_string = sparql_escape_string
 
 
-def construct_conversatie_exists_query(graph_uri, dossiernummer):
+def construct_conversatie_exists_query(graph_uri, referentieABB):
     """
-    Construct a query for selecting a conversatie based on dossiernummer (thereby also testing if the conversatie already exists)
+    Construct a query for selecting a conversatie based on referentieABB (thereby also testing if the conversatie already exists)
 
     :param graph_uri: string
-    :param dossiernummer: string
+    :param referentieABB: string
     :returns: string containing SPARQL query
     """
-    dossiernummer = escape_helpers.sparql_escape_string(dossiernummer)
+    referentieABB = escape_helpers.sparql_escape_string(referentieABB)
     q = """
         PREFIX schema: <http://schema.org/>
 
@@ -46,13 +46,13 @@ def construct_conversatie_exists_query(graph_uri, dossiernummer):
                     schema:identifier {}.
             }}
         }}
-        """.format(graph_uri, dossiernummer)
+        """.format(graph_uri, referentieABB)
     return q
 
 
 def construct_bericht_exists_query(graph_uri, bericht_uri):
     """
-    Construct a query for selecting a bericht based on its URI, retrieving the conversatie & dossiernummer at the same time.
+    Construct a query for selecting a bericht based on its URI, retrieving the conversatie & referentieABB at the same time.
 
     :param graph_uri: string
     :param bericht_uri: string
@@ -61,13 +61,13 @@ def construct_bericht_exists_query(graph_uri, bericht_uri):
     q = """
         PREFIX schema: <http://schema.org/>
 
-        SELECT DISTINCT ?conversatie ?dossiernummer
+        SELECT DISTINCT ?conversatie ?referentieABB
         WHERE {{
             GRAPH <{0}> {{
                 <{1}> a schema:Message.
                 ?conversatie a schema:Conversation;
                     schema:hasPart <{1}>;
-                    schema:identifier ?dossiernummer.
+                    schema:identifier ?referentieABB.
             }}
         }}
         """.format(graph_uri, bericht_uri)
@@ -84,7 +84,7 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
     :returns: string containing SPARQL query
     """
     conversatie = copy.deepcopy(conversatie) # For not modifying the pass-by-name original
-    conversatie['dossiernummer'] = escape_helpers.sparql_escape_string(conversatie['dossiernummer'])
+    conversatie['referentieABB'] = escape_helpers.sparql_escape_string(conversatie['referentieABB'])
     conversatie['betreft'] = escape_helpers.sparql_escape_string(conversatie['betreft'])
     conversatie['current_type_communicatie'] = escape_helpers.sparql_escape_string(conversatie['current_type_communicatie'])
     bericht = copy.deepcopy(bericht) # For not modifying the pass-by-name original
@@ -97,7 +97,7 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
             GRAPH <{0}> {{
                 <{1[uri]}> a schema:Conversation;
                     <http://mu.semte.ch/vocabularies/core/uuid> "{1[uuid]}";
-                    schema:identifier {1[dossiernummer]};
+                    schema:identifier {1[referentieABB]};
      """
     if conversatie["dossierUri"]:
         q += """
@@ -332,11 +332,11 @@ def construct_unsent_berichten_query(naar_uri, max_sending_attempts):
         PREFIX schema: <http://schema.org/>
         PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 
-        SELECT DISTINCT ?dossiernummer ?dossieruri ?bericht ?betreft ?uuid ?van ?verzonden ?inhoud
+        SELECT DISTINCT ?referentieABB ?dossieruri ?bericht ?betreft ?uuid ?van ?verzonden ?inhoud
         WHERE {{
             GRAPH ?g {{
                 ?conversatie a schema:Conversation;
-                    schema:identifier ?dossiernummer;
+                    schema:identifier ?referentieABB;
                     schema:about ?betreft;
                     schema:hasPart ?bericht.
                 ?bericht a schema:Message;
@@ -539,16 +539,19 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
         PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
         PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
 
-        SELECT DISTINCT ?inzending ?inzendingUuid ?bestuurseenheid ?decisionType ?sessionDate ?decisionTypeLabel
+        SELECT DISTINCT ?inzending ?inzendingUuid ?bestuurseenheid ?decisionType ?sessionDate
+                        ?decisionTypeLabel ?datumVanVerzenden ?boekjaar
         WHERE {{
             GRAPH ?g {{
                 ?inzending a meb:Submission ;
                     adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
                     <http://mu.semte.ch/vocabularies/core/uuid> ?inzendingUuid ;
                     <http://purl.org/pav/createdBy> ?bestuurseenheid;
+                    <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#sentDate> ?datumVanVerzenden;
                     prov:generated ?formData .
 
-                ?formData dct:type ?decisionType .
+                ?formData dct:type ?decisionType ;
+                    <http://linkedeconomy.org/ontology#financialYear> ?boekjaar .
 
                 VALUES ?decisionType {{ {1} }}
 
