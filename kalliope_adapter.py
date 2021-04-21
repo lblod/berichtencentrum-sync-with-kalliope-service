@@ -17,14 +17,14 @@ CERT_BUNDLE_PATH = "/etc/ssl/certs/ca-certificates.crt"
 MAX_REQ_CHUNK_SIZE = 10
 
 
-def new_conversatie(dossiernummer,
+def new_conversatie(referentieABB,
                     betreft,
                     current_type_communicatie,
                     reactietermijn,
                     berichten=[]):
     conversatie = {}
     conversatie['uuid'] = helpers.generate_uuid()
-    conversatie['dossiernummer'] = dossiernummer
+    conversatie['referentieABB'] = referentieABB
     conversatie['betreft'] = betreft
     conversatie['current_type_communicatie'] = current_type_communicatie
     conversatie['reactietermijn'] = reactietermijn
@@ -37,7 +37,8 @@ def new_bericht(verzonden,
                 van,
                 naar,
                 inhoud,
-                type_communicatie):
+                type_communicatie,
+                dossierbehandelaar):
     bericht = {}
     bericht['uuid'] = helpers.generate_uuid()
     bericht['verzonden'] = verzonden
@@ -46,6 +47,7 @@ def new_bericht(verzonden,
     bericht['naar'] = naar
     bericht['inhoud'] = inhoud
     bericht['type_communicatie'] = type_communicatie
+    bericht['dossierbehandelaar'] = dossierbehandelaar
     return bericht
 
 
@@ -172,14 +174,18 @@ def parse_kalliope_poststuk_uit(ps_uit, session):
                         .isoformat()
     ontvangen = datetime.now(tz=TIMEZONE).replace(microsecond=0).isoformat()
     inhoud = ps_uit['inhoud'] if ps_uit['inhoud'] else ""
-    dossiernummer = ps_uit['dossierNummer']
+    referentieABB = ps_uit['referentieABB']
     betreft = ps_uit['betreft']
     type_communicatie = ps_uit['typeCommunicatie']
     reactietermijn = "P30D"
+    dossierbehandelaar = {
+        'identifier': ps_uit['dossierbehandelaar']['id'],
+        'email': ps_uit['dossierbehandelaar']['email'],
+    }
 
-    bericht = new_bericht(verzonden, ontvangen, van, naar, inhoud, type_communicatie)
+    bericht = new_bericht(verzonden, ontvangen, van, naar, inhoud, type_communicatie, dossierbehandelaar)
     bericht['uri'] = ps_uit['uri']
-    conversatie = new_conversatie(dossiernummer,
+    conversatie = new_conversatie(referentieABB,
                                   betreft,
                                   type_communicatie,
                                   reactietermijn)
@@ -209,7 +215,8 @@ def construct_kalliope_poststuk_in(conversatie, bericht):
         'afzenderUri': bericht['van'],
         'origineelBerichtUri': conversatie['origineelBerichtUri'],  # NOTE: optional
         'betreft': conversatie['betreft'],  # NOTE: Is always the same across the whole conversation in our case
-        'inhoud': bericht['inhoud']  # NOTE: optional
+        'inhoud': bericht['inhoud'],  # NOTE: optional
+        'datumVanVerzenden': bericht['verzonden'],
     }
     if 'dossierUri' in conversatie:
         data['dossierUri'] = conversatie['dossierUri']
@@ -221,11 +228,23 @@ def construct_kalliope_poststuk_in(conversatie, bericht):
     poststuk_in.extend(files)
     return poststuk_in
 
+def construct_kalliope_poststuk_uit_confirmation(bericht):
+    """
+    Prepare the payload for sending a confirmation about well received messsages to the Kalliope API.
+
+    :param bericht: bericht object reprensenting the received message
+    :returns: data parameters object as consumed by requests
+    """
+
+    data = {
+        'uriPoststukUit': bericht['uri'],
+        'datumBeschikbaarheid': bericht['ontvangen'],
+    }
+    return data
 
 def post_kalliope_poststuk_in(path, session, params):
     """
     Perform the API-call to send a new poststuk to Kalliope.
-
     :param path: url of the api endpoint that we want to send to
     :param session: a Kalliope session, as returned by open_kalliope_api_session()
     :param url_params: dict of url parameters for the api call
@@ -242,6 +261,31 @@ def post_kalliope_poststuk_in(path, session, params):
         raise requests.exceptions.HTTPError('Failed to post Kalliope poststuk-in (statuscode {}): {}'.format(r.status_code,
                                                                                                              errorDescription))
 
+def post_kalliope_poststuk_uit_confirmation(path, session, data):
+    """
+    Perform the API-call to send information around the berichtencentrum to Kalliope.
+
+    :param path: url of the api endpoint that we want to send to
+    :param session: a Kalliope session, as returned by open_kalliope_api_session()
+    :param data: object of parameters for the api call
+    :returns: True when we get a 204 response
+    """
+
+    headers = {
+        "Content-type": "application/json",
+        "Accept": "application/json",
+    }
+
+    r = session.post(path, json=data, headers=headers)
+    if r.status_code == requests.codes.no_content:
+        return True
+    else:
+        try:
+            errorDescription = r.json()
+        except Exception as e:
+            errorDescription = r
+        raise requests.exceptions.HTTPError('Failed to post Kalliope poststuck-uit-confirmation (statuscode {}): {}'.format(r.status_code,
+                                                                                                             errorDescription))
 
 def post_kalliope_inzending_in(path, session, inzending):
     """
