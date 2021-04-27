@@ -549,8 +549,9 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
                     <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#sentDate> ?datumVanVerzenden;
                     prov:generated ?formData .
 
-                ?formData dct:type ?decisionType ;
-                    <http://linkedeconomy.org/ontology#financialYear> ?boekjaar .
+                ?formData dct:type ?decisionType .
+
+                OPTIONAL {{ ?formData <http://linkedeconomy.org/ontology#financialYear> ?boekjaar . }}
 
                 VALUES ?decisionType {{ {1} }}
 

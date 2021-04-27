@@ -86,6 +86,6 @@ def parse_inzending_sparql_response(inzending_res):
         'typePoststuk': 'https://kalliope.abb.vlaanderen.be/ld/algemeen/dossierType/besluit',
         'typeMelding': inzending_res['decisionType']['value'],
         'datumVanVerzenden': inzending_res['datumVanVerzenden']['value'],
-        'boekjaar': inzending_res['boekjaar']['value'],
+        'boekjaar': inzending_res.get('boekjaar', {}).get('value', ''),
     }
     return inzending
