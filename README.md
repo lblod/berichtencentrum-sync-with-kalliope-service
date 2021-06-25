@@ -11,6 +11,7 @@ To add the service to your stack, add the following snippet to `docker-compose.y
       KALLIOPE_PS_UIT_CONFIRMATION_ENDPOINT: "https://kalliope-svc-test.abb.vlaanderen.be/glapi/poststuk-uit/ontvangstbevestiging"
       KALLIOPE_PS_IN_ENDPOINT: "https://kalliope-svc-test.abb.vlaanderen.be/glapi/poststuk-in"
       BERICHTEN_CRON_PATTERN: "*/5 * * * *"
+      BERICHTEN_IN_CONFIRMATION_CRON_PATTERN: "3/5 * * * *"
       INZENDINGEN_CRON_PATTERN: "* 22 * * *"
     volumes:
       - ./data/files:/data/files
@@ -22,14 +23,15 @@ To add the service to your stack, add the following snippet to `docker-compose.y
 
 Required environment variables:
 
-* `KALLIOPE_API_USERNAME`  
+* `KALLIOPE_API_USERNAME`
 * `KALLIOPE_API_PASSWORD`
 * `KALLIOPE_PS_UIT_ENDPOINT`
 * `KALLIOPE_PS_UIT_CONFIRMATION_ENDPOINT`
 * `KALLIOPE_PS_IN_ENDPOINT`
 * `INZENDING_BASE_URL`
 * `BERICHTEN_CRON_PATTERN`: Pattern of the cron job that polls the API for berichten
-* `INZENDINGEN_CRON_PATTERN`: Pattern of the cron job that polls the API for inzendingen
+* `BERICHTEN_IN_CONFIRMATION_CRON_PATTERN`: Pattern of the cron job that sends confirmations
+* `INZENDINGEN_CRON_PATTERN`: Pattern of the cron job that sends inzendingen
 
 Optional environment variables:
 

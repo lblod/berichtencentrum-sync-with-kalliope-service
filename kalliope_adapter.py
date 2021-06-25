@@ -228,19 +228,6 @@ def construct_kalliope_poststuk_in(conversatie, bericht):
     poststuk_in.extend(files)
     return poststuk_in
 
-def construct_kalliope_poststuk_uit_confirmation(bericht):
-    """
-    Prepare the payload for sending a confirmation about well received messsages to the Kalliope API.
-
-    :param bericht: bericht object reprensenting the received message
-    :returns: data parameters object as consumed by requests
-    """
-
-    data = {
-        'uriPoststukUit': bericht['uri'],
-        'datumBeschikbaarheid': bericht['ontvangen'],
-    }
-    return data
 
 def post_kalliope_poststuk_in(path, session, params):
     """
@@ -260,6 +247,7 @@ def post_kalliope_poststuk_in(path, session, params):
             errorDescription = r
         raise requests.exceptions.HTTPError('Failed to post Kalliope poststuk-in (statuscode {}): {}'.format(r.status_code,
                                                                                                              errorDescription))
+
 
 def post_kalliope_poststuk_uit_confirmation(path, session, data):
     """

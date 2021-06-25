@@ -8,6 +8,10 @@ from pytz import timezone
 import re
 
 TIMEZONE = timezone('Europe/Brussels')
+STATUS_DELIVERED_UNCONFIRMED = \
+    "http://data.lblod.info/id/status/berichtencentrum/sync-with-kalliope/delivered/unconfirmed"
+STATUS_DELIVERED_CONFIRMED = \
+    "http://data.lblod.info/id/status/berichtencentrum/sync-with-kalliope/delivered/confirmed"
 
 
 def sparql_escape_string(obj):
@@ -74,7 +78,7 @@ def construct_bericht_exists_query(graph_uri, bericht_uri):
     return q
 
 
-def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
+def construct_insert_conversatie_query(graph_uri, conversatie, bericht, delivery_timestamp):
     """
     Construct a SPARQL query for inserting a new conversatie with a first bericht attached.
 
@@ -83,15 +87,17 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
     :param bericht: dict containing escaped properties for bericht
     :returns: string containing SPARQL query
     """
-    conversatie = copy.deepcopy(conversatie) # For not modifying the pass-by-name original
+    conversatie = copy.deepcopy(conversatie)  # For not modifying the pass-by-name original
     conversatie['referentieABB'] = escape_helpers.sparql_escape_string(conversatie['referentieABB'])
     conversatie['betreft'] = escape_helpers.sparql_escape_string(conversatie['betreft'])
-    conversatie['current_type_communicatie'] = escape_helpers.sparql_escape_string(conversatie['current_type_communicatie'])
-    bericht = copy.deepcopy(bericht) # For not modifying the pass-by-name original
+    conversatie['current_type_communicatie'] =\
+        escape_helpers.sparql_escape_string(conversatie['current_type_communicatie'])
+    bericht = copy.deepcopy(bericht)  # For not modifying the pass-by-name original
     bericht['inhoud'] = escape_helpers.sparql_escape_string(bericht['inhoud'])
     q = """
         PREFIX schema: <http://schema.org/>
         PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+        PREFIX adms: <http://www.w3.org/ns/adms#>
 
         INSERT DATA {{
             GRAPH <{0}> {{
@@ -116,27 +122,33 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht):
                     schema:text {2[inhoud]};
                     <http://purl.org/dc/terms/type> "{2[type_communicatie]}";
                     schema:sender <{2[van]}>;
-                    schema:recipient <{2[naar]}>.
+                    schema:recipient <{2[naar]}>;
+                    adms:status <{3}>;
+                    ext:deliveredAt "{4}"^^xsd:dateTime.
             }}
         }}
     """
-    q = q.format(graph_uri, conversatie, bericht)
+    q = q.format(graph_uri, conversatie, bericht,
+                 STATUS_DELIVERED_UNCONFIRMED, delivery_timestamp)
     return q
 
 
-def construct_insert_bericht_query(graph_uri, bericht, conversatie_uri):
+def construct_insert_bericht_query(graph_uri, bericht, conversatie_uri, delivery_timestamp):
     """
     Construct a SPARQL query for inserting a bericht and attaching it to an existing conversatie.
 
     :param graph_uri: string
     :param bericht: dict containing properties for bericht
     :param conversatie_uri: string containing the uri of the conversatie that the bericht has to get attached to
+    :param delivery_timestamp: string
     :returns: string containing SPARQL query
     """
-    bericht = copy.deepcopy(bericht) # For not modifying the pass-by-name original
+    bericht = copy.deepcopy(bericht)  # For not modifying the pass-by-name original
     bericht['inhoud'] = escape_helpers.sparql_escape_string(bericht['inhoud'])
     q = """
         PREFIX schema: <http://schema.org/>
+        PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+        PREFIX adms: <http://www.w3.org/ns/adms#>
 
         INSERT DATA {{
             GRAPH <{0}> {{
@@ -149,11 +161,15 @@ def construct_insert_bericht_query(graph_uri, bericht, conversatie_uri):
                     schema:text {1[inhoud]};
                     schema:sender <{1[van]}>;
                     schema:recipient <{1[naar]}>;
+                    adms:status <{3}>;
+                    ext:deliveredAt "{4}"^^xsd:dateTime;
                     <http://purl.org/dc/terms/type> "{1[type_communicatie]}".
             }}
         }}
-        """.format(graph_uri, bericht, conversatie_uri)
+        """.format(graph_uri, bericht, conversatie_uri,
+                   STATUS_DELIVERED_UNCONFIRMED, delivery_timestamp)
     return q
+
 
 def construct_update_conversatie_type_query(graph_uri, conversatie_uri, type_communicatie):
     """
@@ -632,6 +648,7 @@ def construct_inzending_sent_query(graph_uri, inzending_uri, verzonden):
     return q
 
 
+# TODO: make optional arguments where optional arguments due
 def construct_create_kalliope_sync_error_query(graph_uri, poststuk_uri, message, error):
     now = datetime.now(tz=TIMEZONE).replace(microsecond=0).isoformat()
     uuid = helpers.generate_uuid()
@@ -674,9 +691,11 @@ def construct_create_kalliope_sync_error_query(graph_uri, poststuk_uri, message,
                  error_uri)
     return q
 
+
 def construct_dossierbehandelaar_exists_query(graph_uri, dossierbehandelaar):
     """
-    Construct a query for selecting a conversatie based on referentieABB (thereby also testing if the conversatie already exists)
+    Construct a query for
+    selecting a conversatie based on referentieABB (thereby also testing if the conversatie already exists)
 
     :param graph_uri: string
     :param referentieABB: string
@@ -697,6 +716,7 @@ def construct_dossierbehandelaar_exists_query(graph_uri, dossierbehandelaar):
         }}
         """.format(graph_uri, identifier)
     return q
+
 
 def construct_insert_dossierbehandelaar_query(graph_uri, bericht):
     """
@@ -728,6 +748,7 @@ def construct_insert_dossierbehandelaar_query(graph_uri, bericht):
         """.format(graph_uri, bericht['dossierbehandelaar'])
     return q
 
+
 def construct_link_dossierbehandelaar_query(graph_uri, bericht):
     """
     Construct a SPARQL query for linking a dossierbehandelaar to a bericht.
@@ -747,3 +768,68 @@ def construct_link_dossierbehandelaar_query(graph_uri, bericht):
         }}
         """.format(graph_uri, bericht, bericht['dossierbehandelaar'])
     return q
+
+
+def construct_get_messages_by_status(status_uri):
+    query_str = """
+        PREFIX schema: <http://schema.org/>
+        PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+        PREFIX adms: <http://www.w3.org/ns/adms#>
+
+        SELECT DISTINCT ?bericht
+                        ?uuid
+                        ?verzonden
+                        ?ontvangen
+                        ?inhoud
+                        ?van
+                        ?naar
+                        ?status
+                        ?deliveredAt
+                        ?typeCommunicatie
+        {{
+            GRAPH ?g {{
+                BIND(<{0}> as ?status)
+
+                ?bericht a schema:Message;
+                    <http://mu.semte.ch/vocabularies/core/uuid> ?uuid;
+                    schema:dateSent ?verzonden;
+                    schema:dateReceived ?ontvangen;
+                    schema:text ?inhoud;
+                    schema:sender ?van;
+                    schema:recipient ?naar;
+                    adms:status ?status;
+                    ext:deliveredAt ?deliveredAt;
+                    <http://purl.org/dc/terms/type> ?typeCommunicatie.
+            }}
+        }}
+    """.format(status_uri)
+
+    return query_str
+
+
+def construct_update_bericht_status(bericht_uri, status_uri):
+    query_str = """
+        PREFIX schema: <http://schema.org/>
+        PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+        PREFIX adms: <http://www.w3.org/ns/adms#>
+
+        DELETE {{
+          GRAPH ?g {{
+             ?bericht adms:status ?status.
+          }}
+        }}
+        INSERT {{
+          GRAPH ?g {{
+             ?bericht adms:status <{1}>.
+          }}
+        }}
+        WHERE {{
+          BIND(<{0}> as ?bericht)
+
+          GRAPH ?g {{
+             ?bericht adms:status ?status.
+          }}
+        }}
+    """.format(bericht_uri, status_uri)
+
+    return query_str
