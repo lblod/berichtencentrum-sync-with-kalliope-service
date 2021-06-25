@@ -29,7 +29,7 @@ from .update_with_supressed_fail import update_with_suppressed_fail
 TIMEZONE = timezone('Europe/Brussels')
 PUBLIC_GRAPH = "http://mu.semte.ch/graphs/public"
 PS_UIT_PATH = os.environ.get('KALLIOPE_PS_UIT_ENDPOINT')
-MAX_MESSAGE_AGE = 10 #int(os.environ.get('MAX_MESSAGE_AGE'))  # in days
+MAX_MESSAGE_AGE = int(os.environ.get('MAX_MESSAGE_AGE'))  # in days
 
 
 def process_berichten_in():
