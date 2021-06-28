@@ -128,8 +128,7 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht, delivery
             }}
         }}
     """
-    q = q.format(graph_uri, conversatie, bericht,
-                 STATUS_DELIVERED_UNCONFIRMED, delivery_timestamp)
+    q = q.format(graph_uri, conversatie, bericht, STATUS_DELIVERED_UNCONFIRMED, delivery_timestamp)
     return q
 
 
@@ -648,7 +647,6 @@ def construct_inzending_sent_query(graph_uri, inzending_uri, verzonden):
     return q
 
 
-# TODO: make optional arguments where optional arguments due
 def construct_create_kalliope_sync_error_query(graph_uri, poststuk_uri, message, error):
     now = datetime.now(tz=TIMEZONE).replace(microsecond=0).isoformat()
     uuid = helpers.generate_uuid()
@@ -657,7 +655,7 @@ def construct_create_kalliope_sync_error_query(graph_uri, poststuk_uri, message,
     Construct a SPARQL query for creating a new KalliopeSyncError
 
     :param graph_uri: string
-    :param poststuk_uri: URI of the message that triggered an error
+    :param poststuk_uri: URI of the message that triggered an error, can be None
     :param message: string describing the error
     :param error: error catched by the exception catcher
     :returns: string containing SPARQL query
@@ -675,7 +673,7 @@ def construct_create_kalliope_sync_error_query(graph_uri, poststuk_uri, message,
     """
     if poststuk_uri is not None:
         q += """
-                       ext:processedMessage <{1}> ;
+                    ext:processedMessage <{1}> ;
              """
     q += """
                     pav:createdOn "{4}"^^xsd:dateTime ;
@@ -770,7 +768,7 @@ def construct_link_dossierbehandelaar_query(graph_uri, bericht):
     return q
 
 
-def construct_get_messages_by_status(status_uri):
+def construct_get_messages_by_status(status_uri, max_confirmation_attempts):
     query_str = """
         PREFIX schema: <http://schema.org/>
         PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
@@ -786,6 +784,8 @@ def construct_get_messages_by_status(status_uri):
                         ?status
                         ?deliveredAt
                         ?typeCommunicatie
+                        ?confirmationAttempts
+                        ?g
         {{
             GRAPH ?g {{
                 BIND(<{0}> as ?status)
@@ -800,9 +800,14 @@ def construct_get_messages_by_status(status_uri):
                     adms:status ?status;
                     ext:deliveredAt ?deliveredAt;
                     <http://purl.org/dc/terms/type> ?typeCommunicatie.
+
+                BIND(0 AS ?default_attempts)
+                OPTIONAL {{ ?bericht ext:failedConfirmationAttempts ?confirmationAttempts. }}
+                BIND(COALESCE(?confirmationAttempts, ?default_attempts) AS ?result_attempts)
+                FILTER(?result_attempts < {1})
             }}
         }}
-    """.format(status_uri)
+    """.format(status_uri, max_confirmation_attempts)
 
     return query_str
 
@@ -833,3 +838,41 @@ def construct_update_bericht_status(bericht_uri, status_uri):
     """.format(bericht_uri, status_uri)
 
     return query_str
+
+def construct_increment_confirmation_attempts_query(graph_uri, poststuk_uri):
+    """
+    Construct a SPARQL query for incrementing (+1) the counter that keeps track of how many times
+    the service attempted to send out a conformation for a certain message without succes.
+
+    :param graph_uri: string
+    :param poststuk_uri: URI of the bericht.
+    :returns: string containing SPARQL query
+    """
+
+    q = """
+        PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+        PREFIX schema: <http://schema.org/>
+
+        DELETE {{
+            GRAPH <{0}> {{
+                <{1}> ext:failedConfirmationAttempts ?result_attempts.
+            }}
+        }}
+        INSERT {{
+            GRAPH <{0}> {{
+                <{1}> ext:failedConfirmationAttempts ?incremented_attempts.
+            }}
+        }}
+        WHERE {{
+            GRAPH <{0}> {{
+                <{1}> a schema:Message.
+
+                OPTIONAL {{ <{1}> ext:failedConfirmationAttempts ?attempts. }}
+                BIND(0 AS ?default_attempts)
+                BIND(COALESCE(?attempts, ?default_attempts) AS ?result_attempts)
+                BIND((?result_attempts + 1) AS ?incremented_attempts)
+            }}
+        }}
+        """.format(graph_uri, poststuk_uri)
+
+    return q

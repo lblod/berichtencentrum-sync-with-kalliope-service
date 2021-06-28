@@ -11,10 +11,6 @@ BERICHTEN_CRON_PATTERN = os.environ.get('BERICHTEN_CRON_PATTERN')
 INZENDINGEN_CRON_PATTERN = os.environ.get('INZENDINGEN_CRON_PATTERN')
 BERICHTEN_IN_CONFIRMATION_CRON_PATTERN = os.environ.get('BERICHTEN_IN_CONFIRMATION_CRON_PATTERN')
 
-# DEBUGGING STARTS HERE
-#import pdb; pdb.set_trace()
-#process_berichten_in() # you need to call this like this, somehow else it doesn't stop in deeper breakpoints
-# END DEBUGGING
 scheduler = BackgroundScheduler()
 
 scheduler.add_job(process_inzendingen, CronTrigger.from_crontab(INZENDINGEN_CRON_PATTERN))

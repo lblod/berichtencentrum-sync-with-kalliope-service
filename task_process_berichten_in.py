@@ -29,7 +29,7 @@ from .update_with_supressed_fail import update_with_suppressed_fail
 TIMEZONE = timezone('Europe/Brussels')
 PUBLIC_GRAPH = "http://mu.semte.ch/graphs/public"
 PS_UIT_PATH = os.environ.get('KALLIOPE_PS_UIT_ENDPOINT')
-MAX_MESSAGE_AGE = 10 #int(os.environ.get('MAX_MESSAGE_AGE'))  # in days
+MAX_MESSAGE_AGE = int(os.environ.get('MAX_MESSAGE_AGE'))  # in days
 
 
 def process_berichten_in():
@@ -100,7 +100,8 @@ def insert_message_in_db(conversatie, bericht, poststuk, session, graph):
         helpers.log(message)
         raise e
 
-    delivery_timestamp = datetime.now(tz=TIMEZONE).isoformat()
+    delivery_timestamp = datetime.now(tz=TIMEZONE).replace(microsecond=0).isoformat()
+
     q2 = construct_conversatie_exists_query(graph, conversatie['referentieABB'])
     query_result2 = query(q2)['results']['bindings']
     if query_result2:  # The conversatie to which the bericht is linked exists.

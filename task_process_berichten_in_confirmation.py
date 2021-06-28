@@ -8,11 +8,13 @@ from .update_with_supressed_fail import update_with_suppressed_fail
 from .queries import STATUS_DELIVERED_CONFIRMED, STATUS_DELIVERED_UNCONFIRMED
 from .queries import construct_get_messages_by_status, construct_update_bericht_status
 from .queries import construct_create_kalliope_sync_error_query
+from .queries import construct_increment_confirmation_attempts_query
+
 from .kalliope_adapter import post_kalliope_poststuk_uit_confirmation
 from .kalliope_adapter import open_kalliope_api_session
 
-
 TIMEZONE = timezone('Europe/Brussels')
+MAX_CONFIRMATION_ATTEMPTS = int(os.environ.get('MAX_CONFIRMATION_ATTEMPTS'))
 PS_UIT_CONFIRMATION_PATH = os.environ.get('KALLIOPE_PS_UIT_CONFIRMATION_ENDPOINT')
 PUBLIC_GRAPH = "http://mu.semte.ch/graphs/public"
 
@@ -21,7 +23,7 @@ def process_confirmations():
     try:
         log("Checking for new delivery confirmations to process")
 
-        query_string = construct_get_messages_by_status(STATUS_DELIVERED_UNCONFIRMED)
+        query_string = construct_get_messages_by_status(STATUS_DELIVERED_UNCONFIRMED, MAX_CONFIRMATION_ATTEMPTS)
         berichten = query(query_string).get('results', {}).get('bindings', [])
 
         log("Found {} confirmations that need to be sent to the Kalliope API".format(len(berichten)))
@@ -47,11 +49,11 @@ def process_confirmations():
 def process_confirmation(session, bericht):
     # TODO: cap it to a max number of attempts, say configurable 20 or so
     try:
-        log("Attempt to confirm: {}".format(bericht["bericht"]["value"]))
+        log("Attempt to confirm {} number {}".format(bericht["bericht"]["value"], bericht["confirmationAttempts"]["value"] if "confirmationAttempts" in bericht.keys() else 0))
 
         poststuk_uit_confirmation = {
-           'uriPoststukUit': bericht["bericht"]["value"],
-           'datumBeschikbaarheid': bericht["deliveredAt"]["value"]
+            'uriPoststukUit': bericht["bericht"]["value"],
+            'datumBeschikbaarheid': bericht["deliveredAt"]["value"]
         }
 
         post_result = post_kalliope_poststuk_uit_confirmation(PS_UIT_CONFIRMATION_PATH,
@@ -73,4 +75,6 @@ def process_confirmation(session, bericht):
         # TODO: this PUBLIC_GRAPH should really be another graph!!!! (now done for consistency)
         error_query = construct_create_kalliope_sync_error_query(PUBLIC_GRAPH, bericht["bericht"]["value"], message, e)
         update_with_suppressed_fail(error_query)
+        confirmation_query = construct_increment_confirmation_attempts_query(bericht["g"]["value"], bericht["bericht"]["value"])
+        update_with_suppressed_fail(confirmation_query)
         log(message)
