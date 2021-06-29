@@ -85,7 +85,14 @@ def parse_inzending_sparql_response(inzending_res):
         'urlToezicht': INZENDING_BASE_URL + '/' + inzending_res['inzendingUuid']['value'],
         'typePoststuk': 'https://kalliope.abb.vlaanderen.be/ld/algemeen/dossierType/besluit',
         'typeMelding': inzending_res['decisionType']['value'],
-        'datumVanVerzenden': inzending_res['datumVanVerzenden']['value'],
-        'boekjaar': inzending_res.get('boekjaar', {}).get('value', ''),
+        'datumVanVerzenden': inzending_res['datumVanVerzenden']['value']
     }
+
+    try:
+        value = inzending_res.get('boekjaar', {}).get('value', '')
+        if value != "":
+            inzending['boekjaar'] = int(value)
+    except ValueError:
+        log("Invalid value \"{}\" for boekjaar will be ignored, expected an int.".format(value))
+
     return inzending
