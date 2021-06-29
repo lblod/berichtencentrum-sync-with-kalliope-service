@@ -88,6 +88,8 @@ def parse_inzending_sparql_response(inzending_res):
         'datumVanVerzenden': inzending_res['datumVanVerzenden']['value']
     }
 
+    #  NOTE: Kalliope expects "boekjaar" to be an int.
+    #        At this stage we can not guarantee this to be true.
     try:
         value = inzending_res.get('boekjaar', {}).get('value', '')
         if value != "":
