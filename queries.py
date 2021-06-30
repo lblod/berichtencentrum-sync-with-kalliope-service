@@ -12,7 +12,8 @@ STATUS_DELIVERED_UNCONFIRMED = \
     "http://data.lblod.info/id/status/berichtencentrum/sync-with-kalliope/delivered/unconfirmed"
 STATUS_DELIVERED_CONFIRMED = \
     "http://data.lblod.info/id/status/berichtencentrum/sync-with-kalliope/delivered/confirmed"
-
+STATUS_DELIVERED_FAILED = \
+    "http://data.lblod.info/id/status/berichtencentrum/sync-with-kalliope/delivered/failed"
 
 def sparql_escape_string(obj):
     log("""Warning: using a monkey patched
@@ -802,10 +803,7 @@ def construct_get_messages_by_status(status_uri, max_confirmation_attempts):
                     ext:deliveredAt ?deliveredAt;
                     <http://purl.org/dc/terms/type> ?typeCommunicatie.
 
-                BIND(0 AS ?default_attempts)
                 OPTIONAL {{ ?bericht ext:failedConfirmationAttempts ?confirmationAttempts. }}
-                BIND(COALESCE(?confirmationAttempts, ?default_attempts) AS ?result_attempts)
-                FILTER(?result_attempts < {1})
             }}
         }}
     """.format(status_uri, max_confirmation_attempts)

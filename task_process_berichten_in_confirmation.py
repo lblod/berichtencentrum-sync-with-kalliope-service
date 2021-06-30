@@ -5,7 +5,7 @@ from helpers import log
 from .sudo_query_helpers import query, update
 from .update_with_supressed_fail import update_with_suppressed_fail
 
-from .queries import STATUS_DELIVERED_CONFIRMED, STATUS_DELIVERED_UNCONFIRMED
+from .queries import STATUS_DELIVERED_CONFIRMED, STATUS_DELIVERED_UNCONFIRMED, STATUS_DELIVERED_FAILED
 from .queries import construct_get_messages_by_status, construct_update_bericht_status
 from .queries import construct_create_kalliope_sync_error_query
 from .queries import construct_increment_confirmation_attempts_query
@@ -49,23 +49,29 @@ def process_confirmations():
 def process_confirmation(session, bericht):
     # TODO: cap it to a max number of attempts, say configurable 20 or so
     try:
-        log("Attempt to confirm {} number {}".format(bericht["bericht"]["value"], bericht["confirmationAttempts"]["value"] if "confirmationAttempts" in bericht.keys() else 0))
+        attempt = bericht["confirmationAttempts"]["value"] if "confirmationAttempts" in bericht.keys() else 0
+        log("Attempt to confirm {} number {}".format(bericht["bericht"]["value"], attempt))
 
-        poststuk_uit_confirmation = {
-            'uriPoststukUit': bericht["bericht"]["value"],
-            'datumBeschikbaarheid': bericht["deliveredAt"]["value"]
-        }
+        if (int(attempt) >= int(MAX_CONFIRMATION_ATTEMPTS)):
+            log('Maximum number of attempts reached. Setting status of {} to {}'.format(bericht["bericht"]["value"], STATUS_DELIVERED_FAILED))
+            failed_q = construct_update_bericht_status(bericht["bericht"]["value"], STATUS_DELIVERED_FAILED)
+            update(failed_q)
+        else:
+            poststuk_uit_confirmation = {
+                'uriPoststukUit': bericht["bericht"]["value"],
+                'datumBeschikbaarheid': bericht["deliveredAt"]["value"]
+            }
 
-        post_result = post_kalliope_poststuk_uit_confirmation(PS_UIT_CONFIRMATION_PATH,
-                                                              session,
-                                                              poststuk_uit_confirmation)
+            post_result = post_kalliope_poststuk_uit_confirmation(PS_UIT_CONFIRMATION_PATH,
+                                                                session,
+                                                                poststuk_uit_confirmation)
 
-        if post_result:
-            # TODO: note, the implicit assumption here is that in some cases, the same confirmation might be sent twice.
-            # Anyway, there is no way around this, if you need robust confirmation...
-            confirmation_q = construct_update_bericht_status(bericht["bericht"]["value"], STATUS_DELIVERED_CONFIRMED)
-            log("successfully sent confirmation to Kalliope for message {}".format(bericht["bericht"]["value"]))
-            update(confirmation_q)
+            if post_result:
+                # TODO: note, the implicit assumption here is that in some cases, the same confirmation might be sent twice.
+                # Anyway, there is no way around this, if you need robust confirmation...
+                confirmation_q = construct_update_bericht_status(bericht["bericht"]["value"], STATUS_DELIVERED_CONFIRMED)
+                log("successfully sent confirmation to Kalliope for message {}".format(bericht["bericht"]["value"]))
+                update(confirmation_q)
 
     except Exception as e:
         message = """
