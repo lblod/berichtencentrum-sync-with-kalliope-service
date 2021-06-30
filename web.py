@@ -29,4 +29,6 @@ scheduler.add_job(process_confirmations, CronTrigger.from_crontab(BERICHTEN_IN_C
 log("Registered a task for fetching and processing messages to Kalliope following pattern {}"
     .format(BERICHTEN_IN_CONFIRMATION_CRON_PATTERN))
 
+# Note : while running this service in development mode, you might notice that the jobs are executed twice
+# It's related to the debug mode of Flask, which does not apply to the built version.
 scheduler.start()
