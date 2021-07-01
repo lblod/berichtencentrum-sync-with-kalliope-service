@@ -11,8 +11,6 @@ from .kalliope_adapter import parse_kalliope_poststuk_uit
 from .kalliope_adapter import parse_kalliope_bijlage
 from .kalliope_adapter import open_kalliope_api_session
 from .kalliope_adapter import get_kalliope_poststukken_uit
-from .kalliope_adapter import construct_kalliope_poststuk_uit_confirmation
-from .kalliope_adapter import post_kalliope_poststuk_uit_confirmation
 from .kalliope_adapter import BIJLAGEN_FOLDER_PATH
 from .queries import construct_bericht_exists_query
 from .queries import construct_conversatie_exists_query
@@ -31,7 +29,6 @@ from .update_with_supressed_fail import update_with_suppressed_fail
 TIMEZONE = timezone('Europe/Brussels')
 PUBLIC_GRAPH = "http://mu.semte.ch/graphs/public"
 PS_UIT_PATH = os.environ.get('KALLIOPE_PS_UIT_ENDPOINT')
-PS_UIT_CONFIRMATION_PATH = os.environ.get('KALLIOPE_PS_UIT_CONFIRMATION_ENDPOINT')
 MAX_MESSAGE_AGE = int(os.environ.get('MAX_MESSAGE_AGE'))  # in days
 
 
@@ -44,6 +41,7 @@ def process_berichten_in():
     vanaf = datetime.now(tz=TIMEZONE) - timedelta(days=MAX_MESSAGE_AGE)
     log("Pulling poststukken from kalliope API for period {} - now".format(vanaf.isoformat()))
     with open_kalliope_api_session() as session:
+
         try:
             poststukken = get_kalliope_poststukken_uit(PS_UIT_PATH, session, vanaf)
             log('Retrieved {} poststukken uit from Kalliope'.format(len(poststukken)))
@@ -67,12 +65,6 @@ def process_berichten_in():
                     log("Bericht '{}' - {} is not in DB yet.".format(conversatie['betreft'], bericht['verzonden']))
                     insert_message_in_db(conversatie, bericht, poststuk, session, graph)
 
-                    poststuk_uit_confirmation = construct_kalliope_poststuk_uit_confirmation(bericht)
-                    post_result = post_kalliope_poststuk_uit_confirmation(PS_UIT_CONFIRMATION_PATH, session, poststuk_uit_confirmation)
-
-                    if post_result:
-                        log("successfully sent confirmation to Kalliope for message {}".format(bericht['uri']))
-
                 else:  # bericht already exists in our DB
                     log("Bericht '{}' - {} already exists in our DB, skipping ...".format(conversatie['betreft'],
                                                                                           bericht['verzonden']))
@@ -94,6 +86,7 @@ def is_message_in_db(bericht, graph):
 
 
 def insert_message_in_db(conversatie, bericht, poststuk, session, graph):
+
     # Fetch attachments & parse
     bericht['bijlagen'] = []
     try:
@@ -107,13 +100,18 @@ def insert_message_in_db(conversatie, bericht, poststuk, session, graph):
         helpers.log(message)
         raise e
 
+    delivery_timestamp = datetime.now(tz=TIMEZONE).replace(microsecond=0).isoformat()
+
     q2 = construct_conversatie_exists_query(graph, conversatie['referentieABB'])
     query_result2 = query(q2)['results']['bindings']
     if query_result2:  # The conversatie to which the bericht is linked exists.
         conversatie_uri = query_result2[0]['conversatie']['value']
+
         log("Existing conversation '{}' inserting new message sent @ {}".format(conversatie['betreft'],
                                                                                 bericht['verzonden']))
-        q_bericht = construct_insert_bericht_query(graph, bericht, conversatie_uri)
+
+        q_bericht = construct_insert_bericht_query(graph, bericht, conversatie_uri, delivery_timestamp)
+
         try:
             update(q_bericht)
             q_type_communicatie =\
@@ -132,7 +130,7 @@ def insert_message_in_db(conversatie, bericht, poststuk, session, graph):
             format(conversatie['betreft'], bericht['verzonden']))
 
         conversatie['uri'] = "http://data.lblod.info/id/conversaties/{}".format(conversatie['uuid'])
-        q_conversatie = construct_insert_conversatie_query(graph, conversatie, bericht)
+        q_conversatie = construct_insert_conversatie_query(graph, conversatie, bericht, delivery_timestamp)
         try:
             update(q_conversatie)
             save_bijlagen(graph, PUBLIC_GRAPH, bericht, bericht['bijlagen'])
@@ -167,6 +165,7 @@ def save_bijlagen(bericht_graph_uri, file_graph, bericht, bijlagen):
                                                    bijlage,
                                                    file)  # TEMP: bijlage in public graph
         update(q_bijlage)
+
 
 def insert_dossierbehandelaar_in_db(graph, bericht):
     q_dossierbehandelaar_exists = construct_dossierbehandelaar_exists_query(graph, bericht['dossierbehandelaar'])
