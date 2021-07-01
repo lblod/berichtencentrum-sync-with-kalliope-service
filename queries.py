@@ -12,8 +12,9 @@ STATUS_DELIVERED_UNCONFIRMED = \
     "http://data.lblod.info/id/status/berichtencentrum/sync-with-kalliope/delivered/unconfirmed"
 STATUS_DELIVERED_CONFIRMED = \
     "http://data.lblod.info/id/status/berichtencentrum/sync-with-kalliope/delivered/confirmed"
-STATUS_DELIVERED_FAILED = \
-    "http://data.lblod.info/id/status/berichtencentrum/sync-with-kalliope/delivered/failed"
+STATUS_DELIVERED_CONFIRMATION_FAILED = \
+    "http://data.lblod.info/id/status/berichtencentrum/sync-with-kalliope/delivered/failedConfirmation"
+
 
 def sparql_escape_string(obj):
     log("""Warning: using a monkey patched
@@ -34,7 +35,8 @@ escape_helpers.sparql_escape_string = sparql_escape_string
 
 def construct_conversatie_exists_query(graph_uri, referentieABB):
     """
-    Construct a query for selecting a conversatie based on referentieABB (thereby also testing if the conversatie already exists)
+    Construct a query for selecting a conversatie based on referentieABB
+    (thereby also testing if the conversatie already exists)
 
     :param graph_uri: string
     :param referentieABB: string

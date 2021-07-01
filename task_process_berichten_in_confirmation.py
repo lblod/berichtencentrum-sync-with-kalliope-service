@@ -5,7 +5,7 @@ from helpers import log
 from .sudo_query_helpers import query, update
 from .update_with_supressed_fail import update_with_suppressed_fail
 
-from .queries import STATUS_DELIVERED_CONFIRMED, STATUS_DELIVERED_UNCONFIRMED, STATUS_DELIVERED_FAILED
+from .queries import STATUS_DELIVERED_CONFIRMED, STATUS_DELIVERED_UNCONFIRMED, STATUS_DELIVERED_CONFIRMATION_FAILED
 from .queries import construct_get_messages_by_status, construct_update_bericht_status
 from .queries import construct_create_kalliope_sync_error_query
 from .queries import construct_increment_confirmation_attempts_query
@@ -53,8 +53,8 @@ def process_confirmation(session, bericht):
 
         if (int(attempt) >= int(MAX_CONFIRMATION_ATTEMPTS)):
             log('Maximum number of attempts reached. Setting status of {} to {}'.
-                format(bericht["bericht"]["value"], STATUS_DELIVERED_FAILED))
-            failed_q = construct_update_bericht_status(bericht["bericht"]["value"], STATUS_DELIVERED_FAILED)
+                format(bericht["bericht"]["value"], STATUS_DELIVERED_CONFIRMATION_FAILED))
+            failed_q = construct_update_bericht_status(bericht["bericht"]["value"], STATUS_DELIVERED_CONFIRMATION_FAILED)
             update(failed_q)
         else:
             poststuk_uit_confirmation = {
