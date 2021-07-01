@@ -83,14 +83,6 @@ def process_berichten_in():
                         log("Bericht '{}' - {} already exists in our DB, skipping ...".format(conversatie['betreft'],
                                                                                               bericht['verzonden']))
 
-            except UnknownBestuurseenheidError as e:
-                message = """
-                        Unknown bestuurseenheid when processing message {}.
-                        """.format(poststuk['uri'])
-
-                error_query = construct_create_kalliope_sync_error_query(PUBLIC_GRAPH, poststuk['uri'], message, e)
-                update_with_suppressed_fail(error_query)
-                log(message)
             except Exception as e:
                 message = """
                         General error while trying to process message {}.
