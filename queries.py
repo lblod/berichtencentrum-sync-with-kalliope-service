@@ -838,6 +838,7 @@ def construct_update_bericht_status(bericht_uri, status_uri):
 
     return query_str
 
+
 def construct_increment_confirmation_attempts_query(graph_uri, poststuk_uri):
     """
     Construct a SPARQL query for incrementing (+1) the counter that keeps track of how many times

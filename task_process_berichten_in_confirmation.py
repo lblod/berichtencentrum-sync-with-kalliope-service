@@ -47,13 +47,13 @@ def process_confirmations():
 
 
 def process_confirmation(session, bericht):
-    # TODO: cap it to a max number of attempts, say configurable 20 or so
     try:
         attempt = bericht["confirmationAttempts"]["value"] if "confirmationAttempts" in bericht.keys() else 0
         log("Attempt to confirm {} number {}".format(bericht["bericht"]["value"], attempt))
 
         if (int(attempt) >= int(MAX_CONFIRMATION_ATTEMPTS)):
-            log('Maximum number of attempts reached. Setting status of {} to {}'.format(bericht["bericht"]["value"], STATUS_DELIVERED_FAILED))
+            log('Maximum number of attempts reached. Setting status of {} to {}'.
+                format(bericht["bericht"]["value"], STATUS_DELIVERED_FAILED))
             failed_q = construct_update_bericht_status(bericht["bericht"]["value"], STATUS_DELIVERED_FAILED)
             update(failed_q)
         else:
@@ -63,13 +63,16 @@ def process_confirmation(session, bericht):
             }
 
             post_result = post_kalliope_poststuk_uit_confirmation(PS_UIT_CONFIRMATION_PATH,
-                                                                session,
-                                                                poststuk_uit_confirmation)
+                                                                  session,
+                                                                  poststuk_uit_confirmation)
 
             if post_result:
-                # TODO: note, the implicit assumption here is that in some cases, the same confirmation might be sent twice.
+                # TODO: note, the implicit assumption here is that in some cases,
+                # the same confirmation might be sent twice.
+                # (i.e. when confirmation to K. was ok, but next statement fails)
                 # Anyway, there is no way around this, if you need robust confirmation...
-                confirmation_q = construct_update_bericht_status(bericht["bericht"]["value"], STATUS_DELIVERED_CONFIRMED)
+                confirmation_q = construct_update_bericht_status(bericht["bericht"]["value"],
+                                                                 STATUS_DELIVERED_CONFIRMED)
                 log("successfully sent confirmation to Kalliope for message {}".format(bericht["bericht"]["value"]))
                 update(confirmation_q)
 
@@ -81,6 +84,7 @@ def process_confirmation(session, bericht):
         # TODO: this PUBLIC_GRAPH should really be another graph!!!! (now done for consistency)
         error_query = construct_create_kalliope_sync_error_query(PUBLIC_GRAPH, bericht["bericht"]["value"], message, e)
         update_with_suppressed_fail(error_query)
-        confirmation_query = construct_increment_confirmation_attempts_query(bericht["g"]["value"], bericht["bericht"]["value"])
+        confirmation_query = construct_increment_confirmation_attempts_query(bericht["g"]["value"],
+                                                                             bericht["bericht"]["value"])
         update_with_suppressed_fail(confirmation_query)
         log(message)
