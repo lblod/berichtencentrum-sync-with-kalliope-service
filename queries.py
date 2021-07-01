@@ -57,6 +57,23 @@ def construct_conversatie_exists_query(graph_uri, referentieABB):
     return q
 
 
+def construct_bestuurseenheid_exists_query(bestuurseeheid_uri):
+    """
+    Construct a query for asking if a bestuurseenehid exists in our database.
+
+    :param bestuurseeheid_uri: string
+    :returns: string containing SPARQL query
+    """
+    q = """
+        PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
+
+        ASK {{
+            <{0}> a besluit:Bestuurseenheid .
+        }}
+        """.format(bestuurseeheid_uri)
+    return q
+
+
 def construct_bericht_exists_query(graph_uri, bericht_uri):
     """
     Construct a query for selecting a bericht based on its URI, retrieving the conversatie & referentieABB at the same time.
