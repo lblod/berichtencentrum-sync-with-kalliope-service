@@ -12,6 +12,7 @@ from .kalliope_adapter import parse_kalliope_bijlage
 from .kalliope_adapter import open_kalliope_api_session
 from .kalliope_adapter import get_kalliope_poststukken_uit
 from .kalliope_adapter import BIJLAGEN_FOLDER_PATH
+from .queries import construct_bestuurseenheid_exists_query
 from .queries import construct_bericht_exists_query
 from .queries import construct_conversatie_exists_query
 from .queries import construct_insert_bijlage_query
@@ -31,6 +32,9 @@ PUBLIC_GRAPH = "http://mu.semte.ch/graphs/public"
 PS_UIT_PATH = os.environ.get('KALLIOPE_PS_UIT_ENDPOINT')
 MAX_MESSAGE_AGE = int(os.environ.get('MAX_MESSAGE_AGE'))  # in days
 
+class UnknownBestuurseenheidError(Exception):
+    """Raised when the bestuurseenheid we received in unknown in our system."""
+    pass
 
 def process_berichten_in():
     """
@@ -56,18 +60,28 @@ def process_berichten_in():
             try:
                 (conversatie, bericht) = parse_kalliope_poststuk_uit(poststuk, session)
 
-                bestuurseenheid_uuid = bericht['naar'].split('/')[-1]
-                graph =\
-                    "http://mu.semte.ch/graphs/organizations/{}/LoketLB-berichtenGebruiker".format(bestuurseenheid_uuid)
-                message_in_db = is_message_in_db(bericht, graph)
+                bestuurseeheid_uri = bericht['naar']
+                bestuurseenheid_uuid = bestuurseeheid_uri.split('/')[-1]
+                bestuurseenheid_in_db = is_bestuurseenheid_in_db(bestuurseeheid_uri)
 
-                if not message_in_db:  # Bericht is not in our DB yet. We should insert it.
-                    log("Bericht '{}' - {} is not in DB yet.".format(conversatie['betreft'], bericht['verzonden']))
-                    insert_message_in_db(conversatie, bericht, poststuk, session, graph)
+                if not bestuurseenheid_in_db:
+                    message = "Bestuurseenheid with uri {} not found in our database".format(bestuurseeheid_uri)
+                    log(message)
+                    raise UnknownBestuurseenheidError(message)
 
-                else:  # bericht already exists in our DB
-                    log("Bericht '{}' - {} already exists in our DB, skipping ...".format(conversatie['betreft'],
-                                                                                          bericht['verzonden']))
+                else:
+                    log("Bestuurseeneheid {} found, proceeding with processing the message".format(bestuurseeheid_uri))
+                    graph =\
+                        "http://mu.semte.ch/graphs/organizations/{}/LoketLB-berichtenGebruiker".format(bestuurseenheid_uuid)
+                    message_in_db = is_message_in_db(bericht, graph)
+
+                    if not message_in_db:  # Bericht is not in our DB yet. We should insert it.
+                        log("Bericht '{}' - {} is not in DB yet.".format(conversatie['betreft'], bericht['verzonden']))
+                        insert_message_in_db(conversatie, bericht, poststuk, session, graph)
+
+                    else:  # bericht already exists in our DB
+                        log("Bericht '{}' - {} already exists in our DB, skipping ...".format(conversatie['betreft'],
+                                                                                              bericht['verzonden']))
 
             except Exception as e:
                 message = """
@@ -79,6 +93,12 @@ def process_berichten_in():
                 log(message)
 
 
+def is_bestuurseenheid_in_db(bestuurseeheid_uri):
+    q = construct_bestuurseenheid_exists_query(bestuurseeheid_uri)
+    query_result = query(q)['boolean']
+    return query_result
+
+
 def is_message_in_db(bericht, graph):
     q = construct_bericht_exists_query(graph, bericht['uri'])
     query_result = query(q)['results']['bindings']
@@ -86,7 +106,6 @@ def is_message_in_db(bericht, graph):
 
 
 def insert_message_in_db(conversatie, bericht, poststuk, session, graph):
-
     # Fetch attachments & parse
     bericht['bijlagen'] = []
     try:
