@@ -19,8 +19,7 @@ from .queries import construct_insert_bijlage_query
 from .queries import construct_insert_conversatie_query
 from .queries import construct_insert_bericht_query
 from .queries import construct_update_conversatie_type_query
-from .queries import construct_update_last_bericht_query_part1
-from .queries import construct_update_last_bericht_query_part2
+from .queries import construct_update_last_bericht_query
 from .queries import construct_create_kalliope_sync_error_query
 from .queries import construct_dossierbehandelaar_exists_query
 from .queries import construct_insert_dossierbehandelaar_query
@@ -124,17 +123,17 @@ def insert_message_in_db(conversatie, bericht, poststuk, session, graph):
     q2 = construct_conversatie_exists_query(graph, conversatie['referentieABB'])
     query_result2 = query(q2)['results']['bindings']
     if query_result2:  # The conversatie to which the bericht is linked exists.
-        conversatie_uri = query_result2[0]['conversatie']['value']
+        conversatie['uri'] = query_result2[0]['conversatie']['value']
 
         log("Existing conversation '{}' inserting new message sent @ {}".format(conversatie['betreft'],
                                                                                 bericht['verzonden']))
 
-        q_bericht = construct_insert_bericht_query(graph, bericht, conversatie_uri, delivery_timestamp)
+        q_bericht = construct_insert_bericht_query(graph, bericht, conversatie['uri'], delivery_timestamp)
 
         try:
             update(q_bericht)
             q_type_communicatie =\
-                construct_update_conversatie_type_query(graph, conversatie_uri, bericht['type_communicatie'])
+                construct_update_conversatie_type_query(graph, conversatie['uri'], bericht['type_communicatie'])
             update(q_type_communicatie)
             # TODO: perhaps later first save bijlagen and the meta-data
             save_bijlagen(graph, PUBLIC_GRAPH, bericht, bericht['bijlagen'])
@@ -159,12 +158,14 @@ def insert_message_in_db(conversatie, bericht, poststuk, session, graph):
             log("{}, skipping: {}\n{}".format(message, poststuk, e))
             raise e
 
-    # Updating ext:lastMessage link for each conversation (in 2 parts because Virtuoso)
-    update(construct_update_last_bericht_query_part1())
-    update(construct_update_last_bericht_query_part2())
-
-    insert_dossierbehandelaar_in_db(graph, bericht)
-
+    try:
+        update(construct_update_last_bericht_query(conversatie['uri'], bericht['uri']))
+        insert_dossierbehandelaar_in_db(graph, bericht)
+    except Exception as e:
+        message = "Something went wrong updating conversation and dossierbehandelaar"
+        update(construct_create_kalliope_sync_error_query(PUBLIC_GRAPH, poststuk['uri'], message, e))
+        log("{}, skipping: {}\n{}".format(message, poststuk, e))
+        raise e
 
 def save_bijlagen(bericht_graph_uri, file_graph, bericht, bijlagen):
     for bijlage in bijlagen:
@@ -189,7 +190,6 @@ def save_bijlagen(bericht_graph_uri, file_graph, bericht, bijlagen):
 def insert_dossierbehandelaar_in_db(graph, bericht):
     q_dossierbehandelaar_exists = construct_dossierbehandelaar_exists_query(graph, bericht['dossierbehandelaar'])
     query_result_dossierbehandelaar_exists = query(q_dossierbehandelaar_exists)['results']['bindings']
-
     if not query_result_dossierbehandelaar_exists:
         q_dossierbehandelaar = construct_insert_dossierbehandelaar_query(graph, bericht)
         update(q_dossierbehandelaar)
