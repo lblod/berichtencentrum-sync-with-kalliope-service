@@ -159,7 +159,7 @@ def insert_message_in_db(conversatie, bericht, poststuk, session, graph):
             raise e
 
     try:
-        update(construct_update_last_bericht_query(conversatie['uri'], bericht['uri']))
+        update(construct_update_last_bericht_query(conversatie['uri']))
         insert_dossierbehandelaar_in_db(graph, bericht)
     except Exception as e:
         message = "Something went wrong updating conversation and dossierbehandelaar"

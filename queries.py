@@ -276,7 +276,7 @@ def construct_insert_bijlage_query(bericht_graph_uri, bijlage_graph_uri, bericht
     return q
 
 
-def construct_update_last_bericht_query(conversatie_uri, bericht_uri):
+def construct_update_last_bericht_query(conversatie_uri):
     """
     Construct a SPARQL query for keeping the last message of a conversation up to date.
 
@@ -288,21 +288,36 @@ def construct_update_last_bericht_query(conversatie_uri, bericht_uri):
 
         DELETE {{
             GRAPH ?g {{
-                <{0}> ext:lastMessage ?message.
+                ?conversation ext:lastMessage ?message.
             }}
         }}
         INSERT {{
             GRAPH ?g {{
-                <{0}> ext:lastMessage <{1}>.
+                ?conversation ext:lastMessage ?newMessage.
             }}
         }}
         WHERE {{
+            BIND(<{0}> as ?conversation)
             GRAPH ?g {{
-                <{0}> a schema:Conversation.
-                OPTIONAL {{ <{0}> ext:lastMessage ?message. }}
+                ?conversation a schema:Conversation;
+                    schema:hasPart ?newMessage.
+                OPTIONAL {{  ?conversation ext:lastMessage ?message. }}
+            }}
+            {{
+                SELECT (?message AS ?newMessage) WHERE {{
+                    GRAPH ?g {{
+                        ?conversation a schema:Conversation;
+                            schema:hasPart ?message.
+                        ?message schema:dateSent ?dateSent.
+                        FILTER NOT EXISTS {{
+                            ?conversation schema:hasPart/schema:dateSent ?otherDateSent.
+                            FILTER( ?dateSent < ?otherDateSent  )
+                        }}
+                    }}
+                }}
             }}
         }}
-        """.format(conversatie_uri, bericht_uri)
+        """.format(conversatie_uri)
     return q
 
 
