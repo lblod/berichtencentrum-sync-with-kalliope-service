@@ -276,10 +276,9 @@ def construct_insert_bijlage_query(bericht_graph_uri, bijlage_graph_uri, bericht
     return q
 
 
-def construct_update_last_bericht_query_part1():
+def construct_update_last_bericht_query(conversatie_uri):
     """
-    Construct a SPARQL query for keeping the ext:lastMessage of each conversation up to date.
-    Part 1/2 (query constructed in 2 parts because Virtuoso)
+    Construct a SPARQL query for keeping the last message of a conversation up to date.
 
     :returns: string containing SPARQL query
     """
@@ -287,71 +286,38 @@ def construct_update_last_bericht_query_part1():
         PREFIX schema: <http://schema.org/>
         PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 
-        DELETE {
-            GRAPH ?g {
+        DELETE {{
+            GRAPH ?g {{
                 ?conversation ext:lastMessage ?message.
-            }
-        }
-        WHERE {
-            GRAPH ?g {
-                ?conversation a schema:Conversation;
-                    schema:hasPart ?newMessage;
-                    ext:lastMessage ?message.
-            }
-            {
-                SELECT (?message AS ?newMessage) WHERE {
-                    GRAPH ?g {
-                        ?conversation a schema:Conversation;
-                            schema:hasPart ?message.
-                        ?message schema:dateSent ?dateSent.
-                        FILTER NOT EXISTS {
-                            ?conversation schema:hasPart/schema:dateSent ?otherDateSent.
-                            FILTER( ?dateSent < ?otherDateSent  )
-                        }
-                    }
-                }
-            }
-        }
-        """
-    return q
-
-
-def construct_update_last_bericht_query_part2():
-    """
-    Construct a SPARQL query for keeping the ext:lastMessage of each conversation up to date.
-    Part 2/2 (query constructed in 2 parts because Virtuoso)
-
-    :returns: string containing SPARQL query
-    """
-    q = """
-        PREFIX schema: <http://schema.org/>
-        PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
-
-        INSERT {
-            GRAPH ?g {
+            }}
+        }}
+        INSERT {{
+            GRAPH ?g {{
                 ?conversation ext:lastMessage ?newMessage.
-            }
-        }
-        WHERE {
-            GRAPH ?g {
+            }}
+        }}
+        WHERE {{
+            BIND(<{0}> as ?conversation)
+            GRAPH ?g {{
                 ?conversation a schema:Conversation;
                     schema:hasPart ?newMessage.
-            }
-            {
-                SELECT (?message AS ?newMessage) WHERE {
-                    GRAPH ?g {
+                OPTIONAL {{  ?conversation ext:lastMessage ?message. }}
+            }}
+            {{
+                SELECT (?message AS ?newMessage) WHERE {{
+                    GRAPH ?g {{
                         ?conversation a schema:Conversation;
                             schema:hasPart ?message.
                         ?message schema:dateSent ?dateSent.
-                        FILTER NOT EXISTS {
+                        FILTER NOT EXISTS {{
                             ?conversation schema:hasPart/schema:dateSent ?otherDateSent.
                             FILTER( ?dateSent < ?otherDateSent  )
-                        }
-                    }
-                }
-            }
-        }
-        """
+                        }}
+                    }}
+                }}
+            }}
+        }}
+        """.format(conversatie_uri)
     return q
 
 
