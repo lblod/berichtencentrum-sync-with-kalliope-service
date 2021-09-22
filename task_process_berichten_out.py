@@ -109,7 +109,7 @@ def get_initial_message_uri(bericht):
 def send_message(session, poststuk_in, bericht, bijlagen, graph):
     try:
         return post_kalliope_poststuk_in(PS_IN_PATH, session, poststuk_in)
-    except requests.exceptions.RequestException as e:
+    except Exception as e:
         message = "Something went wrong while posting following poststuk in, skipping: {}\n{}".format(poststuk_in,
                                                                                                       e)
         update(construct_create_kalliope_sync_error_query(PUBLIC_GRAPH, bericht['uri'], message, e))
