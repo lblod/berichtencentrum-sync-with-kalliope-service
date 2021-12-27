@@ -230,7 +230,6 @@ def construct_insert_bijlage_query(bericht_graph_uri, bericht_uri, bijlage, file
     Construct a SPARQL query for inserting a bijlage and attaching it to an existing bericht.
 
     :param bericht_graph_uri: string
-    :param bijlage_graph_uri: string
     :param bericht_uri: string
     :param bijlage: dict containing escaped properties for bijlage
     :param file: dict containing escaped properties for file (similar to bijlage, see mu-file-service)
@@ -361,7 +360,6 @@ def construct_select_bijlagen_query(bericht_uri):
     """
     Construct a SPARQL query for retrieving all bijlages for a given bericht.
 
-    :param bijlagen_graph_uri: string, graph where file information is stored
     :param bericht_uri: URI of the bericht for which we want to retrieve bijlagen.
     :returns: string containing SPARQL query
     """
