@@ -136,7 +136,7 @@ def insert_message_in_db(conversatie, bericht, poststuk, session, graph):
                 construct_update_conversatie_type_query(graph, conversatie['uri'], bericht['type_communicatie'])
             update(q_type_communicatie)
             # TODO: perhaps later first save bijlagen and the meta-data
-            save_bijlagen(graph, PUBLIC_GRAPH, bericht, bericht['bijlagen'])
+            save_bijlagen(graph, bericht, bericht['bijlagen'])
         except Exception as e:
             message = "Something went wrong inserting new message or conversation"
             update(construct_create_kalliope_sync_error_query(PUBLIC_GRAPH, poststuk['uri'], message, e))
@@ -151,7 +151,7 @@ def insert_message_in_db(conversatie, bericht, poststuk, session, graph):
         q_conversatie = construct_insert_conversatie_query(graph, conversatie, bericht, delivery_timestamp)
         try:
             update(q_conversatie)
-            save_bijlagen(graph, PUBLIC_GRAPH, bericht, bericht['bijlagen'])
+            save_bijlagen(graph, bericht, bericht['bijlagen'])
         except Exception as e:
             message = "Something went wrong inserting new message"
             update(construct_create_kalliope_sync_error_query(PUBLIC_GRAPH, poststuk['uri'], message, e))
@@ -167,7 +167,7 @@ def insert_message_in_db(conversatie, bericht, poststuk, session, graph):
         log("{}, skipping: {}\n{}".format(message, poststuk, e))
         raise e
 
-def save_bijlagen(bericht_graph_uri, file_graph, bericht, bijlagen):
+def save_bijlagen(bericht_graph_uri, bericht, bijlagen):
     for bijlage in bijlagen:
         bijlage['uri'] = "http://mu.semte.ch/services/file-service/files/{}".format(bijlage['id'])
         file = {
@@ -180,7 +180,6 @@ def save_bijlagen(bericht_graph_uri, file_graph, bericht, bijlagen):
         f = open(filepath, 'wb')
         f.write(bijlage['buffer'])
         q_bijlage = construct_insert_bijlage_query(bericht_graph_uri,
-                                                   file_graph,
                                                    bericht['uri'],
                                                    bijlage,
                                                    file)  # TEMP: bijlage in public graph
