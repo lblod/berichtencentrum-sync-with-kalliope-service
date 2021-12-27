@@ -374,15 +374,13 @@ def construct_select_bijlagen_query(bericht_uri):
         PREFIX dct: <http://purl.org/dc/terms/>
 
         SELECT DISTINCT ?bijlagenaam ?file ?type WHERE {{
-            GRAPH ?g {{
-                <{0}> a schema:Message;
-                    nie:hasPart ?bijlage.
+            <{0}> a schema:Message;
+                nie:hasPart ?bijlage.
 
-                ?bijlage a nfo:FileDataObject;
-                    nfo:fileName ?bijlagenaam;
-                    dct:format ?type.
-                ?file nie:dataSource ?bijlage.
-            }}
+            ?bijlage a nfo:FileDataObject;
+                nfo:fileName ?bijlagenaam;
+                dct:format ?type.
+            ?file nie:dataSource ?bijlage.
         }}
         """.format(bericht_uri)
     return q
