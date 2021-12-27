@@ -359,7 +359,7 @@ def construct_unsent_berichten_query(naar_uri, max_sending_attempts):
     return q
 
 
-def construct_select_bijlagen_query(bijlagen_graph_uri, bericht_uri):
+def construct_select_bijlagen_query(bericht_uri):
     """
     Construct a SPARQL query for retrieving all bijlages for a given bericht.
 
@@ -373,19 +373,18 @@ def construct_select_bijlagen_query(bijlagen_graph_uri, bericht_uri):
         PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
         PREFIX dct: <http://purl.org/dc/terms/>
 
-        SELECT ?bijlagenaam ?file ?type WHERE {{
+        SELECT DISTINCT ?bijlagenaam ?file ?type WHERE {{
             GRAPH ?g {{
-                <{1}> a schema:Message;
+                <{0}> a schema:Message;
                     nie:hasPart ?bijlage.
-            }}
-            GRAPH <{0}> {{
+
                 ?bijlage a nfo:FileDataObject;
                     nfo:fileName ?bijlagenaam;
                     dct:format ?type.
                 ?file nie:dataSource ?bijlage.
             }}
         }}
-        """.format(bijlagen_graph_uri, bericht_uri)
+        """.format(bericht_uri)
     return q
 
 
