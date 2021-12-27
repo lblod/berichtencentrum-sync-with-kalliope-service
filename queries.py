@@ -225,7 +225,7 @@ def construct_update_conversatie_type_query(graph_uri, conversatie_uri, type_com
     return q
 
 
-def construct_insert_bijlage_query(bericht_graph_uri, bijlage_graph_uri, bericht_uri, bijlage, file):
+def construct_insert_bijlage_query(bericht_graph_uri, bericht_uri, bijlage, file):
     """
     Construct a SPARQL query for inserting a bijlage and attaching it to an existing bericht.
 
@@ -252,27 +252,25 @@ def construct_insert_bijlage_query(bericht_graph_uri, bijlage_graph_uri, bericht
 
         INSERT DATA {{
             GRAPH <{0}> {{
-                <{2}> nie:hasPart <{3[uri]}>.
-            }}
-            GRAPH <{1}> {{
+                <{1}> nie:hasPart <{2[uri]}>.
+                <{2[uri]}> a nfo:FileDataObject;
+                    <http://mu.semte.ch/vocabularies/core/uuid> "{2[uuid]}";
+                    nfo:fileName {2[name]};
+                    dct:format {2[mimetype]};
+                    dct:created "{2[created]}"^^xsd:dateTime;
+                    nfo:fileSize "{2[size]}"^^xsd:integer;
+                    dbpedia:fileExtension "{2[extension]}".
                 <{3[uri]}> a nfo:FileDataObject;
                     <http://mu.semte.ch/vocabularies/core/uuid> "{3[uuid]}";
                     nfo:fileName {3[name]};
-                    dct:format {3[mimetype]};
-                    dct:created "{3[created]}"^^xsd:dateTime;
-                    nfo:fileSize "{3[size]}"^^xsd:integer;
-                    dbpedia:fileExtension "{3[extension]}".
-                <{4[uri]}> a nfo:FileDataObject;
-                    <http://mu.semte.ch/vocabularies/core/uuid> "{4[uuid]}";
-                    nfo:fileName {4[name]};
-                    dct:format {3[mimetype]};
-                    dct:created "{3[created]}"^^xsd:dateTime;
-                    nfo:fileSize "{3[size]}"^^xsd:integer;
-                    dbpedia:fileExtension "{3[extension]}";
-                    nie:dataSource <{3[uri]}>.
+                    dct:format {2[mimetype]};
+                    dct:created "{2[created]}"^^xsd:dateTime;
+                    nfo:fileSize "{2[size]}"^^xsd:integer;
+                    dbpedia:fileExtension "{2[extension]}";
+                    nie:dataSource <{2[uri]}>.
             }}
         }}
-        """.format(bericht_graph_uri, bijlage_graph_uri, bericht_uri, bijlage, file)
+        """.format(bericht_graph_uri, bericht_uri, bijlage, file)
     return q
 
 
@@ -359,7 +357,7 @@ def construct_unsent_berichten_query(naar_uri, max_sending_attempts):
     return q
 
 
-def construct_select_bijlagen_query(bijlagen_graph_uri, bericht_uri):
+def construct_select_bijlagen_query(bericht_uri):
     """
     Construct a SPARQL query for retrieving all bijlages for a given bericht.
 
@@ -373,19 +371,16 @@ def construct_select_bijlagen_query(bijlagen_graph_uri, bericht_uri):
         PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
         PREFIX dct: <http://purl.org/dc/terms/>
 
-        SELECT ?bijlagenaam ?file ?type WHERE {{
-            GRAPH ?g {{
-                <{1}> a schema:Message;
-                    nie:hasPart ?bijlage.
-            }}
-            GRAPH <{0}> {{
-                ?bijlage a nfo:FileDataObject;
-                    nfo:fileName ?bijlagenaam;
-                    dct:format ?type.
-                ?file nie:dataSource ?bijlage.
-            }}
+        SELECT DISTINCT ?bijlagenaam ?file ?type WHERE {{
+            <{0}> a schema:Message;
+                nie:hasPart ?bijlage.
+
+            ?bijlage a nfo:FileDataObject;
+                nfo:fileName ?bijlagenaam;
+                dct:format ?type.
+            ?file nie:dataSource ?bijlage.
         }}
-        """.format(bijlagen_graph_uri, bericht_uri)
+        """.format(bericht_uri)
     return q
 
 

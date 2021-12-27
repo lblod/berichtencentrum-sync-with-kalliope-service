@@ -87,7 +87,7 @@ def prepare_message_and_conversation(bericht_res):
     }
     if 'dossieruri' in bericht_res:
         conversatie['dossierUri'] = bericht_res['dossieruri']['value']
-    q_bijlagen = construct_select_bijlagen_query(PUBLIC_GRAPH, bericht['uri'])  # TEMP: bijlage in public graph
+    q_bijlagen = construct_select_bijlagen_query(bericht['uri'])
     bijlagen = query(q_bijlagen)['results']['bindings']
     bericht['bijlagen'] = []
     for bijlage_res in bijlagen:
