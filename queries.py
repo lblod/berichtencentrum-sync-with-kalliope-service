@@ -522,7 +522,7 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
         '<https://data.vlaanderen.be/id/concept/BesluitType/cb361927-1aab-4016-bd8a-1a84841391ba>', # Collectieve motie van wantrouwen
         '<https://data.vlaanderen.be/id/concept/BesluitDocumentType/365d561c-57c7-4523-af04-6e3c91426c56>', # Overzicht vergoedingen en presentiegelden
         '<https://data.vlaanderen.be/id/concept/BesluitType/4511f992-2b52-42fe-9cb6-feae6241ad26>', # Saneringsplan
-        'https://data.vlaanderen.be/id/concept/BesluitType/b04bc642-c892-4aae-ac1f-f6ff21362704>' # code van goed bestuur
+        '<https://data.vlaanderen.be/id/concept/BesluitType/b04bc642-c892-4aae-ac1f-f6ff21362704>' # code van goed bestuur
     ]
     separator = ' '
 
