@@ -10,6 +10,7 @@ from .queries import construct_increment_inzending_attempts_query
 from .queries import construct_inzending_sent_query
 from .queries import construct_create_kalliope_sync_error_query
 from .update_with_supressed_fail import update_with_suppressed_fail
+from dateutil import parser
 
 
 TIMEZONE = timezone('Europe/Brussels')
@@ -77,11 +78,17 @@ def process_inzendingen():
 
 
 def parse_inzending_sparql_response(inzending_res):
+    session_date = inzending_res.get('sessionDate', {}).get('value', '')
+    if session_date:
+        session_date = parser.isoparse(session_date)
+        session_date = session_date.astimezone(TIMEZONE)
+        session_date = session_date.strftime('%Y-%m-%d')
+
     inzending = {
         'uri': inzending_res['inzending']['value'],
         'afzenderUri': inzending_res['bestuurseenheid']['value'],
         'betreft': inzending_res['decisionTypeLabel']['value'] + ' ' +
-        inzending_res.get('sessionDate', {}).get('value', '').split('T')[0],
+          session_date,
         'urlToezicht': INZENDING_BASE_URL + '/' + inzending_res['inzendingUuid']['value'],
         'typePoststuk': 'https://kalliope.abb.vlaanderen.be/ld/algemeen/dossierType/besluit',
         'typeMelding': inzending_res['decisionType']['value'],
