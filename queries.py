@@ -504,7 +504,9 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
         PREFIX eli:     <http://data.europa.eu/eli/ontology#>
         PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
         PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
-
+        PREFIX ere:     <http://data.lblod.info/vocabularies/erediensten/>
+        PREFIX org:     <http://www.w3.org/ns/org#>
+        
         SELECT DISTINCT ?inzending ?inzendingUuid ?bestuurseenheid ?decisionType ?sessionDate
                         ?decisionTypeLabel ?datumVanVerzenden ?boekjaar
         WHERE {{
@@ -533,6 +535,14 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
             }}
             GRAPH ?h {{
                 OPTIONAL {{ ?decisionType skos:prefLabel ?decisionTypeLabel }} .
+            }}
+
+            MINUS {{
+                GRAPH ?i {{
+                    ?centraalBestuur a ere:CentraalBestuurVanDeEredienst ;
+                        org:hasSubOrganization ?bestuurseenheid .
+                    FILTER (?decisionType IN (<https://data.vlaanderen.be/id/concept/BesluitDocumentType/2c9ada23-1229-4c7e-a53e-acddc9014e4e>, <https://data.vlaanderen.be/id/concept/BesluitType/e44c535d-4339-4d15-bdbf-d4be6046de2c>))
+                }}
             }}
         }}
         """.format(max_sending_attempts, separator.join(allowedDecisionTypesList))
