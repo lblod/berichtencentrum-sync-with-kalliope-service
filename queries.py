@@ -514,20 +514,20 @@ def verify_inzendingen_flowthrough_rules()
     """
 
     ask_query_eb_has_cb = """
-        PREFIX ere: <http://data.lblod.info/vocabularies/erediensten/>
-        PREFIX org: <http://www.w3.org/ns/org#>
-        PREFIX pav: <http://purl.org/pav/>
-        
-        ASK {{
-            ?centraalBestuur a ere:CentraalBestuurVanDeEredienst ;
-                             org:hasSubOrganization ?bestuurseenheid .
-            ?inzending a meb:Submission ;
-                       adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
-                       prov:generated ?formData ;
-                       pav:createdBy ?bestuurseenheid .
-            ?formData dct:type ?decisionType .
-            VALUES ?decisionType {{ {} }}
-        }}
+    PREFIX ere: <http://data.lblod.info/vocabularies/erediensten/>
+    PREFIX org: <http://www.w3.org/ns/org#>
+    PREFIX pav: <http://purl.org/pav/>
+    
+    ASK {{
+        ?centraalBestuur a ere:CentraalBestuurVanDeEredienst ;
+                         org:hasSubOrganization ?bestuurseenheid .
+        ?inzending a meb:Submission ;
+                   adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
+                   prov:generated ?formData ;
+                   pav:createdBy ?bestuurseenheid .
+        ?formData dct:type ?decisionType .
+        VALUES ?decisionType {{ {} }}
+    }}
     """.format(" ".join(DECISION_TYPES_EB_HAS_CB))
 
     ask_query_cb = """
@@ -626,7 +626,8 @@ def verify_inzendingen_flowthrough_rules()
                 FILTER (?decisionType IN {})""".format(tuple(DECISION_TYPES_PO)))
 
     if filter_rules:
-        filter_query = "FILTER NOT EXISTS {{ GRAPH ?i {{ {} }} }}".format(" . ".join(filter_rules))
+        filter_query = """FILTER NOT EXISTS {{ GRAPH ?i {{ {} }} }}""".format(" .\n".join(filter_rules))
+
     else:
         filter_query = ""
 
