@@ -5,6 +5,7 @@ import helpers
 from helpers import log
 from datetime import datetime
 from pytz import timezone
+from .sudo_query_helpers import query
 import re
 import json
 
@@ -16,6 +17,32 @@ STATUS_DELIVERED_CONFIRMED = \
     "http://data.lblod.info/id/status/berichtencentrum/sync-with-kalliope/delivered/confirmed"
 STATUS_DELIVERED_CONFIRMATION_FAILED = \
     "http://data.lblod.info/id/status/berichtencentrum/sync-with-kalliope/delivered/failedConfirmation"
+
+# Inzendingen business rules :  sender classification with decisionType
+
+DECISION_TYPES_EB_HAS_CB = [
+    "<https://data.vlaanderen.be/id/concept/BesluitType/e44c535d-4339-4d15-bdbf-d4be6046de2c>",
+    "<https://data.vlaanderen.be/id/concept/BesluitDocumentType/2c9ada23-1229-4c7e-a53e-acddc9014e4e>"           
+]
+
+DECISION_TYPES_CB = [
+    "<https://data.vlaanderen.be/id/concept/BesluitDocumentType/18833df2-8c9e-4edd-87fd-b5c252337349>",
+    "<https://data.vlaanderen.be/id/concept/BesluitDocumentType/2c9ada23-1229-4c7e-a53e-acddc9014e4e>"
+]
+
+DECISION_TYPES_RO = [
+    "<https://data.vlaanderen.be/id/concept/BesluitType/2b12630f-8c4e-40a4-8a61-a0c45621a1e6>"
+]
+
+DECISION_TYPES_GO = [
+    "<https://data.vlaanderen.be/id/concept/BesluitType/df261490-cc74-4f80-b783-41c35e720b46>",
+    "<https://data.vlaanderen.be/id/concept/BesluitType/3fcf7dba-2e5b-4955-a489-6dd8285c013b>"
+]
+
+DECISION_TYPES_PO = [
+    "<https://data.vlaanderen.be/id/concept/BesluitType/df261490-cc74-4f80-b783-41c35e720b46>",
+    "<https://data.vlaanderen.be/id/concept/BesluitType/3fcf7dba-2e5b-4955-a489-6dd8285c013b>"
+]
 
 
 def sparql_escape_string(obj):
@@ -480,6 +507,130 @@ def construct_select_original_bericht_query(bericht_uri):
         """.format(bericht_uri)
     return q
 
+def verify_inzendingen_flowthrough_rules()
+    """
+    Checking where sender has a specific submission type based on business rules.
+    If the rule is matching we exclude the submission from the notifications by building a filter query.
+    """
+
+    ask_query_eb_has_cb = """
+        PREFIX ere: <http://data.lblod.info/vocabularies/erediensten/>
+        PREFIX org: <http://www.w3.org/ns/org#>
+        PREFIX pav: <http://purl.org/pav/>
+        
+        ASK {{
+            ?centraalBestuur a ere:CentraalBestuurVanDeEredienst ;
+                             org:hasSubOrganization ?bestuurseenheid .
+            ?inzending a meb:Submission ;
+                       adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
+                       prov:generated ?formData ;
+                       pav:createdBy ?bestuurseenheid .
+            ?formData dct:type ?decisionType .
+            VALUES ?decisionType {{ {} }}
+        }}
+    """.format(" ".join(DECISION_TYPES_EB_HAS_CB))
+
+    ask_query_cb = """
+    PREFIX ere: <http://data.lblod.info/vocabularies/erediensten/>
+    PREFIX org: <http://www.w3.org/ns/org#>
+    PREFIX pav: <http://purl.org/pav/>
+    
+    ASK {{
+        ?bestuurseenheid a ere:CentraalBestuurVanDeEredienst .
+        ?inzending a meb:Submission ;
+                   adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
+                   prov:generated ?formData ;
+                   pav:createdBy ?bestuurseenheid .
+        ?formData dct:type ?decisionType .
+        VALUES ?decisionType {{ {} }}
+    }}
+    """.format(" ".join(DECISION_TYPES_CB))
+
+    ask_query_ro = """
+    PREFIX ere: <http://data.lblod.info/vocabularies/erediensten/>
+    PREFIX org: <http://www.w3.org/ns/org#>
+    PREFIX pav: <http://purl.org/pav/>
+    
+    ASK {{
+        ?bestuurseenheid a ere:RepresentatiefOrgaan .
+        ?inzending a meb:Submission ;
+                   adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
+                   prov:generated ?formData ;
+                   pav:createdBy ?bestuurseenheid .
+        ?formData dct:type ?decisionType .
+        VALUES ?decisionType {{ {} }}
+    }}
+    """.format(" ".join(DECISION_TYPES_RO))
+
+    ask_query_go = """
+    PREFIX ere: <http://data.lblod.info/vocabularies/erediensten/>
+    PREFIX org: <http://www.w3.org/ns/org#>
+    PREFIX pav: <http://purl.org/pav/>
+    PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
+    
+    ASK {{
+        ?bestuurseenheid besluit:classificatie <http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000001> .
+        ?inzending a meb:Submission ;
+                   adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
+                   prov:generated ?formData ;
+                   pav:createdBy ?bestuurseenheid .
+        ?formData dct:type ?decisionType .
+        VALUES ?decisionType {{ {} }}
+    }}
+    """.format(" ".join(DECISION_TYPES_GO))
+
+    ask_query_po = """
+    PREFIX ere: <http://data.lblod.info/vocabularies/erediensten/>
+    PREFIX org: <http://www.w3.org/ns/org#>
+    PREFIX pav: <http://purl.org/pav/>
+    PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
+    
+    ASK {{
+        ?bestuurseenheid besluit:classificatie <http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000000> .
+        ?inzending a meb:Submission ;
+                   adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
+                   prov:generated ?formData ;
+                   pav:createdBy ?bestuurseenheid .
+        ?formData dct:type ?decisionType .
+        VALUES ?decisionType {{ {} }}
+    }}
+    """.format(" ".join(DECISION_TYPES_PO))
+
+    eb_has_cb = query(ask_query_eb_has_cb)['boolean']
+    cb = query(ask_query_cb)['boolean']
+    ro = query(ask_query_ro)['boolean']
+    go = query(ask_query_go)['boolean']
+    po = query(ask_query_po)['boolean']
+
+    filter_rules = []
+
+    if eb_has_cb:
+        filter_rules.append("""?centraalBestuur a ere:CentraalBestuurVanDeEredienst ;
+                    org:hasSubOrganization ?bestuurseenheid .
+                FILTER (?decisionType IN {})""".format(tuple(DECISION_TYPES_EB_HAS_CB)))
+
+    if cb:
+        filter_rules.append("""?bestuurseenheid a ere:CentraalBestuurVanDeEredienst .
+                FILTER (?decisionType IN {})""".format(tuple(DECISION_TYPES_CB)))
+
+    if ro:
+        filter_rules.append("""?bestuurseenheid a ere:RepresentatiefOrgaan .
+                FILTER (?decisionType IN {})""".format(DECISION_TYPES_RO[0]))
+
+    if go:
+        filter_rules.append("""?bestuurseenheid besluit:classificatie <http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000001> . 
+                FILTER (?decisionType IN {})""".format(tuple(DECISION_TYPES_GO)))
+
+    if po:
+        filter_rules.append("""?bestuurseenheid besluit:classificatie <http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000000> . 
+                FILTER (?decisionType IN {})""".format(tuple(DECISION_TYPES_PO)))
+
+    if filter_rules:
+        filter_query = "FILTER NOT EXISTS {{ GRAPH ?i {{ {} }} }}".format(" . ".join(filter_rules))
+    else:
+        filter_query = ""
+
+    return filter_query
 
 def construct_unsent_inzendingen_query(max_sending_attempts):
     """
@@ -494,6 +645,7 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
     separator = ' '
 
     q = """
+        PREFIX mu:      <http://mu.semte.ch/vocabularies/core/uuid>
         PREFIX meb:     <http://rdf.myexperiment.org/ontologies/base/>
         PREFIX dct:     <http://purl.org/dc/terms/>
         PREFIX nmo:     <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
@@ -506,6 +658,7 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
         PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
         PREFIX ere:     <http://data.lblod.info/vocabularies/erediensten/>
         PREFIX org:     <http://www.w3.org/ns/org#>
+        PREFIX pav:     <http://purl.org/pav/>
         
         SELECT DISTINCT ?inzending ?inzendingUuid ?bestuurseenheid ?decisionType ?sessionDate
                         ?decisionTypeLabel ?datumVanVerzenden ?boekjaar
@@ -513,9 +666,9 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
             GRAPH ?g {{
                 ?inzending a meb:Submission ;
                     adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
-                    <http://mu.semte.ch/vocabularies/core/uuid> ?inzendingUuid ;
-                    <http://purl.org/pav/createdBy> ?bestuurseenheid;
-                    <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#sentDate> ?datumVanVerzenden;
+                    mu:uuid ?inzendingUuid ;
+                    pav:createdBy ?bestuurseenheid;
+                    nmo:sentDate ?datumVanVerzenden;
                     prov:generated ?formData .
 
                 ?formData dct:type ?decisionType .
@@ -537,15 +690,9 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
                 OPTIONAL {{ ?decisionType skos:prefLabel ?decisionTypeLabel }} .
             }}
 
-            MINUS {{
-                GRAPH ?i {{
-                    ?centraalBestuur a ere:CentraalBestuurVanDeEredienst ;
-                        org:hasSubOrganization ?bestuurseenheid .
-                    FILTER (?decisionType IN (<https://data.vlaanderen.be/id/concept/BesluitDocumentType/2c9ada23-1229-4c7e-a53e-acddc9014e4e>, <https://data.vlaanderen.be/id/concept/BesluitType/e44c535d-4339-4d15-bdbf-d4be6046de2c>))
-                }}
-            }}
+            {2}
         }}
-        """.format(max_sending_attempts, separator.join(allowedDecisionTypesList))
+        """.format(max_sending_attempts, separator.join(allowedDecisionTypesList), verify_inzendingen_flowthrough_rules())
     return q
 
 
