@@ -5,7 +5,6 @@ import helpers
 from helpers import log
 from datetime import datetime
 from pytz import timezone
-from .sudo_query_helpers import query
 import re
 import json
 
@@ -507,11 +506,9 @@ def construct_select_original_bericht_query(bericht_uri):
         """.format(bericht_uri)
     return q
 
-def verify_inzendingen_flowthrough_rules()
-    """
-    Checking where sender has a specific submission type based on business rules.
-    If the rule is matching we exclude the submission from the notifications by building a filter query.
-    """
+def verify_eb_has_cb_exclusion_rule(bestuurseenheid)
+
+    bestuurseenheid = escape_helpers.sparql_escape_string(bestuurseenheid)
 
     ask_query_eb_has_cb = """
     PREFIX ere: <http://data.lblod.info/vocabularies/erediensten/>
@@ -520,15 +517,21 @@ def verify_inzendingen_flowthrough_rules()
     
     ASK {{
         ?centraalBestuur a ere:CentraalBestuurVanDeEredienst ;
-                         org:hasSubOrganization ?bestuurseenheid .
+                         org:hasSubOrganization {0} .
         ?inzending a meb:Submission ;
                    adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
                    prov:generated ?formData ;
-                   pav:createdBy ?bestuurseenheid .
+                   pav:createdBy {0} .
         ?formData dct:type ?decisionType .
-        VALUES ?decisionType {{ {} }}
+        VALUES ?decisionType {{ {1} }}
     }}
-    """.format(" ".join(DECISION_TYPES_EB_HAS_CB))
+    """.format(bestuurseenheid, " ".join(DECISION_TYPES_EB_HAS_CB))
+
+    return ask_query_eb_has_cb
+
+def verify_cb_exclusion_rule(bestuurseenheid)
+
+    bestuurseenheid = escape_helpers.sparql_escape_string(bestuurseenheid)
 
     ask_query_cb = """
     PREFIX ere: <http://data.lblod.info/vocabularies/erediensten/>
@@ -536,15 +539,21 @@ def verify_inzendingen_flowthrough_rules()
     PREFIX pav: <http://purl.org/pav/>
     
     ASK {{
-        ?bestuurseenheid a ere:CentraalBestuurVanDeEredienst .
+        {0} a ere:CentraalBestuurVanDeEredienst .
         ?inzending a meb:Submission ;
                    adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
                    prov:generated ?formData ;
-                   pav:createdBy ?bestuurseenheid .
+                   pav:createdBy {0} .
         ?formData dct:type ?decisionType .
-        VALUES ?decisionType {{ {} }}
+        VALUES ?decisionType {{ {1} }}
     }}
-    """.format(" ".join(DECISION_TYPES_CB))
+    """.format(bestuurseenheid, " ".join(DECISION_TYPES_CB))
+
+    return ask_query_cb
+
+def verify_ro_exclusion_rule(bestuurseenheid)
+
+    bestuurseenheid = escape_helpers.sparql_escape_string(bestuurseenheid)
 
     ask_query_ro = """
     PREFIX ere: <http://data.lblod.info/vocabularies/erediensten/>
@@ -552,15 +561,21 @@ def verify_inzendingen_flowthrough_rules()
     PREFIX pav: <http://purl.org/pav/>
     
     ASK {{
-        ?bestuurseenheid a ere:RepresentatiefOrgaan .
+        {0} a ere:RepresentatiefOrgaan .
         ?inzending a meb:Submission ;
                    adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
                    prov:generated ?formData ;
-                   pav:createdBy ?bestuurseenheid .
+                   pav:createdBy {0} .
         ?formData dct:type ?decisionType .
-        VALUES ?decisionType {{ {} }}
+        VALUES ?decisionType {{ {1} }}
     }}
-    """.format(" ".join(DECISION_TYPES_RO))
+    """.format(bestuurseenheid, " ".join(DECISION_TYPES_RO))
+
+    return ask_query_ro
+
+def verify_go_exclusion_rule(bestuurseenheid)
+
+    bestuurseenheid = escape_helpers.sparql_escape_string(bestuurseenheid)
 
     ask_query_go = """
     PREFIX ere: <http://data.lblod.info/vocabularies/erediensten/>
@@ -569,15 +584,21 @@ def verify_inzendingen_flowthrough_rules()
     PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
     
     ASK {{
-        ?bestuurseenheid besluit:classificatie <http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000001> .
+        {0} besluit:classificatie <http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000001> .
         ?inzending a meb:Submission ;
                    adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
                    prov:generated ?formData ;
-                   pav:createdBy ?bestuurseenheid .
+                   pav:createdBy {0} .
         ?formData dct:type ?decisionType .
-        VALUES ?decisionType {{ {} }}
+        VALUES ?decisionType {{ {1} }}
     }}
-    """.format(" ".join(DECISION_TYPES_GO))
+    """.format(bestuurseenheid, " ".join(DECISION_TYPES_GO))
+
+    return ask_query_go
+
+def verify_po_exclusion_rule(bestuurseenheid)
+
+    bestuurseenheid = escape_helpers.sparql_escape_string(bestuurseenheid)
 
     ask_query_po = """
     PREFIX ere: <http://data.lblod.info/vocabularies/erediensten/>
@@ -586,52 +607,18 @@ def verify_inzendingen_flowthrough_rules()
     PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
     
     ASK {{
-        ?bestuurseenheid besluit:classificatie <http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000000> .
+        {0} besluit:classificatie <http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000000> .
         ?inzending a meb:Submission ;
                    adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
                    prov:generated ?formData ;
-                   pav:createdBy ?bestuurseenheid .
+                   pav:createdBy {0} .
         ?formData dct:type ?decisionType .
-        VALUES ?decisionType {{ {} }}
+        VALUES ?decisionType {{ {1} }}
     }}
-    """.format(" ".join(DECISION_TYPES_PO))
+    """.format(bestuurseenheid, " ".join(DECISION_TYPES_PO))
 
-    eb_has_cb = query(ask_query_eb_has_cb)['boolean']
-    cb = query(ask_query_cb)['boolean']
-    ro = query(ask_query_ro)['boolean']
-    go = query(ask_query_go)['boolean']
-    po = query(ask_query_po)['boolean']
+    return ask_query_po
 
-    filter_rules = []
-
-    if eb_has_cb:
-        filter_rules.append("""?centraalBestuur a ere:CentraalBestuurVanDeEredienst ;
-                    org:hasSubOrganization ?bestuurseenheid .
-                FILTER (?decisionType IN {})""".format(tuple(DECISION_TYPES_EB_HAS_CB)))
-
-    if cb:
-        filter_rules.append("""?bestuurseenheid a ere:CentraalBestuurVanDeEredienst .
-                FILTER (?decisionType IN {})""".format(tuple(DECISION_TYPES_CB)))
-
-    if ro:
-        filter_rules.append("""?bestuurseenheid a ere:RepresentatiefOrgaan .
-                FILTER (?decisionType IN {})""".format(DECISION_TYPES_RO[0]))
-
-    if go:
-        filter_rules.append("""?bestuurseenheid besluit:classificatie <http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000001> . 
-                FILTER (?decisionType IN {})""".format(tuple(DECISION_TYPES_GO)))
-
-    if po:
-        filter_rules.append("""?bestuurseenheid besluit:classificatie <http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000000> . 
-                FILTER (?decisionType IN {})""".format(tuple(DECISION_TYPES_PO)))
-
-    if filter_rules:
-        filter_query = """FILTER NOT EXISTS {{ GRAPH ?i {{ {} }} }}""".format(" .\n".join(filter_rules))
-
-    else:
-        filter_query = ""
-
-    return filter_query
 
 def construct_unsent_inzendingen_query(max_sending_attempts):
     """
@@ -690,10 +677,8 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
             GRAPH ?h {{
                 OPTIONAL {{ ?decisionType skos:prefLabel ?decisionTypeLabel }} .
             }}
-
-            {2}
         }}
-        """.format(max_sending_attempts, separator.join(allowedDecisionTypesList), verify_inzendingen_flowthrough_rules())
+        """.format(max_sending_attempts, separator.join(allowedDecisionTypesList))
     return q
 
 
