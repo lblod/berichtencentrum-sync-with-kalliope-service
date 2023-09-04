@@ -521,7 +521,7 @@ def verify_eb_has_cb_exclusion_rule(submission)
     
     ASK {{
 
-    BIND({0} AS ?submission)
+    BIND(<{0}> AS ?submission)
        ?bestuurseenheid a ere:BestuurVanDeEredienst.
 
         ?centraalBestuur a ere:CentraalBestuurVanDeEredienst ;
@@ -551,7 +551,7 @@ def verify_cb_exclusion_rule(submission)
     PREFIX adms:        <http://www.w3.org/ns/adms#>
     
     ASK {{
-        BIND({0} AS ?submission)
+        BIND(<{0}> AS ?submission)
         ?bestuurseenheid a ere:CentraalBestuurVanDeEredienst .
         ?submission a meb:Submission ;
                    adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
@@ -578,7 +578,7 @@ def verify_ro_exclusion_rule(submission)
     PREFIX adms:        <http://www.w3.org/ns/adms#>
     
     ASK {{
-        BIND({0} AS ?submission)
+        BIND(<{0}> AS ?submission)
         ?bestuurseenheid a ere:RepresentatiefOrgaan .
         ?submission a meb:Submission ;
                    adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
@@ -606,7 +606,7 @@ def verify_go_exclusion_rule(submission)
     PREFIX adms:        <http://www.w3.org/ns/adms#>
     
     ASK {{
-        BIND({0} AS ?submission)
+        BIND(<{0}> AS ?submission)
         ?bestuurseenheid besluit:classificatie <http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000001> .
         ?submission a meb:Submission ;
                    adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
@@ -634,7 +634,7 @@ def verify_po_exclusion_rule(submission)
     PREFIX adms:        <http://www.w3.org/ns/adms#>
     
     ASK {{
-        BIND({0} AS ?submission)
+        BIND(<{0}> AS ?submission)
         ?bestuurseenheid besluit:classificatie <http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000000> .
         ?submission a meb:Submission ;
                    adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
