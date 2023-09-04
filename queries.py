@@ -511,18 +511,18 @@ def verify_eb_has_cb_exclusion_rule(submission)
     submission = escape_helpers.sparql_escape_string(submission)
 
     ask_query_eb_has_cb = """
-    PREFIX ere:         http://data.lblod.info/vocabularies/erediensten/>
-    PREFIX org:         http://www.w3.org/ns/org#>
-    PREFIX pav:         http://purl.org/pav/>
-    PREFIX meb:         http://rdf.myexperiment.org/ontologies/base/>
-    PREFIX dct:         http://purl.org/dc/terms/>
-    PREFIX prov:        http://www.w3.org/ns/prov#>
-    PREFIX adms:        http://www.w3.org/ns/adms#>
+    PREFIX ere:         <http://data.lblod.info/vocabularies/erediensten/>
+    PREFIX org:         <http://www.w3.org/ns/org#>
+    PREFIX pav:         <http://purl.org/pav/>
+    PREFIX meb:         <http://rdf.myexperiment.org/ontologies/base/>
+    PREFIX dct:         <http://purl.org/dc/terms/>
+    PREFIX prov:        <http://www.w3.org/ns/prov#>
+    PREFIX adms:        <http://www.w3.org/ns/adms#>
     
     ASK {{
 
     BIND({0} AS ?submission)
-       ?bestuurseenheid a ere:EredienstBestuur.
+       ?bestuurseenheid a ere:BestuurVanDeEredienst.
 
         ?centraalBestuur a ere:CentraalBestuurVanDeEredienst ;
                          org:hasSubOrganization ?bestuurseenheid .
@@ -542,13 +542,13 @@ def verify_cb_exclusion_rule(submission)
     submission = escape_helpers.sparql_escape_string(submission)
 
     ask_query_cb = """
-    PREFIX ere:         http://data.lblod.info/vocabularies/erediensten/>
-    PREFIX org:         http://www.w3.org/ns/org#>
-    PREFIX pav:         http://purl.org/pav/>
-    PREFIX meb:         http://rdf.myexperiment.org/ontologies/base/>
-    PREFIX dct:         http://purl.org/dc/terms/>
-    PREFIX prov:        http://www.w3.org/ns/prov#>
-    PREFIX adms:        http://www.w3.org/ns/adms#>
+    PREFIX ere:         <http://data.lblod.info/vocabularies/erediensten/>
+    PREFIX org:         <http://www.w3.org/ns/org#>
+    PREFIX pav:         <http://purl.org/pav/>
+    PREFIX meb:         <http://rdf.myexperiment.org/ontologies/base/>
+    PREFIX dct:         <http://purl.org/dc/terms/>
+    PREFIX prov:        <http://www.w3.org/ns/prov#>
+    PREFIX adms:        <http://www.w3.org/ns/adms#>
     
     ASK {{
         BIND({0} AS ?submission)
@@ -569,13 +569,13 @@ def verify_ro_exclusion_rule(submission)
     submission = escape_helpers.sparql_escape_string(submission)
 
     ask_query_ro = """
-    PREFIX ere:         http://data.lblod.info/vocabularies/erediensten/>
-    PREFIX org:         http://www.w3.org/ns/org#>
-    PREFIX pav:         http://purl.org/pav/>
-    PREFIX meb:         http://rdf.myexperiment.org/ontologies/base/>
-    PREFIX dct:         http://purl.org/dc/terms/>
-    PREFIX prov:        http://www.w3.org/ns/prov#>
-    PREFIX adms:        http://www.w3.org/ns/adms#>
+    PREFIX ere:         <http://data.lblod.info/vocabularies/erediensten/>
+    PREFIX org:         <http://www.w3.org/ns/org#>
+    PREFIX pav:         <http://purl.org/pav/>
+    PREFIX meb:         <http://rdf.myexperiment.org/ontologies/base/>
+    PREFIX dct:         <http://purl.org/dc/terms/>
+    PREFIX prov:        <http://www.w3.org/ns/prov#>
+    PREFIX adms:        <http://www.w3.org/ns/adms#>
     
     ASK {{
         BIND({0} AS ?submission)
@@ -596,14 +596,14 @@ def verify_go_exclusion_rule(submission)
     submission = escape_helpers.sparql_escape_string(submission)
 
     ask_query_go = """
-    PREFIX ere:         http://data.lblod.info/vocabularies/erediensten/>
-    PREFIX org:         http://www.w3.org/ns/org#>
-    PREFIX pav:         http://purl.org/pav/>
-    PREFIX meb:         http://rdf.myexperiment.org/ontologies/base/>
-    PREFIX dct:         http://purl.org/dc/terms/>
-    PREFIX besluit:     http://data.vlaanderen.be/ns/besluit#>
-    PREFIX prov:        http://www.w3.org/ns/prov#>
-    PREFIX adms:        http://www.w3.org/ns/adms#>
+    PREFIX ere:         <http://data.lblod.info/vocabularies/erediensten/>
+    PREFIX org:         <http://www.w3.org/ns/org#>
+    PREFIX pav:         <http://purl.org/pav/>
+    PREFIX meb:         <http://rdf.myexperiment.org/ontologies/base/>
+    PREFIX dct:         <http://purl.org/dc/terms/>
+    PREFIX besluit:     <http://data.vlaanderen.be/ns/besluit#>
+    PREFIX prov:        <http://www.w3.org/ns/prov#>
+    PREFIX adms:        <http://www.w3.org/ns/adms#>
     
     ASK {{
         BIND({0} AS ?submission)
@@ -624,14 +624,14 @@ def verify_po_exclusion_rule(submission)
     submission = escape_helpers.sparql_escape_string(submission)
 
     ask_query_po = """
-    PREFIX ere:         http://data.lblod.info/vocabularies/erediensten/>
-    PREFIX org:         http://www.w3.org/ns/org#>
-    PREFIX pav:         http://purl.org/pav/>
-    PREFIX meb:         http://rdf.myexperiment.org/ontologies/base/>
-    PREFIX dct:         http://purl.org/dc/terms/>
-    PREFIX besluit:     http://data.vlaanderen.be/ns/besluit#>
-    PREFIX prov:        http://www.w3.org/ns/prov#>
-    PREFIX adms:        http://www.w3.org/ns/adms#>
+    PREFIX ere:         <http://data.lblod.info/vocabularies/erediensten/>
+    PREFIX org:         <http://www.w3.org/ns/org#>
+    PREFIX pav:         <http://purl.org/pav/>
+    PREFIX meb:         <http://rdf.myexperiment.org/ontologies/base/>
+    PREFIX dct:         <http://purl.org/dc/terms/>
+    PREFIX besluit:     <http://data.vlaanderen.be/ns/besluit#>
+    PREFIX prov:        <http://www.w3.org/ns/prov#>
+    PREFIX adms:        <http://www.w3.org/ns/adms#>
     
     ASK {{
         BIND({0} AS ?submission)
