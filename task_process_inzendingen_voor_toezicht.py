@@ -117,20 +117,21 @@ def parse_inzending_sparql_response(inzending_res):
 
 def exclude_inzendingen_from_rules(inzendingen)
     """
-    This takes the bestuurseenheid (sender) and running ASK queries to check if it matches the pattern from business rules; see: Leesrechtenlogica Databank Erediensten,
-    then it will exclude the matching ones and construct the filtered list. 
+    This takes an individual submission to run ASK queries to check if it matches the pattern from business rules (a submission's formData who has a specific decisionType and sender needs to be excluded when they match a certain criteria in the list); 
+    It will then sort them out from the inzendingen.
+    see: Leesrechtenlogica Databank Erediensten
     """
     filtered_inzendingen = []
 
     for inzending in inzendingen:
-    
-        sender = inzending['bestuurseenheid']['value']
 
-        eb_has_cb = query(verify_eb_has_cb_exclusion_rule(sender))['boolean']
-        cb = query(verify_cb_exclusion_rule(sender))['boolean']
-        ro = query(verify_ro_exclusion_rule(sender))['boolean']
-        go = query(verify_go_exclusion_rule(sender))['boolean']
-        po = query(verify_po_exclusion_rule(sender))['boolean']
+        submission = inzending['inzending']['value']
+
+        eb_has_cb = query(verify_eb_has_cb_exclusion_rule(submission))['boolean']
+        cb = query(verify_cb_exclusion_rule(submission))['boolean']
+        ro = query(verify_ro_exclusion_rule(submission))['boolean']
+        go = query(verify_go_exclusion_rule(submission))['boolean']
+        po = query(verify_po_exclusion_rule(submission))['boolean']
 
 
         if not (eb_has_cb or cb or ro or go or po):

@@ -506,116 +506,144 @@ def construct_select_original_bericht_query(bericht_uri):
         """.format(bericht_uri)
     return q
 
-def verify_eb_has_cb_exclusion_rule(bestuurseenheid)
+def verify_eb_has_cb_exclusion_rule(submission)
 
-    bestuurseenheid = escape_helpers.sparql_escape_string(bestuurseenheid)
+    submission = escape_helpers.sparql_escape_string(submission)
 
     ask_query_eb_has_cb = """
-    PREFIX ere: <http://data.lblod.info/vocabularies/erediensten/>
-    PREFIX org: <http://www.w3.org/ns/org#>
-    PREFIX pav: <http://purl.org/pav/>
+    PREFIX ere:         http://data.lblod.info/vocabularies/erediensten/>
+    PREFIX org:         http://www.w3.org/ns/org#>
+    PREFIX pav:         http://purl.org/pav/>
+    PREFIX meb:         http://rdf.myexperiment.org/ontologies/base/>
+    PREFIX dct:         http://purl.org/dc/terms/>
+    PREFIX prov:        http://www.w3.org/ns/prov#>
+    PREFIX adms:        http://www.w3.org/ns/adms#>
     
     ASK {{
+
+    BIND({0} AS ?submission)
+       ?bestuurseenheid a ere:EredienstBestuur.
+
         ?centraalBestuur a ere:CentraalBestuurVanDeEredienst ;
-                         org:hasSubOrganization {0} .
-        ?inzending a meb:Submission ;
+                         org:hasSubOrganization ?bestuurseenheid .
+        ?submission a meb:Submission ;
                    adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
                    prov:generated ?formData ;
-                   pav:createdBy {0} .
+                   pav:createdBy ?bestuurseenheid .
         ?formData dct:type ?decisionType .
         VALUES ?decisionType {{ {1} }}
     }}
-    """.format(bestuurseenheid, " ".join(DECISION_TYPES_EB_HAS_CB))
+    """.format(submission, " ".join(DECISION_TYPES_EB_HAS_CB))
 
     return ask_query_eb_has_cb
 
-def verify_cb_exclusion_rule(bestuurseenheid)
+def verify_cb_exclusion_rule(submission)
 
-    bestuurseenheid = escape_helpers.sparql_escape_string(bestuurseenheid)
+    submission = escape_helpers.sparql_escape_string(submission)
 
     ask_query_cb = """
-    PREFIX ere: <http://data.lblod.info/vocabularies/erediensten/>
-    PREFIX org: <http://www.w3.org/ns/org#>
-    PREFIX pav: <http://purl.org/pav/>
+    PREFIX ere:         http://data.lblod.info/vocabularies/erediensten/>
+    PREFIX org:         http://www.w3.org/ns/org#>
+    PREFIX pav:         http://purl.org/pav/>
+    PREFIX meb:         http://rdf.myexperiment.org/ontologies/base/>
+    PREFIX dct:         http://purl.org/dc/terms/>
+    PREFIX prov:        http://www.w3.org/ns/prov#>
+    PREFIX adms:        http://www.w3.org/ns/adms#>
     
     ASK {{
-        {0} a ere:CentraalBestuurVanDeEredienst .
-        ?inzending a meb:Submission ;
+        BIND({0} AS ?submission)
+        ?bestuurseenheid a ere:CentraalBestuurVanDeEredienst .
+        ?submission a meb:Submission ;
                    adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
                    prov:generated ?formData ;
-                   pav:createdBy {0} .
+                   pav:createdBy ?bestuurseenheid .
         ?formData dct:type ?decisionType .
         VALUES ?decisionType {{ {1} }}
     }}
-    """.format(bestuurseenheid, " ".join(DECISION_TYPES_CB))
+    """.format(submission, " ".join(DECISION_TYPES_CB))
 
     return ask_query_cb
 
-def verify_ro_exclusion_rule(bestuurseenheid)
+def verify_ro_exclusion_rule(submission)
 
-    bestuurseenheid = escape_helpers.sparql_escape_string(bestuurseenheid)
+    submission = escape_helpers.sparql_escape_string(submission)
 
     ask_query_ro = """
-    PREFIX ere: <http://data.lblod.info/vocabularies/erediensten/>
-    PREFIX org: <http://www.w3.org/ns/org#>
-    PREFIX pav: <http://purl.org/pav/>
+    PREFIX ere:         http://data.lblod.info/vocabularies/erediensten/>
+    PREFIX org:         http://www.w3.org/ns/org#>
+    PREFIX pav:         http://purl.org/pav/>
+    PREFIX meb:         http://rdf.myexperiment.org/ontologies/base/>
+    PREFIX dct:         http://purl.org/dc/terms/>
+    PREFIX prov:        http://www.w3.org/ns/prov#>
+    PREFIX adms:        http://www.w3.org/ns/adms#>
     
     ASK {{
-        {0} a ere:RepresentatiefOrgaan .
-        ?inzending a meb:Submission ;
+        BIND({0} AS ?submission)
+        ?bestuurseenheid a ere:RepresentatiefOrgaan .
+        ?submission a meb:Submission ;
                    adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
                    prov:generated ?formData ;
-                   pav:createdBy {0} .
+                   pav:createdBy ?bestuurseenheid .
         ?formData dct:type ?decisionType .
         VALUES ?decisionType {{ {1} }}
     }}
-    """.format(bestuurseenheid, " ".join(DECISION_TYPES_RO))
+    """.format(submission, " ".join(DECISION_TYPES_RO))
 
     return ask_query_ro
 
-def verify_go_exclusion_rule(bestuurseenheid)
+def verify_go_exclusion_rule(submission)
 
-    bestuurseenheid = escape_helpers.sparql_escape_string(bestuurseenheid)
+    submission = escape_helpers.sparql_escape_string(submission)
 
     ask_query_go = """
-    PREFIX ere: <http://data.lblod.info/vocabularies/erediensten/>
-    PREFIX org: <http://www.w3.org/ns/org#>
-    PREFIX pav: <http://purl.org/pav/>
-    PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
+    PREFIX ere:         http://data.lblod.info/vocabularies/erediensten/>
+    PREFIX org:         http://www.w3.org/ns/org#>
+    PREFIX pav:         http://purl.org/pav/>
+    PREFIX meb:         http://rdf.myexperiment.org/ontologies/base/>
+    PREFIX dct:         http://purl.org/dc/terms/>
+    PREFIX besluit:     http://data.vlaanderen.be/ns/besluit#>
+    PREFIX prov:        http://www.w3.org/ns/prov#>
+    PREFIX adms:        http://www.w3.org/ns/adms#>
     
     ASK {{
-        {0} besluit:classificatie <http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000001> .
-        ?inzending a meb:Submission ;
+        BIND({0} AS ?submission)
+        ?bestuurseenheid besluit:classificatie <http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000001> .
+        ?submission a meb:Submission ;
                    adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
                    prov:generated ?formData ;
-                   pav:createdBy {0} .
+                   pav:createdBy ?bestuurseenheid .
         ?formData dct:type ?decisionType .
         VALUES ?decisionType {{ {1} }}
     }}
-    """.format(bestuurseenheid, " ".join(DECISION_TYPES_GO))
+    """.format(submission, " ".join(DECISION_TYPES_GO))
 
     return ask_query_go
 
-def verify_po_exclusion_rule(bestuurseenheid)
+def verify_po_exclusion_rule(submission)
 
-    bestuurseenheid = escape_helpers.sparql_escape_string(bestuurseenheid)
+    submission = escape_helpers.sparql_escape_string(submission)
 
     ask_query_po = """
-    PREFIX ere: <http://data.lblod.info/vocabularies/erediensten/>
-    PREFIX org: <http://www.w3.org/ns/org#>
-    PREFIX pav: <http://purl.org/pav/>
-    PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
+    PREFIX ere:         http://data.lblod.info/vocabularies/erediensten/>
+    PREFIX org:         http://www.w3.org/ns/org#>
+    PREFIX pav:         http://purl.org/pav/>
+    PREFIX meb:         http://rdf.myexperiment.org/ontologies/base/>
+    PREFIX dct:         http://purl.org/dc/terms/>
+    PREFIX besluit:     http://data.vlaanderen.be/ns/besluit#>
+    PREFIX prov:        http://www.w3.org/ns/prov#>
+    PREFIX adms:        http://www.w3.org/ns/adms#>
     
     ASK {{
-        {0} besluit:classificatie <http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000000> .
-        ?inzending a meb:Submission ;
+        BIND({0} AS ?submission)
+        ?bestuurseenheid besluit:classificatie <http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000000> .
+        ?submission a meb:Submission ;
                    adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
                    prov:generated ?formData ;
-                   pav:createdBy {0} .
+                   pav:createdBy ?bestuurseenheid .
         ?formData dct:type ?decisionType .
         VALUES ?decisionType {{ {1} }}
     }}
-    """.format(bestuurseenheid, " ".join(DECISION_TYPES_PO))
+    """.format(submission, " ".join(DECISION_TYPES_PO))
 
     return ask_query_po
 
