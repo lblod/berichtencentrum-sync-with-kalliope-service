@@ -521,17 +521,18 @@ def verify_eb_has_cb_exclusion_rule(submission)
     
     ASK {{
 
-    BIND(<{0}> AS ?submission)
-       ?bestuurseenheid a ere:BestuurVanDeEredienst.
-
-        ?centraalBestuur a ere:CentraalBestuurVanDeEredienst ;
-                         org:hasSubOrganization ?bestuurseenheid .
+        BIND(<{0}> AS ?submission)
         ?submission a meb:Submission ;
                    adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
                    prov:generated ?formData ;
                    pav:createdBy ?bestuurseenheid .
         ?formData dct:type ?decisionType .
         VALUES ?decisionType {{ {1} }}
+
+        ?bestuurseenheid a ere:BestuurVanDeEredienst.
+
+        ?centraalBestuur a ere:CentraalBestuurVanDeEredienst ;
+                         org:hasSubOrganization ?bestuurseenheid .
     }}
     """.format(submission, " ".join(DECISION_TYPES_EB_HAS_CB))
 
@@ -552,13 +553,14 @@ def verify_cb_exclusion_rule(submission)
     
     ASK {{
         BIND(<{0}> AS ?submission)
-        ?bestuurseenheid a ere:CentraalBestuurVanDeEredienst .
         ?submission a meb:Submission ;
                    adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
                    prov:generated ?formData ;
                    pav:createdBy ?bestuurseenheid .
         ?formData dct:type ?decisionType .
         VALUES ?decisionType {{ {1} }}
+
+        ?bestuurseenheid a ere:CentraalBestuurVanDeEredienst .
     }}
     """.format(submission, " ".join(DECISION_TYPES_CB))
 
@@ -579,13 +581,14 @@ def verify_ro_exclusion_rule(submission)
     
     ASK {{
         BIND(<{0}> AS ?submission)
-        ?bestuurseenheid a ere:RepresentatiefOrgaan .
         ?submission a meb:Submission ;
                    adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
                    prov:generated ?formData ;
                    pav:createdBy ?bestuurseenheid .
         ?formData dct:type ?decisionType .
         VALUES ?decisionType {{ {1} }}
+
+        ?bestuurseenheid a ere:RepresentatiefOrgaan .
     }}
     """.format(submission, " ".join(DECISION_TYPES_RO))
 
@@ -607,13 +610,14 @@ def verify_go_exclusion_rule(submission)
     
     ASK {{
         BIND(<{0}> AS ?submission)
-        ?bestuurseenheid besluit:classificatie <http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000001> .
         ?submission a meb:Submission ;
                    adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
                    prov:generated ?formData ;
                    pav:createdBy ?bestuurseenheid .
         ?formData dct:type ?decisionType .
         VALUES ?decisionType {{ {1} }}
+
+        ?bestuurseenheid besluit:classificatie <http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000001> .
     }}
     """.format(submission, " ".join(DECISION_TYPES_GO))
 
@@ -635,13 +639,14 @@ def verify_po_exclusion_rule(submission)
     
     ASK {{
         BIND(<{0}> AS ?submission)
-        ?bestuurseenheid besluit:classificatie <http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000000> .
         ?submission a meb:Submission ;
                    adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
                    prov:generated ?formData ;
                    pav:createdBy ?bestuurseenheid .
         ?formData dct:type ?decisionType .
         VALUES ?decisionType {{ {1} }}
+        
+        ?bestuurseenheid besluit:classificatie <http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000000> .
     }}
     """.format(submission, " ".join(DECISION_TYPES_PO))
 
