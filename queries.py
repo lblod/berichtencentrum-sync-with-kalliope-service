@@ -666,7 +666,7 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
     separator = ' '
 
     q = """
-        PREFIX mu:      <http://mu.semte.ch/vocabularies/core/uuid>
+        PREFIX mu:      <http://mu.semte.ch/vocabularies/core/>
         PREFIX meb:     <http://rdf.myexperiment.org/ontologies/base/>
         PREFIX dct:     <http://purl.org/dc/terms/>
         PREFIX nmo:     <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
