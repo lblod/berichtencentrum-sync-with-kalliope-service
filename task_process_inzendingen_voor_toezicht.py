@@ -1,5 +1,4 @@
 import os
-import pdb
 from pytz import timezone
 from datetime import datetime
 from helpers import log
@@ -72,7 +71,6 @@ def process_inzendingen():
                     q_sent = construct_inzending_sent_query(graph, inzending['uri'], ontvangen)
                     update(q_sent)
                     log("successfully sent submission {} to Kalliope".format(inzending['uri']))
-                    pdb.set_trace() # a basic breakpoint
                     
             except Exception as e:
                 inzending_uri = inzending.get('uri')
