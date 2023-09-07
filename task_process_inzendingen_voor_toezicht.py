@@ -1,4 +1,5 @@
 import os
+import pdb
 from pytz import timezone
 from datetime import datetime
 from helpers import log
@@ -16,6 +17,7 @@ from .queries import verify_go_exclusion_rule
 from .queries import verify_po_exclusion_rule
 from .update_with_supressed_fail import update_with_suppressed_fail
 from dateutil import parser
+
 
 
 TIMEZONE = timezone('Europe/Brussels')
@@ -70,7 +72,8 @@ def process_inzendingen():
                     q_sent = construct_inzending_sent_query(graph, inzending['uri'], ontvangen)
                     update(q_sent)
                     log("successfully sent submission {} to Kalliope".format(inzending['uri']))
-
+                    pdb.set_trace() # a basic breakpoint
+                    
             except Exception as e:
                 inzending_uri = inzending.get('uri')
                 message = """
@@ -115,7 +118,7 @@ def parse_inzending_sparql_response(inzending_res):
 
     return inzending
 
-def exclude_inzendingen_from_rules(inzendingen)
+def exclude_inzendingen_from_rules(inzendingen):
     """
     This takes an individual submission to run ASK queries to check if it matches the pattern from business rules (a submission's formData who has a specific decisionType and sender needs to be excluded when they match a certain criteria in the list); 
     It will then sort them out from the inzendingen.

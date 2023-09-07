@@ -506,7 +506,7 @@ def construct_select_original_bericht_query(bericht_uri):
         """.format(bericht_uri)
     return q
 
-def verify_eb_has_cb_exclusion_rule(submission)
+def verify_eb_has_cb_exclusion_rule(submission):
 
     submission = escape_helpers.sparql_escape_string(submission)
 
@@ -538,7 +538,7 @@ def verify_eb_has_cb_exclusion_rule(submission)
 
     return ask_query_eb_has_cb
 
-def verify_cb_exclusion_rule(submission)
+def verify_cb_exclusion_rule(submission):
 
     submission = escape_helpers.sparql_escape_string(submission)
 
@@ -566,7 +566,7 @@ def verify_cb_exclusion_rule(submission)
 
     return ask_query_cb
 
-def verify_ro_exclusion_rule(submission)
+def verify_ro_exclusion_rule(submission):
 
     submission = escape_helpers.sparql_escape_string(submission)
 
@@ -594,7 +594,7 @@ def verify_ro_exclusion_rule(submission)
 
     return ask_query_ro
 
-def verify_go_exclusion_rule(submission)
+def verify_go_exclusion_rule(submission):
 
     submission = escape_helpers.sparql_escape_string(submission)
 
@@ -623,7 +623,7 @@ def verify_go_exclusion_rule(submission)
 
     return ask_query_go
 
-def verify_po_exclusion_rule(submission)
+def verify_po_exclusion_rule(submission):
 
     submission = escape_helpers.sparql_escape_string(submission)
 
