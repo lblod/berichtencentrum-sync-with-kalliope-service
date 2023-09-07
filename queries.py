@@ -508,8 +508,6 @@ def construct_select_original_bericht_query(bericht_uri):
 
 def verify_eb_has_cb_exclusion_rule(submission):
 
-    submission = escape_helpers.sparql_escape_string(submission)
-
     ask_query_eb_has_cb = """
     PREFIX ere:         <http://data.lblod.info/vocabularies/erediensten/>
     PREFIX org:         <http://www.w3.org/ns/org#>
@@ -540,8 +538,6 @@ def verify_eb_has_cb_exclusion_rule(submission):
 
 def verify_cb_exclusion_rule(submission):
 
-    submission = escape_helpers.sparql_escape_string(submission)
-
     ask_query_cb = """
     PREFIX ere:         <http://data.lblod.info/vocabularies/erediensten/>
     PREFIX org:         <http://www.w3.org/ns/org#>
@@ -567,8 +563,6 @@ def verify_cb_exclusion_rule(submission):
     return ask_query_cb
 
 def verify_ro_exclusion_rule(submission):
-
-    submission = escape_helpers.sparql_escape_string(submission)
 
     ask_query_ro = """
     PREFIX ere:         <http://data.lblod.info/vocabularies/erediensten/>
@@ -596,8 +590,6 @@ def verify_ro_exclusion_rule(submission):
 
 def verify_go_exclusion_rule(submission):
 
-    submission = escape_helpers.sparql_escape_string(submission)
-
     ask_query_go = """
     PREFIX ere:         <http://data.lblod.info/vocabularies/erediensten/>
     PREFIX org:         <http://www.w3.org/ns/org#>
@@ -624,8 +616,6 @@ def verify_go_exclusion_rule(submission):
     return ask_query_go
 
 def verify_po_exclusion_rule(submission):
-
-    submission = escape_helpers.sparql_escape_string(submission)
 
     ask_query_po = """
     PREFIX ere:         <http://data.lblod.info/vocabularies/erediensten/>
