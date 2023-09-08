@@ -9,8 +9,14 @@ from .queries import construct_unsent_inzendingen_query
 from .queries import construct_increment_inzending_attempts_query
 from .queries import construct_inzending_sent_query
 from .queries import construct_create_kalliope_sync_error_query
+from .queries import verify_eb_has_cb_exclusion_rule
+from .queries import verify_cb_exclusion_rule
+from .queries import verify_ro_exclusion_rule
+from .queries import verify_go_exclusion_rule
+from .queries import verify_po_exclusion_rule
 from .update_with_supressed_fail import update_with_suppressed_fail
 from dateutil import parser
+
 
 
 TIMEZONE = timezone('Europe/Brussels')
@@ -28,7 +34,11 @@ def process_inzendingen():
     """
     q = construct_unsent_inzendingen_query(MAX_SENDING_ATTEMPTS)
     inzendingen = query(q)['results']['bindings']
-    inzendingen = [parse_inzending_sparql_response(inzending_res) for inzending_res in inzendingen]
+
+    # Here we remove inzendingen that matches exclusion criteria from business rules 
+    filtered_inzendingen = exclude_inzendingen_from_rules(inzendingen)
+
+    inzendingen = [parse_inzending_sparql_response(inzending_res) for inzending_res in filtered_inzendingen]
     log("Found {} submissions that need to be sent to the Kalliope API".format(len(inzendingen)))
     if len(inzendingen) == 0:
         return
@@ -61,7 +71,7 @@ def process_inzendingen():
                     q_sent = construct_inzending_sent_query(graph, inzending['uri'], ontvangen)
                     update(q_sent)
                     log("successfully sent submission {} to Kalliope".format(inzending['uri']))
-
+                    
             except Exception as e:
                 inzending_uri = inzending.get('uri')
                 message = """
@@ -105,3 +115,27 @@ def parse_inzending_sparql_response(inzending_res):
         log("Invalid value \"{}\" for boekjaar will be ignored, expected an int.".format(value))
 
     return inzending
+
+def exclude_inzendingen_from_rules(inzendingen):
+    """
+    This takes an individual submission to run ASK queries to check if it matches the pattern from business rules (a submission's formData who has a specific decisionType and sender needs to be excluded when they match a certain criteria in the list); 
+    It will then sort them out from the inzendingen.
+    see: Leesrechtenlogica Databank Erediensten
+    """
+    filtered_inzendingen = []
+
+    for inzending in inzendingen:
+
+        submission = inzending['inzending']['value']
+
+        eb_has_cb = query(verify_eb_has_cb_exclusion_rule(submission))['boolean']
+        cb = query(verify_cb_exclusion_rule(submission))['boolean']
+        ro = query(verify_ro_exclusion_rule(submission))['boolean']
+        go = query(verify_go_exclusion_rule(submission))['boolean']
+        po = query(verify_po_exclusion_rule(submission))['boolean']
+
+
+        if not (eb_has_cb or cb or ro or go or po):
+            filtered_inzendingen.append(inzending)
+
+    return filtered_inzendingen
