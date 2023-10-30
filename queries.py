@@ -141,7 +141,7 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht, delivery
     conversatie['current_type_communicatie'] =\
         escape_helpers.sparql_escape_string(conversatie['current_type_communicatie'])
     bericht = copy.deepcopy(bericht)  # For not modifying the pass-by-name original
-    bericht['inhoud'] = escape_helpers.sparql_escape_string(bericht['inhoud'])
+    bericht['inhoud'] = escape_helpers.sparql_escape_string(bericht['inhoud']) or "Origineel bericht in bijlage."
     q = """
         PREFIX schema: <http://schema.org/>
         PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
