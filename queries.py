@@ -141,7 +141,6 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht, delivery
     conversatie['current_type_communicatie'] =\
         escape_helpers.sparql_escape_string(conversatie['current_type_communicatie'])
     bericht = copy.deepcopy(bericht)  # For not modifying the pass-by-name original
-    bericht['inhoud'] = escape_helpers.sparql_escape_string(bericht['inhoud'])
     q = """
         PREFIX schema: <http://schema.org/>
         PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
@@ -167,7 +166,7 @@ def construct_insert_conversatie_query(graph_uri, conversatie, bericht, delivery
                     <http://mu.semte.ch/vocabularies/core/uuid> "{2[uuid]}";
                     schema:dateSent "{2[verzonden]}"^^xsd:dateTime;
                     schema:dateReceived "{2[ontvangen]}"^^xsd:dateTime;
-                    schema:text {2[inhoud]};
+                    schema:text "Origineel bericht in bijlage";
                     <http://purl.org/dc/terms/type> "{2[type_communicatie]}";
                     schema:sender <{2[van]}>;
                     schema:recipient <{2[naar]}>;
@@ -191,7 +190,6 @@ def construct_insert_bericht_query(graph_uri, bericht, conversatie_uri, delivery
     :returns: string containing SPARQL query
     """
     bericht = copy.deepcopy(bericht)  # For not modifying the pass-by-name original
-    bericht['inhoud'] = escape_helpers.sparql_escape_string(bericht['inhoud'])
     q = """
         PREFIX schema: <http://schema.org/>
         PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
@@ -205,7 +203,7 @@ def construct_insert_bericht_query(graph_uri, bericht, conversatie_uri, delivery
                     <http://mu.semte.ch/vocabularies/core/uuid> "{1[uuid]}";
                     schema:dateSent "{1[verzonden]}"^^xsd:dateTime;
                     schema:dateReceived "{1[ontvangen]}"^^xsd:dateTime;
-                    schema:text {1[inhoud]};
+                    schema:text "Origineel bericht in bijlage";
                     schema:sender <{1[van]}>;
                     schema:recipient <{1[naar]}>;
                     adms:status <{3}>;
