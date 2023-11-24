@@ -885,7 +885,11 @@ def construct_link_dossierbehandelaar_query(graph_uri, bericht):
     return q
 
 
-def construct_get_messages_by_status(status_uri, max_confirmation_attempts):
+def construct_get_messages_by_status(status_uri, max_confirmation_attempts, bericht_uri=None):
+    bound_bericht_statement = ""
+    if bericht_uri:
+        bound_bericht_statement = "BIND(<{0}> as ?bericht)".format(bericht_uri)
+
     query_str = """
         PREFIX schema: <http://schema.org/>
         PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
@@ -906,6 +910,7 @@ def construct_get_messages_by_status(status_uri, max_confirmation_attempts):
         {{
             GRAPH ?g {{
                 BIND(<{0}> as ?status)
+                {1}
 
                 ?bericht a schema:Message;
                     <http://mu.semte.ch/vocabularies/core/uuid> ?uuid;
@@ -921,7 +926,7 @@ def construct_get_messages_by_status(status_uri, max_confirmation_attempts):
                 OPTIONAL {{ ?bericht ext:failedConfirmationAttempts ?confirmationAttempts. }}
             }}
         }}
-    """.format(status_uri, max_confirmation_attempts)
+    """.format(status_uri, bound_bericht_statement)
 
     return query_str
 

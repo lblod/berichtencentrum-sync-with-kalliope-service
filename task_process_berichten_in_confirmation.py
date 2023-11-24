@@ -19,11 +19,11 @@ PS_UIT_CONFIRMATION_PATH = os.environ.get('KALLIOPE_PS_UIT_CONFIRMATION_ENDPOINT
 PUBLIC_GRAPH = "http://mu.semte.ch/graphs/public"
 
 
-def process_confirmations():
+def process_confirmations(bericht_uri=None):
     try:
         log("Checking for new delivery confirmations to process")
 
-        query_string = construct_get_messages_by_status(STATUS_DELIVERED_UNCONFIRMED, MAX_CONFIRMATION_ATTEMPTS)
+        query_string = construct_get_messages_by_status(STATUS_DELIVERED_UNCONFIRMED, MAX_CONFIRMATION_ATTEMPTS, bericht_uri)
         berichten = query(query_string).get('results', {}).get('bindings', [])
 
         log("Found {} confirmations that need to be sent to the Kalliope API".format(len(berichten)))

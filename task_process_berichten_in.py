@@ -26,6 +26,8 @@ from .queries import construct_insert_dossierbehandelaar_query
 from .queries import construct_link_dossierbehandelaar_query
 from .update_with_supressed_fail import update_with_suppressed_fail
 
+from .task_process_berichten_in_confirmation import process_confirmations
+
 TIMEZONE = timezone('Europe/Brussels')
 PUBLIC_GRAPH = "http://mu.semte.ch/graphs/public"
 PS_UIT_PATH = os.environ.get('KALLIOPE_PS_UIT_ENDPOINT')
@@ -77,6 +79,7 @@ def process_berichten_in():
                     if not message_in_db:  # Bericht is not in our DB yet. We should insert it.
                         log("Bericht '{}' - {} is not in DB yet.".format(conversatie['betreft'], bericht['verzonden']))
                         insert_message_in_db(conversatie, bericht, poststuk, session, graph)
+                        process_confirmations(bericht['uri'])
 
                     else:  # bericht already exists in our DB
                         log("Bericht '{}' - {} already exists in our DB, skipping ...".format(conversatie['betreft'],
