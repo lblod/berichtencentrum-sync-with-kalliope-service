@@ -327,17 +327,14 @@ def construct_update_last_bericht_query(conversatie_uri):
                 OPTIONAL {{  ?conversation ext:lastMessage ?message. }}
             }}
             {{
-                SELECT (?message AS ?newMessage) WHERE {{
-                    GRAPH ?g {{
-                        ?conversation a schema:Conversation;
-                            schema:hasPart ?message.
-                        ?message schema:dateSent ?dateSent.
-                        FILTER NOT EXISTS {{
-                            ?conversation schema:hasPart/schema:dateSent ?otherDateSent.
-                            FILTER( ?dateSent < ?otherDateSent  )
-                        }}
-                    }}
-                }}
+              SELECT DISTINCT (?message AS ?newMessage) ?dateSent WHERE {{
+                ?conversation a schema:Conversation;
+                  schema:hasPart ?message;
+
+                ?message schema:dateSent ?dateSent.
+              }}
+              ORDER BY DESC(?dateSent)
+              LIMIT 1
             }}
         }}
         """.format(conversatie_uri)
