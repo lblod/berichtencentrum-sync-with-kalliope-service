@@ -357,7 +357,6 @@ def construct_unsent_berichten_query(naar_uri, max_sending_attempts):
 
         SELECT DISTINCT ?referentieABB ?dossieruri ?bericht ?betreft ?uuid ?van ?verzonden ?inhoud
         WHERE {{
-            GRAPH ?g {{
                 ?conversatie a schema:Conversation;
                     schema:identifier ?referentieABB;
                     schema:about ?betreft;
@@ -376,7 +375,6 @@ def construct_unsent_berichten_query(naar_uri, max_sending_attempts):
                 OPTIONAL {{ ?bericht ext:failedSendingAttempts ?attempts. }}
                 BIND(COALESCE(?attempts, ?default_attempts) AS ?result_attempts)
                 FILTER(?result_attempts < {1})
-            }}
         }}
         """.format(naar_uri, max_sending_attempts)
     return q
