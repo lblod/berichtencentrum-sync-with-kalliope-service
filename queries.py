@@ -910,6 +910,7 @@ def construct_get_messages_by_status(status_uri, max_confirmation_attempts, beri
 
                 OPTIONAL {{ ?bericht ext:failedConfirmationAttempts ?confirmationAttempts. }}
             }}
+            FILTER( REGEX(STR(?g), "LoketLB-berichtenGebruiker"))
         }}
     """.format(status_uri, bound_bericht_statement)
 
