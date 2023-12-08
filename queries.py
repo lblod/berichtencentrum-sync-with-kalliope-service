@@ -479,15 +479,12 @@ def construct_select_original_bericht_query(bericht_uri):
         PREFIX schema: <http://schema.org/>
         PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 
-        SELECT ?origineelbericht WHERE {{
-            GRAPH ?g {{
+        SELECT DISTINCT ?origineelbericht WHERE {{
                 ?conversation a schema:Conversation;
                     schema:hasPart ?origineelbericht;
                     schema:hasPart <{0}>.
-            }}
             {{
-                SELECT (?message AS ?origineelbericht) WHERE {{
-                    GRAPH ?g {{
+                SELECT DISTINCT (?message AS ?origineelbericht) WHERE {{
                         ?conversation a schema:Conversation;
                             schema:hasPart ?message.
                         ?message schema:dateSent ?dateSent.
@@ -495,7 +492,6 @@ def construct_select_original_bericht_query(bericht_uri):
                             ?conversation schema:hasPart/schema:dateSent ?otherDateSent.
                             FILTER( ?dateSent > ?otherDateSent )
                         }}
-                    }}
                 }}
             }}
         }}
