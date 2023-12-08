@@ -327,17 +327,14 @@ def construct_update_last_bericht_query(conversatie_uri):
                 OPTIONAL {{  ?conversation ext:lastMessage ?message. }}
             }}
             {{
-                SELECT (?message AS ?newMessage) WHERE {{
-                    GRAPH ?g {{
-                        ?conversation a schema:Conversation;
-                            schema:hasPart ?message.
-                        ?message schema:dateSent ?dateSent.
-                        FILTER NOT EXISTS {{
-                            ?conversation schema:hasPart/schema:dateSent ?otherDateSent.
-                            FILTER( ?dateSent < ?otherDateSent  )
-                        }}
-                    }}
-                }}
+              SELECT DISTINCT (?message AS ?newMessage) ?dateSent WHERE {{
+                ?conversation a schema:Conversation;
+                  schema:hasPart ?message.
+
+                ?message schema:dateSent ?dateSent.
+              }}
+              ORDER BY DESC(?dateSent)
+              LIMIT 1
             }}
         }}
         """.format(conversatie_uri)
@@ -357,7 +354,6 @@ def construct_unsent_berichten_query(naar_uri, max_sending_attempts):
 
         SELECT DISTINCT ?referentieABB ?dossieruri ?bericht ?betreft ?uuid ?van ?verzonden ?inhoud
         WHERE {{
-            GRAPH ?g {{
                 ?conversatie a schema:Conversation;
                     schema:identifier ?referentieABB;
                     schema:about ?betreft;
@@ -376,7 +372,6 @@ def construct_unsent_berichten_query(naar_uri, max_sending_attempts):
                 OPTIONAL {{ ?bericht ext:failedSendingAttempts ?attempts. }}
                 BIND(COALESCE(?attempts, ?default_attempts) AS ?result_attempts)
                 FILTER(?result_attempts < {1})
-            }}
         }}
         """.format(naar_uri, max_sending_attempts)
     return q
@@ -481,27 +476,17 @@ def construct_select_original_bericht_query(bericht_uri):
         PREFIX schema: <http://schema.org/>
         PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 
-        SELECT ?origineelbericht WHERE {{
-            GRAPH ?g {{
-                ?conversation a schema:Conversation;
-                    schema:hasPart ?origineelbericht;
-                    schema:hasPart <{0}>.
-            }}
-            {{
-                SELECT (?message AS ?origineelbericht) WHERE {{
-                    GRAPH ?g {{
-                        ?conversation a schema:Conversation;
-                            schema:hasPart ?message.
-                        ?message schema:dateSent ?dateSent.
-                        FILTER NOT EXISTS {{
-                            ?conversation schema:hasPart/schema:dateSent ?otherDateSent.
-                            FILTER( ?dateSent > ?otherDateSent )
-                        }}
-                    }}
-                }}
-            }}
-        }}
-        """.format(bericht_uri)
+        SELECT DISTINCT ?origineelbericht ?dateSent WHERE {{
+          ?conversation a schema:Conversation;
+            schema:hasPart ?origineelbericht;
+            schema:hasPart <{0}>.
+
+            ?origineelbericht schema:dateSent ?dateSent.
+         }}
+         ORDER BY ASC(?dateSent)
+         LIMIT 1
+       """.format(bericht_uri)
+
     return q
 
 def verify_eb_has_cb_exclusion_rule(submission):
@@ -925,6 +910,7 @@ def construct_get_messages_by_status(status_uri, max_confirmation_attempts, beri
 
                 OPTIONAL {{ ?bericht ext:failedConfirmationAttempts ?confirmationAttempts. }}
             }}
+            FILTER( REGEX(STR(?g), "LoketLB-berichtenGebruiker"))
         }}
     """.format(status_uri, bound_bericht_statement)
 
