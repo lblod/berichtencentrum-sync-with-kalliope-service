@@ -479,23 +479,17 @@ def construct_select_original_bericht_query(bericht_uri):
         PREFIX schema: <http://schema.org/>
         PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 
-        SELECT DISTINCT ?origineelbericht WHERE {{
-                ?conversation a schema:Conversation;
-                    schema:hasPart ?origineelbericht;
-                    schema:hasPart <{0}>.
-            {{
-                SELECT DISTINCT (?message AS ?origineelbericht) WHERE {{
-                        ?conversation a schema:Conversation;
-                            schema:hasPart ?message.
-                        ?message schema:dateSent ?dateSent.
-                        FILTER NOT EXISTS {{
-                            ?conversation schema:hasPart/schema:dateSent ?otherDateSent.
-                            FILTER( ?dateSent > ?otherDateSent )
-                        }}
-                }}
-            }}
-        }}
-        """.format(bericht_uri)
+        SELECT DISTINCT ?origineelbericht ?dateSent WHERE {{
+          ?conversation a schema:Conversation;
+            schema:hasPart ?origineelbericht;
+            schema:hasPart <{0}>.
+
+            ?origineelbericht schema:dateSent ?dateSent.
+         }}
+         ORDER BY ASC(?dateSent)
+         LIMIT 1
+       """.format(bericht_uri)
+
     return q
 
 def verify_eb_has_cb_exclusion_rule(submission):
