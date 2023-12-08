@@ -329,7 +329,7 @@ def construct_update_last_bericht_query(conversatie_uri):
             {{
               SELECT DISTINCT (?message AS ?newMessage) ?dateSent WHERE {{
                 ?conversation a schema:Conversation;
-                  schema:hasPart ?message;
+                  schema:hasPart ?message.
 
                 ?message schema:dateSent ?dateSent.
               }}
