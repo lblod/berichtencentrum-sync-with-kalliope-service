@@ -10,6 +10,7 @@ from .queries import construct_increment_inzending_attempts_query
 from .queries import construct_inzending_sent_query
 from .queries import construct_create_kalliope_sync_error_query
 from .queries import verify_eb_has_cb_exclusion_rule
+from .queries import verify_eb_exclusion_rule
 from .queries import verify_cb_exclusion_rule
 from .queries import verify_ro_exclusion_rule
 from .queries import verify_go_exclusion_rule
@@ -129,13 +130,14 @@ def exclude_inzendingen_from_rules(inzendingen):
         submission = inzending['inzending']['value']
 
         eb_has_cb = query(verify_eb_has_cb_exclusion_rule(submission))['boolean']
+        eb = query(verify_eb_exclusion_rule(submission))['boolean']
         cb = query(verify_cb_exclusion_rule(submission))['boolean']
         ro = query(verify_ro_exclusion_rule(submission))['boolean']
         go = query(verify_go_exclusion_rule(submission))['boolean']
         po = query(verify_po_exclusion_rule(submission))['boolean']
 
 
-        if not (eb_has_cb or cb or ro or go or po):
+        if not (eb_has_cb or eb or cb or ro or go or po):
             filtered_inzendingen.append(inzending)
 
     return filtered_inzendingen

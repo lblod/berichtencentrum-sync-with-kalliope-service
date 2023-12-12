@@ -20,27 +20,32 @@ STATUS_DELIVERED_CONFIRMATION_FAILED = \
 # Inzendingen business rules :  sender classification with decisionType
 
 DECISION_TYPES_EB_HAS_CB = [
-    "<https://data.vlaanderen.be/id/concept/BesluitType/e44c535d-4339-4d15-bdbf-d4be6046de2c>",
-    "<https://data.vlaanderen.be/id/concept/BesluitDocumentType/2c9ada23-1229-4c7e-a53e-acddc9014e4e>"           
+    "<https://data.vlaanderen.be/id/concept/BesluitType/e44c535d-4339-4d15-bdbf-d4be6046de2c>", # Jaarrekening
+    "<https://data.vlaanderen.be/id/concept/BesluitDocumentType/2c9ada23-1229-4c7e-a53e-acddc9014e4e>" # Gecoordineerde inzending meerjarenplannen
+]
+
+DECISION_TYPES_EB = [
+    "<https://data.vlaanderen.be/id/concept/BesluitType/f56c645d-b8e1-4066-813d-e213f5bc529f>" # Meerjarenplan(aanpassing)
 ]
 
 DECISION_TYPES_CB = [
-    "<https://data.vlaanderen.be/id/concept/BesluitDocumentType/18833df2-8c9e-4edd-87fd-b5c252337349>",
-    "<https://data.vlaanderen.be/id/concept/BesluitDocumentType/2c9ada23-1229-4c7e-a53e-acddc9014e4e>"
+    "<https://data.vlaanderen.be/id/concept/BesluitDocumentType/18833df2-8c9e-4edd-87fd-b5c252337349>", # Budgetten(wijzigingen) - Indiening bij representatief orgaan
+    "<https://data.vlaanderen.be/id/concept/BesluitDocumentType/2c9ada23-1229-4c7e-a53e-acddc9014e4e>" # Gecoordineerde inzending meerjarenplannen
 ]
 
 DECISION_TYPES_RO = [
-    "<https://data.vlaanderen.be/id/concept/BesluitType/2b12630f-8c4e-40a4-8a61-a0c45621a1e6>"
+    "<https://data.vlaanderen.be/id/concept/BesluitType/2b12630f-8c4e-40a4-8a61-a0c45621a1e6>", # Advies Budget(wijziging)
+    "<https://data.vlaanderen.be/id/concept/BesluitType/0fc2c27d-a03c-4e3f-9db1-f10f026f76f8>" # Advies Meerjarenplan
 ]
 
 DECISION_TYPES_GO = [
-    "<https://data.vlaanderen.be/id/concept/BesluitType/df261490-cc74-4f80-b783-41c35e720b46>",
-    "<https://data.vlaanderen.be/id/concept/BesluitType/3fcf7dba-2e5b-4955-a489-6dd8285c013b>"
+    "<https://data.vlaanderen.be/id/concept/BesluitType/df261490-cc74-4f80-b783-41c35e720b46>", # Besluit over budget(wijziging) eredienstbestuur
+    "<https://data.vlaanderen.be/id/concept/BesluitType/3fcf7dba-2e5b-4955-a489-6dd8285c013b>" # Besluit over meerjarenplan(aanpassing) eredienstbestuur
 ]
 
 DECISION_TYPES_PO = [
-    "<https://data.vlaanderen.be/id/concept/BesluitType/df261490-cc74-4f80-b783-41c35e720b46>",
-    "<https://data.vlaanderen.be/id/concept/BesluitType/3fcf7dba-2e5b-4955-a489-6dd8285c013b>"
+    "<https://data.vlaanderen.be/id/concept/BesluitType/df261490-cc74-4f80-b783-41c35e720b46>", # Besluit over budget(wijziging) eredienstbestuur
+    "<https://data.vlaanderen.be/id/concept/BesluitType/3fcf7dba-2e5b-4955-a489-6dd8285c013b>" # Besluit over meerjarenplan(aanpassing) eredienstbestuur
 ]
 
 
@@ -518,6 +523,33 @@ def verify_eb_has_cb_exclusion_rule(submission):
     """.format(submission, " ".join(DECISION_TYPES_EB_HAS_CB))
 
     return ask_query_eb_has_cb
+
+def verify_eb_exclusion_rule(submission):
+
+    ask_query_eb = """
+    PREFIX ere:         <http://data.lblod.info/vocabularies/erediensten/>
+    PREFIX pav:         <http://purl.org/pav/>
+    PREFIX meb:         <http://rdf.myexperiment.org/ontologies/base/>
+    PREFIX dct:         <http://purl.org/dc/terms/>
+    PREFIX prov:        <http://www.w3.org/ns/prov#>
+    PREFIX adms:        <http://www.w3.org/ns/adms#>
+    
+    ASK {{
+
+        BIND(<{0}> AS ?submission)
+        ?submission a meb:Submission ;
+                   adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
+                   prov:generated ?formData ;
+                   pav:createdBy ?bestuurseenheid .
+        ?formData dct:type ?decisionType .
+        VALUES ?decisionType {{ {1} }}
+
+        ?bestuurseenheid a ere:BestuurVanDeEredienst.
+
+    }}
+    """.format(submission, " ".join(DECISION_TYPES_EB))
+
+    return ask_query_eb
 
 def verify_cb_exclusion_rule(submission):
 
