@@ -311,30 +311,32 @@ def construct_update_last_bericht_query(conversatie_uri):
 
         DELETE {{
             GRAPH ?g {{
-                ?conversation ext:lastMessage ?message.
+                ?conversation ext:lastMessage ?oldMessage.
             }}
         }}
         INSERT {{
             GRAPH ?g {{
-                ?conversation ext:lastMessage ?newMessage.
+                ?conversation ext:lastMessage ?message.
             }}
         }}
         WHERE {{
-            BIND(<{0}> as ?conversation)
-            GRAPH ?g {{
-                ?conversation a schema:Conversation;
-                    schema:hasPart ?newMessage.
-                OPTIONAL {{  ?conversation ext:lastMessage ?message. }}
-            }}
             {{
-              SELECT DISTINCT (?message AS ?newMessage) ?dateSent WHERE {{
+              SELECT DISTINCT ?conversation ?message WHERE {{
+               BIND(<{0}> as ?conversation)
                 ?conversation a schema:Conversation;
                   schema:hasPart ?message.
-
                 ?message schema:dateSent ?dateSent.
               }}
               ORDER BY DESC(?dateSent)
               LIMIT 1
+            }}
+
+            GRAPH ?g {{
+                ?conversation a schema:Conversation;
+                   schema:hasPart ?message.
+                OPTIONAL {{
+                  ?conversation ext:lastMessage ?oldMessage.
+                }}
             }}
         }}
         """.format(conversatie_uri)
