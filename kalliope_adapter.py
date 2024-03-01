@@ -178,10 +178,7 @@ def parse_kalliope_poststuk_uit(ps_uit, session):
     betreft = ps_uit['betreft']
     type_communicatie = ps_uit['typeCommunicatie']
     reactietermijn = "P30D"
-    dossierbehandelaar = {
-        'identifier': ps_uit['dossierbehandelaar']['id'],
-        'email': ps_uit['dossierbehandelaar']['email'],
-    }
+    dossierbehandelaar = '' if ps_uit['typePoststuk'] == 'https://kalliope.abb.vlaanderen.be/ld/algemeen/dossierType/omzendbrief' else { 'identifier': ps_uit['dossierbehandelaar']['id'], 'email': ps_uit['dossierbehandelaar']['email'], }
 
     bericht = new_bericht(verzonden, ontvangen, van, naar, inhoud, type_communicatie, dossierbehandelaar)
     bericht['uri'] = ps_uit['uri']
