@@ -25,6 +25,7 @@ PUBLIC_GRAPH = "http://mu.semte.ch/graphs/public"
 INZENDING_IN_PATH = os.environ.get('KALLIOPE_PS_IN_ENDPOINT')
 MAX_SENDING_ATTEMPTS = int(os.environ.get('MAX_SENDING_ATTEMPTS'))
 INZENDING_BASE_URL = os.environ.get('INZENDING_BASE_URL')
+EREDIENSTEN_BASE_URL = os.environ.get('EREDIENSTEN_BASE_URL')
 
 
 def process_inzendingen():
@@ -95,12 +96,14 @@ def parse_inzending_sparql_response(inzending_res):
         session_date = session_date.astimezone(TIMEZONE)
         session_date = session_date.strftime('%Y-%m-%d')
 
+    erediensten_databank_flow_only = inzending_res['decisionType']['value'] in ['https://data.vlaanderen.be/id/concept/BesluitDocumentType/14793940-5b9c-4172-b108-c73665ad9d6a', 'https://data.vlaanderen.be/id/concept/BesluitDocumentType/651525f8-8650-4ce8-8eea-f19b94d50b73']
+
     inzending = {
         'uri': inzending_res['inzending']['value'],
         'afzenderUri': inzending_res['bestuurseenheid']['value'],
         'betreft': inzending_res['decisionTypeLabel']['value'] + ' ' +
           session_date,
-        'urlToezicht': INZENDING_BASE_URL + '/' + inzending_res['inzendingUuid']['value'],
+        'urlToezicht': EREDIENSTEN_BASE_URL + '/' + inzending_res['inzendingUuid']['value'] if erediensten_databank_flow_only else INZENDING_BASE_URL + '/' + inzending_res['inzendingUuid']['value'],
         'typePoststuk': 'https://kalliope.abb.vlaanderen.be/ld/algemeen/dossierType/besluit',
         'typeMelding': inzending_res['decisionType']['value'],
         'datumVanVerzenden': inzending_res['datumVanVerzenden']['value']

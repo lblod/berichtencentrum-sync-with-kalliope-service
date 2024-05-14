@@ -29,6 +29,7 @@ Required environment variables:
 * `KALLIOPE_PS_UIT_CONFIRMATION_ENDPOINT`
 * `KALLIOPE_PS_IN_ENDPOINT`
 * `INZENDING_BASE_URL`
+* `EREDIENSTEN_BASE_URL`
 * `BERICHTEN_CRON_PATTERN`: Pattern of the cron job that polls the API for berichten
 * `BERICHTEN_IN_CONFIRMATION_CRON_PATTERN`: Pattern of the cron job that sends confirmations
 * `INZENDINGEN_CRON_PATTERN`: Pattern of the cron job that sends inzendingen
