@@ -361,6 +361,7 @@ def construct_unsent_berichten_query(naar_uri, max_sending_attempts):
 
         SELECT DISTINCT ?referentieABB ?dossieruri ?bericht ?betreft ?uuid ?van ?verzonden ?inhoud
         WHERE {{
+            GRAPH ?g {{
                 ?conversatie a schema:Conversation;
                     schema:identifier ?referentieABB;
                     schema:about ?betreft;
@@ -379,6 +380,9 @@ def construct_unsent_berichten_query(naar_uri, max_sending_attempts):
                 OPTIONAL {{ ?bericht ext:failedSendingAttempts ?attempts. }}
                 BIND(COALESCE(?attempts, ?default_attempts) AS ?result_attempts)
                 FILTER(?result_attempts < {1})
+            }}
+
+            FILTER(REGEX(STR(?g), "http://mu.semte.ch/graphs/organizations/.*/LoketLB-toezichtGebruiker"))
         }}
         """.format(naar_uri, max_sending_attempts)
     return q
@@ -691,7 +695,7 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
         SELECT DISTINCT ?inzending ?inzendingUuid ?bestuurseenheid ?decisionType ?sessionDate
                         ?decisionTypeLabel ?datumVanVerzenden ?boekjaar
         WHERE {{
-
+            GRAPH ?g {{
                 ?inzending a meb:Submission ;
                     adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
                     mu:uuid ?inzendingUuid ;
@@ -713,10 +717,11 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
                 OPTIONAL {{ ?inzending ext:failedSendingAttempts ?attempts. }}
                 BIND(COALESCE(?attempts, ?default_attempts) AS ?result_attempts)
                 FILTER(?result_attempts < {0})
+            }}
 
+            OPTIONAL {{ ?decisionType skos:prefLabel ?decisionTypeLabel }} .
 
-                OPTIONAL {{ ?decisionType skos:prefLabel ?decisionTypeLabel }} .
-
+            FILTER(REGEX(STR(?g), "http://mu.semte.ch/graphs/organizations/.*/LoketLB-toezichtGebruiker"))
         }}
         """.format(max_sending_attempts, separator.join(allowedDecisionTypesList))
     return q
