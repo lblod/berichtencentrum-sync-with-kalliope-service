@@ -382,7 +382,7 @@ def construct_unsent_berichten_query(naar_uri, max_sending_attempts):
                 FILTER(?result_attempts < {1})
             }}
 
-            FILTER(REGEX(STR(?g), "http://mu.semte.ch/graphs/organizations/.*/LoketLB-toezichtGebruiker"))
+            FILTER(REGEX(STR(?g), "http://mu.semte.ch/graphs/organizations/.*/LoketLB-berichtenGebruiker"))
         }}
         """.format(naar_uri, max_sending_attempts)
     return q
