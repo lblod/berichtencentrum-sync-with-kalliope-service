@@ -37,7 +37,7 @@ def process_inzendingen():
     q = construct_unsent_inzendingen_query(MAX_SENDING_ATTEMPTS)
     inzendingen = query(q)['results']['bindings']
 
-    # Here we remove inzendingen that matches exclusion criteria from business rules 
+    # Here we remove inzendingen that matches exclusion criteria from business rules
     filtered_inzendingen = exclude_inzendingen_from_rules(inzendingen)
 
     inzendingen = [parse_inzending_sparql_response(inzending_res) for inzending_res in filtered_inzendingen]
@@ -73,7 +73,7 @@ def process_inzendingen():
                     q_sent = construct_inzending_sent_query(graph, inzending['uri'], ontvangen)
                     update(q_sent)
                     log("successfully sent submission {} to Kalliope".format(inzending['uri']))
-                    
+
             except Exception as e:
                 inzending_uri = inzending.get('uri')
                 message = """
@@ -96,7 +96,7 @@ def parse_inzending_sparql_response(inzending_res):
         session_date = session_date.astimezone(TIMEZONE)
         session_date = session_date.strftime('%Y-%m-%d')
 
-    erediensten_databank_flow_only = inzending_res['decisionType']['value'] in ['https://data.vlaanderen.be/id/concept/BesluitDocumentType/14793940-5b9c-4172-b108-c73665ad9d6a', 'https://data.vlaanderen.be/id/concept/BesluitDocumentType/651525f8-8650-4ce8-8eea-f19b94d50b73']
+    erediensten_databank_flow_only = inzending_res['decisionType']['value'] in ['https://data.vlaanderen.be/id/concept/BesluitDocumentType/14793940-5b9c-4172-b108-c73665ad9d6a', 'https://data.vlaanderen.be/id/concept/BesluitDocumentType/651525f8-8650-4ce8-8eea-f19b94d50b73', 'https://data.vlaanderen.be/id/concept/BesluitType/95c671c2-3ab7-43e2-a90d-9b096c84bfe7']
 
     inzending = {
         'uri': inzending_res['inzending']['value'],
@@ -122,7 +122,7 @@ def parse_inzending_sparql_response(inzending_res):
 
 def exclude_inzendingen_from_rules(inzendingen):
     """
-    This takes an individual submission to run ASK queries to check if it matches the pattern from business rules (a submission's formData who has a specific decisionType and sender needs to be excluded when they match a certain criteria in the list); 
+    This takes an individual submission to run ASK queries to check if it matches the pattern from business rules (a submission's formData who has a specific decisionType and sender needs to be excluded when they match a certain criteria in the list);
     It will then sort them out from the inzendingen.
     see: Leesrechtenlogica Databank Erediensten
     """
