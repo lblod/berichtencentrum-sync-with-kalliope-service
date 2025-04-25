@@ -1,4 +1,6 @@
 # Changelog
+## 0.22.5 (2025-04-25)
+- Add besluitType to erediensten_databank_flow_only
 ## 0.22.4 (2025-03-19)
 - Change one `FILTER` from `LoketLB-toezichtGebruiker` to `LoketLB-berichtenGebruiker`.
   - The query looks for `schema:Conversation`, so we were filtering on the wrong graph.
