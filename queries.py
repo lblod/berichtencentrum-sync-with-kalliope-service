@@ -704,7 +704,7 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
                     prov:generated ?formData .
 
                 ?formData dct:type ?decisionType .
-                ?bestuurseenheid besluit:classificatie ?bestuurseenheidType
+                ?bestuurseenheid besluit:classificatie ?bestuurseenheidType .
 
                 OPTIONAL {{ ?formData <http://linkedeconomy.org/ontology#financialYear> ?boekjaar . }}
 
