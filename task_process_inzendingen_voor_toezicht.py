@@ -88,6 +88,56 @@ def process_inzendingen():
                 log(message)
     pass
 
+def determine_url(inzending_res):
+    """
+    Determine the correct URL for 'urlToezicht'.
+    """
+    # Rules to decide if it should be worship based
+    RULES = [
+        #Gemeente / Provincie
+        {
+            "decisionType": ["https://data.vlaanderen.be/id/concept/BesluitDocumentType/4f938e44-8bce-4d3a-b5a7-b84754fe981a", "https://data.vlaanderen.be/id/concept/BesluitType/79414af4-4f57-4ca3-aaa4-f8f1e015e71c"],
+            "bestuurseenheidType": ["https://data.vlaanderen.be/doc/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000001", "https://data.vlaanderen.be/doc/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000000"]
+        },
+        # Bestuur van de eredienst
+        {
+            "decisionType": ["https://data.vlaanderen.be/id/concept/BesluitDocumentType/a970c99d-c06c-4942-9815-153bf3e87df2",
+                            "https://data.vlaanderen.be/id/concept/BesluitType/54b61cbd-349f-41c4-9c8a-7e8e67d08347",
+                            "https://data.vlaanderen.be/id/concept/BesluitType/e44c535d-4339-4d15-bdbf-d4be6046de2c"],
+            "bestuurseenheidType": "http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/66ec74fd-8cfc-4e16-99c6-350b35012e86"
+        },
+        #Centraal bestuur van de eredienst
+        {
+            "decisionType": "https://data.vlaanderen.be/id/concept/BesluitDocumentType/672bf096-dccd-40af-ab60-bd7de15cc461",
+            "bestuurseenheidType": "http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/f9cac08a-13c1-49da-9bcb-f650b0604054"
+        },
+        # Representatief orgaan
+        {
+            "decisionType": ["https://data.vlaanderen.be/id/concept/BesluitDocumentType/651525f8-8650-4ce8-8eea-f19b94d50b73",
+                            "https://data.vlaanderen.be/id/concept/BesluitDocumentType/d611364b-007b-49a7-b2bf-b8f4e5568777",
+                            "https://data.vlaanderen.be/id/concept/BesluitDocumentType/6d1a3aea-6773-4e10-924d-38be596c5e2e",
+                            "https://data.vlaanderen.be/id/concept/BesluitDocumentType/14793940-5b9c-4172-b108-c73665ad9d6a",
+                            "https://data.vlaanderen.be/id/concept/BesluitDocumentType/95a6c5a1-05af-4d48-b2ef-5ebb1e58783b"],
+            "bestuurseenheidType": "http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/36372fad-0358-499c-a4e3-f412d2eae213"
+        },
+        # (Centraal) bestuur van de eredienst
+        {
+            "decisionType": "https://data.vlaanderen.be/id/concept/BesluitType/41a09f6c-7964-4777-8375-437ef61ed946",
+            "bestuurseenheidType": ["http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/66ec74fd-8cfc-4e16-99c6-350b35012e86", "http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/f9cac08a-13c1-49da-9bcb-f650b0604054"]
+        },
+    ]
+
+    decision_type = inzending_res['decisionType']['value']
+    afzender_class = inzending_res['bestuurseenheidType']['value']
+
+    # Make URL
+    for rule in RULES:
+        if decision_type == rule['decisionType'] and afzender_class in rule['bestuurseenheidType']:
+            return EREDIENSTEN_BASE_URL + '/' + inzending_res['inzendingUuid']['value']
+        elif inzending_res['decisionType']['value'] in ['https://data.vlaanderen.be/id/concept/BesluitType/95c671c2-3ab7-43e2-a90d-9b096c84bfe7']:
+            return EREDIENSTEN_BASE_URL + '/' + inzending_res['inzendingUuid']['value']
+        else:
+            return INZENDING_BASE_URL + '/' + inzending_res['inzendingUuid']['value']
 
 def parse_inzending_sparql_response(inzending_res):
     session_date = inzending_res.get('sessionDate', {}).get('value', '')
@@ -96,14 +146,12 @@ def parse_inzending_sparql_response(inzending_res):
         session_date = session_date.astimezone(TIMEZONE)
         session_date = session_date.strftime('%Y-%m-%d')
 
-    erediensten_databank_flow_only = inzending_res['decisionType']['value'] in ['https://data.vlaanderen.be/id/concept/BesluitDocumentType/14793940-5b9c-4172-b108-c73665ad9d6a', 'https://data.vlaanderen.be/id/concept/BesluitDocumentType/651525f8-8650-4ce8-8eea-f19b94d50b73', 'https://data.vlaanderen.be/id/concept/BesluitType/95c671c2-3ab7-43e2-a90d-9b096c84bfe7']
-
     inzending = {
         'uri': inzending_res['inzending']['value'],
         'afzenderUri': inzending_res['bestuurseenheid']['value'],
         'betreft': inzending_res['decisionTypeLabel']['value'] + ' ' +
           session_date,
-        'urlToezicht': EREDIENSTEN_BASE_URL + '/' + inzending_res['inzendingUuid']['value'] if erediensten_databank_flow_only else INZENDING_BASE_URL + '/' + inzending_res['inzendingUuid']['value'],
+        'urlToezicht': determine_url(inzending_res),
         'typePoststuk': 'https://kalliope.abb.vlaanderen.be/ld/algemeen/dossierType/besluit',
         'typeMelding': inzending_res['decisionType']['value'],
         'datumVanVerzenden': inzending_res['datumVanVerzenden']['value']

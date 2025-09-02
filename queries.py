@@ -693,7 +693,7 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
         PREFIX pav:     <http://purl.org/pav/>
         
         SELECT DISTINCT ?inzending ?inzendingUuid ?bestuurseenheid ?decisionType ?sessionDate
-                        ?decisionTypeLabel ?datumVanVerzenden ?boekjaar
+                        ?decisionTypeLabel ?datumVanVerzenden ?boekjaar ?bestuurseenheidType
         WHERE {{
             GRAPH ?g {{
                 ?inzending a meb:Submission ;
@@ -704,6 +704,7 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
                     prov:generated ?formData .
 
                 ?formData dct:type ?decisionType .
+                ?bestuurseenheid besluit:classificatie ?bestuurseenheidType
 
                 OPTIONAL {{ ?formData <http://linkedeconomy.org/ontology#financialYear> ?boekjaar . }}
 
