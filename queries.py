@@ -663,6 +663,69 @@ def verify_po_exclusion_rule(submission):
 
     return ask_query_po
 
+def verify_mp_exclusion_rule(submission):
+    # Meerjarenplan exclusion if sender is a bestuur van de eredienst
+    ask_query_mp = """
+    PREFIX ere:     <http://data.lblod.info/vocabularies/erediensten/>
+    PREFIX pav:     <http://purl.org/pav/>
+    PREFIX meb:     <http://rdf.myexperiment.org/ontologies/base/>
+    PREFIX dct:     <http://purl.org/dc/terms/>
+    PREFIX prov:    <http://www.w3.org/ns/prov#>
+    PREFIX adms:    <http://www.w3.org/ns/adms#>
+    PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
+    
+    ASK {{
+        BIND(<{0}> AS ?submission)
+
+        ?submission a meb:Submission ;
+                    adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
+                    prov:generated ?formData ;
+                    pav:createdBy ?bestuurseenheid .
+
+        ?formData dct:type <https://data.vlaanderen.be/id/concept/BesluitType/f56c645d-b8e1-4066-813d-e213f5bc529f> .
+
+        ?bestuurseenheid besluit:classificatie <http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/66ec74fd-8cfc-4e16-99c6-350b35012e86> .
+    }}
+    """.format(submission)
+
+    return ask_query_mp
+
+def verify_opnavb_exclusion_rule(submission):
+    # Opstart beroepsprocedure naar aanleiding van een beslissing if its (centraal) bestuur van de eredienst, representatief orgaan, gemeente or provincie
+    ask_query_opnavb = """
+    PREFIX ere:     <http://data.lblod.info/vocabularies/erediensten/>
+    PREFIX pav:     <http://purl.org/pav/>
+    PREFIX meb:     <http://rdf.myexperiment.org/ontologies/base/>
+    PREFIX dct:     <http://purl.org/dc/terms/>
+    PREFIX prov:    <http://www.w3.org/ns/prov#>
+    PREFIX adms:    <http://www.w3.org/ns/adms#>
+    PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
+    
+    ASK {{
+        BIND(<{0}> AS ?submission)
+
+        ?submission a meb:Submission ;
+                    adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
+                    prov:generated ?formData ;
+                    pav:createdBy ?bestuurseenheid .
+
+        ?formData dct:type <https://data.vlaanderen.be/id/concept/BesluitDocumentType/802a7e56-54f8-488d-b489-4816321fb9ae> .
+
+        ?bestuurseenheid besluit:classificatie ?bestuurseenheidType .
+
+        VALUES ?bestuurseenheidType {{
+            <http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/66ec74fd-8cfc-4e16-99c6-350b35012e86>
+            <http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/f9cac08a-13c1-49da-9bcb-f650b0604054>
+            <http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/36372fad-0358-499c-a4e3-f412d2eae213>
+            <http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000001>
+            <http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000000>
+        }}
+    }}
+    """.format(submission)
+
+    return ask_query_opnavb
+
+
 
 def construct_unsent_inzendingen_query(max_sending_attempts):
     """

@@ -15,6 +15,8 @@ from .queries import verify_cb_exclusion_rule
 from .queries import verify_ro_exclusion_rule
 from .queries import verify_go_exclusion_rule
 from .queries import verify_po_exclusion_rule
+from .queries import verify_mp_exclusion_rule
+from .queries import verify_opnavb_exclusion_rule
 from .update_with_supressed_fail import update_with_suppressed_fail
 from dateutil import parser
 
@@ -176,9 +178,11 @@ def exclude_inzendingen_from_rules(inzendingen):
         ro = query(verify_ro_exclusion_rule(submission))['boolean']
         go = query(verify_go_exclusion_rule(submission))['boolean']
         po = query(verify_po_exclusion_rule(submission))['boolean']
+        mp = query(verify_mp_exclusion_rule(submission))['boolean'] 
+        opnavb = query(verify_opnavb_exclusion_rule(submission))['boolean'] 
 
-
-        if not (eb_has_cb or eb or cb or ro or go or po):
+        if not (eb_has_cb or eb or cb or ro or go or po or mp or opnavb):
             filtered_inzendingen.append(inzending)
 
     return filtered_inzendingen
+
