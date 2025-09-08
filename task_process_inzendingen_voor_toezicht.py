@@ -98,7 +98,7 @@ def determine_url(inzending_res):
     RULES = [
         #Gemeente / Provincie
         {"decisionType": ["https://data.vlaanderen.be/id/concept/BesluitDocumentType/4f938e44-8bce-4d3a-b5a7-b84754fe981a", "https://data.vlaanderen.be/id/concept/BesluitType/79414af4-4f57-4ca3-aaa4-f8f1e015e71c", "https://data.vlaanderen.be/id/concept/BesluitType/b25faa84-3ab5-47ae-98c0-1b389c77b827"],
-            "bestuurseenheidType": ["https://data.vlaanderen.be/doc/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000001", "https://data.vlaanderen.be/doc/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000000"]},
+            "bestuurseenheidType": ["http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000001", "http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000000"]},
         # Bestuur van de eredienst
         {"decisionType": ["https://data.vlaanderen.be/id/concept/BesluitDocumentType/a970c99d-c06c-4942-9815-153bf3e87df2",
                             "https://data.vlaanderen.be/id/concept/BesluitType/54b61cbd-349f-41c4-9c8a-7e8e67d08347",
