@@ -765,7 +765,6 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
                     prov:generated ?formData .
 
                 ?formData dct:type ?decisionType .
-                ?bestuurseenheid besluit:classificatie ?bestuurseenheidType .
 
                 OPTIONAL {{ ?formData <http://linkedeconomy.org/ontology#financialYear> ?boekjaar . }}
 
@@ -780,6 +779,8 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
                 BIND(COALESCE(?attempts, ?default_attempts) AS ?result_attempts)
                 FILTER(?result_attempts < {0})
             }}
+
+            ?bestuurseenheid besluit:classificatie ?bestuurseenheidType .
 
             OPTIONAL {{ ?decisionType skos:prefLabel ?decisionTypeLabel }} .
 
