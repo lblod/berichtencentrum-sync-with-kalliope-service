@@ -725,8 +725,6 @@ def verify_opnavb_exclusion_rule(submission):
 
     return ask_query_opnavb
 
-
-
 def construct_unsent_inzendingen_query(max_sending_attempts):
     """
     Construct a SPARQL query for retrieving all messages for a given recipient that haven't been received yet by the other party.
