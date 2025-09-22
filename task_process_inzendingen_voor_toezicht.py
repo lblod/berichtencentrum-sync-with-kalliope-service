@@ -121,15 +121,21 @@ def determine_url(inzending_res):
 
     decision_type = inzending_res['decisionType']['value']
     afzender_class = inzending_res['bestuurseenheidType']['value']
+    url = INZENDING_BASE_URL + '/' + inzending_res['inzendingUuid']['value']
 
-    # Make URL
     for rule in RULES:
-        if decision_type == rule['decisionType'] and afzender_class in rule['bestuurseenheidType']:
-            return EREDIENSTEN_BASE_URL + '/' + inzending_res['inzendingUuid']['value']
-        elif inzending_res['decisionType']['value'] in ['https://data.vlaanderen.be/id/concept/BesluitType/95c671c2-3ab7-43e2-a90d-9b096c84bfe7']:
-            return EREDIENSTEN_BASE_URL + '/' + inzending_res['inzendingUuid']['value']
-        else:
-            return INZENDING_BASE_URL + '/' + inzending_res['inzendingUuid']['value']
+        rule_decision_types = rule['decisionType'] if isinstance(rule['decisionType'], list) else [rule['decisionType']]
+        rule_bestuurseenheid_types = rule['bestuurseenheidType'] if isinstance(rule['bestuurseenheidType'], list) else [rule['bestuurseenheidType']]
+
+        # update URL if rule matches
+        if decision_type in rule_decision_types and afzender_class in rule_bestuurseenheid_types:
+            url = EREDIENSTEN_BASE_URL + '/' + inzending_res['inzendingUuid']['value']
+
+    # special case override
+    if decision_type == 'https://data.vlaanderen.be/id/concept/BesluitType/95c671c2-3ab7-43e2-a90d-9b096c84bfe7':
+        url = EREDIENSTEN_BASE_URL + '/' + inzending_res['inzendingUuid']['value']
+
+    return url
 
 def parse_inzending_sparql_response(inzending_res):
     session_date = inzending_res.get('sessionDate', {}).get('value', '')
