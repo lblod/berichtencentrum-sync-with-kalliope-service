@@ -9,6 +9,7 @@ from .queries import construct_unsent_inzendingen_query
 from .queries import construct_increment_inzending_attempts_query
 from .queries import construct_inzending_sent_query
 from .queries import construct_create_kalliope_sync_error_query
+from .queries import verify_eb_has_active_cb_exclusion_rule
 from .queries import verify_eb_has_cb_exclusion_rule
 from .queries import verify_eb_exclusion_rule
 from .queries import verify_cb_exclusion_rule
@@ -179,6 +180,7 @@ def exclude_inzendingen_from_rules(inzendingen):
         submission = inzending['inzending']['value']
 
         eb_has_cb = query(verify_eb_has_cb_exclusion_rule(submission))['boolean']
+        eb_has_active_cb = query(verify_eb_has_active_cb_exclusion_rule(submission))['boolean']
         eb = query(verify_eb_exclusion_rule(submission))['boolean']
         cb = query(verify_cb_exclusion_rule(submission))['boolean']
         ro = query(verify_ro_exclusion_rule(submission))['boolean']
@@ -187,7 +189,7 @@ def exclude_inzendingen_from_rules(inzendingen):
         mp = query(verify_mp_exclusion_rule(submission))['boolean'] 
         opnavb = query(verify_opnavb_exclusion_rule(submission))['boolean'] 
 
-        if not (eb_has_cb or eb or cb or ro or go or po or mp or opnavb):
+        if not (eb_has_cb or eb_has_active_cb or eb or cb or ro or go or po or mp or opnavb):
             filtered_inzendingen.append(inzending)
 
     return filtered_inzendingen

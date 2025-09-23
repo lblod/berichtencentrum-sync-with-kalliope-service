@@ -20,8 +20,11 @@ STATUS_DELIVERED_CONFIRMATION_FAILED = \
 # Inzendingen business rules :  sender classification with decisionType
 
 DECISION_TYPES_EB_HAS_CB = [
-    "<https://data.vlaanderen.be/id/concept/BesluitType/e44c535d-4339-4d15-bdbf-d4be6046de2c>", # Jaarrekening
     "<https://data.vlaanderen.be/id/concept/BesluitDocumentType/2c9ada23-1229-4c7e-a53e-acddc9014e4e>" # Gecoordineerde inzending meerjarenplannen
+]
+
+DECISION_TYPES_EB_HAS_ACTIVE_CB = [
+    "<https://data.vlaanderen.be/id/concept/BesluitType/e44c535d-4339-4d15-bdbf-d4be6046de2c>" # Jaarrekening
 ]
 
 DECISION_TYPES_EB = [
@@ -529,6 +532,39 @@ def verify_eb_has_cb_exclusion_rule(submission):
     """.format(submission, " ".join(DECISION_TYPES_EB_HAS_CB))
 
     return ask_query_eb_has_cb
+
+def verify_eb_has_active_cb_exclusion_rule(submission):
+
+    ask_query_eb_has_active_cb = """
+    PREFIX ere:         <http://data.lblod.info/vocabularies/erediensten/>
+    PREFIX org:         <http://www.w3.org/ns/org#>
+    PREFIX pav:         <http://purl.org/pav/>
+    PREFIX meb:         <http://rdf.myexperiment.org/ontologies/base/>
+    PREFIX dct:         <http://purl.org/dc/terms/>
+    PREFIX prov:        <http://www.w3.org/ns/prov#>
+    PREFIX adms:        <http://www.w3.org/ns/adms#>
+    PREFIX regorg: <http://www.w3.org/ns/regorg#>
+
+    
+    ASK {{
+
+        BIND(<{0}> AS ?submission)
+        ?submission a meb:Submission ;
+                   adms:status <http://lblod.data.gift/concepts/9bd8d86d-bb10-4456-a84e-91e9507c374c> ;
+                   prov:generated ?formData ;
+                   pav:createdBy ?bestuurseenheid .
+        ?formData dct:type ?decisionType .
+        VALUES ?decisionType {{ {1} }}
+
+        ?bestuurseenheid a ere:BestuurVanDeEredienst.
+
+        ?centraalBestuur a ere:CentraalBestuurVanDeEredienst ;
+                         org:hasSubOrganization ?bestuurseenheid ;
+                         regorg:orgStatus <http://lblod.data.gift/concepts/63cc561de9188d64ba5840a42ae8f0d6> .
+    }}
+    """.format(submission, " ".join(DECISION_TYPES_EB_HAS_ACTIVE_CB))
+
+    return ask_query_eb_has_active_cb
 
 def verify_eb_exclusion_rule(submission):
 
