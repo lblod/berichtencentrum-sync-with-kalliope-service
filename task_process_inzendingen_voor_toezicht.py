@@ -44,6 +44,12 @@ def process_inzendingen():
     filtered_inzendingen = exclude_inzendingen_from_rules(inzendingen)
 
     inzendingen = [parse_inzending_sparql_response(inzending_res) for inzending_res in filtered_inzendingen]
+
+    # Ensure the inzending to be sent are unique.
+    # This is currently a workaround since there are problems in the data, and previous queries sometimes
+    # returns 'double' results. seeAlso: DL-6946
+    inzendingen = list({inzending['uri']: inzending for inzending in inzendingen}.values())
+
     log("Found {} submissions that need to be sent to the Kalliope API".format(len(inzendingen)))
     if len(inzendingen) == 0:
         return
