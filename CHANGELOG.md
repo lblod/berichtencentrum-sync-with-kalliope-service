@@ -1,4 +1,7 @@
 # Changelog
+## 0.23.0 (2025-10-08)
+- Big change on the notification rules to kalliope and it's content
+  - See also: https://binnenland.atlassian.net/browse/DL-6705
 ## 0.22.7 (2025-09-24)
 - Changed URL determination into a function and added extra exclusion roles
 ## 0.22.5 (2025-04-25)
