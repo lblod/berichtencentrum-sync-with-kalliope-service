@@ -1,4 +1,6 @@
 # Changelog
+## Unreleased
+- Fix on the notification rules to kalliope
 ## 0.23.0 (2025-10-08)
 - Big change on the notification rules to kalliope and it's content
   - See also: https://binnenland.atlassian.net/browse/DL-6705
