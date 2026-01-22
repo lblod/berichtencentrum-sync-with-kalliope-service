@@ -1,5 +1,5 @@
 # Changelog
-## Unreleased
+## 0.23.1 (2026-01-22)
 - Fix on the notification rules to kalliope
 ## 0.23.0 (2025-10-08)
 - Big change on the notification rules to kalliope and it's content
