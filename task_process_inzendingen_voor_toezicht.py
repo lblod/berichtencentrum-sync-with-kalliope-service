@@ -202,7 +202,7 @@ def exclude_inzendingen_from_rules(inzendingen):
     return filtered_inzendingen
 
 def extract_bestuurseenheid_uuid(afzender_uri: str) -> str | None:
-    # Standard UUID with dashes (e.g. 27e7a364-fe11-4303-9a43-fc2e1a3510d7)
+    # Standard UUID with dashes 
     uuid_pattern = re.search(
         r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}',
         afzender_uri
@@ -222,4 +222,3 @@ def extract_bestuurseenheid_uuid(afzender_uri: str) -> str | None:
 
     # Fallback: last path segment
     return afzender_uri.rstrip('/').split('/')[-1] or None
-
