@@ -201,7 +201,7 @@ def exclude_inzendingen_from_rules(inzendingen):
 
     return filtered_inzendingen
 
-def extract_bestuurseenheid_uuid(afzender_uri: str) -> str | None:
+def extract_bestuurseenheid_uuid(afzender_uri):
     # Standard UUID with dashes 
     uuid_pattern = re.search(
         r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}',
