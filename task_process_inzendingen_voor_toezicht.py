@@ -200,3 +200,4 @@ def exclude_inzendingen_from_rules(inzendingen):
             filtered_inzendingen.append(inzending)
 
     return filtered_inzendingen
+
