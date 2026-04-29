@@ -59,7 +59,7 @@ def process_inzendingen():
         for inzending in inzendingen:
             try:
                 #  NOTE: Add graph as argument to query because Virtuoso
-                bestuurseenheid_uuid = extract_bestuurseenheid_uuid(inzending['afzenderUri'])
+                bestuurseenheid_uuid = inzending['bestuurseenheidUuid']
                 graph = \
                     "http://mu.semte.ch/graphs/organizations/{}/LoketLB-toezichtGebruiker".format(bestuurseenheid_uuid)
                 try:
@@ -160,7 +160,8 @@ def parse_inzending_sparql_response(inzending_res):
         'urlToezicht': determine_url(inzending_res),
         'typePoststuk': 'https://kalliope.abb.vlaanderen.be/ld/algemeen/dossierType/besluit',
         'typeMelding': inzending_res['decisionType']['value'],
-        'datumVanVerzenden': inzending_res['datumVanVerzenden']['value']
+        'datumVanVerzenden': inzending_res['datumVanVerzenden']['value'],
+        'bestuurseenheidUuid': inzending_res['bestuurseenheidUuid']['value']
     }
 
     #  NOTE: Kalliope expects "boekjaar" to be an int.
@@ -200,25 +201,3 @@ def exclude_inzendingen_from_rules(inzendingen):
             filtered_inzendingen.append(inzending)
 
     return filtered_inzendingen
-
-def extract_bestuurseenheid_uuid(afzender_uri):
-    # Standard UUID with dashes 
-    uuid_pattern = re.search(
-        r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}',
-        afzender_uri
-    )
-    if uuid_pattern:
-        return uuid_pattern.group(0)
-
-    # Long hex string (64 chars)
-    long_hex = re.search(r'[0-9a-fA-F]{64}', afzender_uri)
-    if long_hex:
-        return long_hex.group(0)
-
-    # Medium hex string (24 chars)
-    medium_hex = re.search(r'[0-9a-fA-F]{24}', afzender_uri)
-    if medium_hex:
-        return medium_hex.group(0)
-
-    # Fallback: last path segment
-    return afzender_uri.rstrip('/').split('/')[-1] or None
