@@ -1,5 +1,4 @@
 import os
-import re
 from pytz import timezone
 from datetime import datetime
 from helpers import log
