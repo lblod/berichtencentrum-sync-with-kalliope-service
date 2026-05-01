@@ -58,7 +58,7 @@ def process_inzendingen():
         for inzending in inzendingen:
             try:
                 #  NOTE: Add graph as argument to query because Virtuoso
-                bestuurseenheid_uuid = inzending['afzenderUri'].split('/')[-1]
+                bestuurseenheid_uuid = inzending['bestuurseenheidUuid']
                 graph = \
                     "http://mu.semte.ch/graphs/organizations/{}/LoketLB-toezichtGebruiker".format(bestuurseenheid_uuid)
                 try:
@@ -159,7 +159,8 @@ def parse_inzending_sparql_response(inzending_res):
         'urlToezicht': determine_url(inzending_res),
         'typePoststuk': 'https://kalliope.abb.vlaanderen.be/ld/algemeen/dossierType/besluit',
         'typeMelding': inzending_res['decisionType']['value'],
-        'datumVanVerzenden': inzending_res['datumVanVerzenden']['value']
+        'datumVanVerzenden': inzending_res['datumVanVerzenden']['value'],
+        'bestuurseenheidUuid': inzending_res['bestuurseenheidUuid']['value']
     }
 
     #  NOTE: Kalliope expects "boekjaar" to be an int.

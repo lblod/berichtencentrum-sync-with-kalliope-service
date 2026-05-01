@@ -1,4 +1,6 @@
 # Changelog
+## Unreleased
+- Make uuid extraction in process inzendingen more robust [DL-7253]
 ## 0.23.1 (2026-01-22)
 - Fix on the notification rules to kalliope
 ## 0.23.0 (2025-10-08)

@@ -789,7 +789,7 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
         PREFIX org:     <http://www.w3.org/ns/org#>
         PREFIX pav:     <http://purl.org/pav/>
         
-        SELECT DISTINCT ?inzending ?inzendingUuid ?bestuurseenheid ?decisionType ?sessionDate
+        SELECT DISTINCT ?inzending ?inzendingUuid ?bestuurseenheid ?bestuurseenheidUuid ?decisionType ?sessionDate
                         ?decisionTypeLabel ?datumVanVerzenden ?boekjaar ?bestuurseenheidType
         WHERE {{
             GRAPH ?g {{
@@ -816,7 +816,8 @@ def construct_unsent_inzendingen_query(max_sending_attempts):
                 FILTER(?result_attempts < {0})
             }}
 
-            ?bestuurseenheid besluit:classificatie ?bestuurseenheidType .
+            ?bestuurseenheid besluit:classificatie ?bestuurseenheidType ;
+                 mu:uuid ?bestuurseenheidUuid .
 
             OPTIONAL {{ ?decisionType skos:prefLabel ?decisionTypeLabel }} .
 
